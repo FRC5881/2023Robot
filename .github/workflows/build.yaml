@@ -35,6 +35,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Check for proper source code formatting
+        run: ./gradlew spotlessCheck
+
       # Runs a single command using the runners shell
       - name: Compile and run tests on robot code
         run: ./gradlew build
