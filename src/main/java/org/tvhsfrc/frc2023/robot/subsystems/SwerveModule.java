@@ -1,18 +1,14 @@
 package org.tvhsfrc.frc2023.robot.subsystems;
 
-import org.tvhsfrc.frc2023.robot.Constants;
-import org.tvhsfrc.frc2023.robot.Constants.SwerveModuleConstants;
-
 import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderConfiguration;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
-import com.revrobotics.REVLibError;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.ControlType;
+import com.revrobotics.REVLibError;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,12 +16,14 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.tvhsfrc.frc2023.robot.Constants;
+import org.tvhsfrc.frc2023.robot.Constants.SwerveModuleConstants;
 
 /**
  * Models a single swerve module.
- * 
- * This class is responsible for controlling individual swerve modules by
- * passing in wpilib SwerveModuleState objects.
+ *
+ * <p>This class is responsible for controlling individual swerve modules by passing in wpilib
+ * SwerveModuleState objects.
  */
 public class SwerveModule extends SubsystemBase {
     // Two RevNeo motors per module.
@@ -36,39 +34,40 @@ public class SwerveModule extends SubsystemBase {
     private final CANCoder turnEncoder;
 
     /**
-     * PID controller for the turn motor. Using the turnEncoder as the feedback
-     * sensor.
-     * <p>
-     * Input range is -180 to 180 degrees where 180 and -180 are equivalent.
-     * <p>
-     * Output range is -1 to 1.
+     * PID controller for the turn motor. Using the turnEncoder as the feedback sensor.
+     *
+     * <p>Input range is -180 to 180 degrees where 180 and -180 are equivalent.
+     *
+     * <p>Output range is -1 to 1.
      */
     private final PIDController turnController;
 
-    /**
-     * The target module state. Assumed to be optimized and desaturated.
-     */
+    /** The target module state. Assumed to be optimized and desaturated. */
     private SwerveModuleState state;
 
     /**
      * Creates a new SwerveModule.
-     * 
-     * After constructing a SwerveModule you should call setDrivePID and setTurnPID
+     *
+     * <p>After constructing a SwerveModule you should call setDrivePID and setTurnPID
      */
     public SwerveModule(SwerveModuleConstants moduleConfig) {
         setName(moduleConfig.name);
 
         // Drive motor configuration
-        this.driveMotor = new CANSparkMax(moduleConfig.driveMotorCANID, CANSparkMax.MotorType.kBrushless);
+        this.driveMotor =
+                new CANSparkMax(moduleConfig.driveMotorCANID, CANSparkMax.MotorType.kBrushless);
         this.driveMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
         this.driveMotor.setSmartCurrentLimit(Constants.Swerve.DRIVE_CURRENT_LIMIT);
-        this.driveMotor.getEncoder()
+        this.driveMotor
+                .getEncoder()
                 .setPositionConversionFactor(Constants.Swerve.DRIVE_CONVERSION_FACTOR);
-        this.driveMotor.getEncoder()
+        this.driveMotor
+                .getEncoder()
                 .setVelocityConversionFactor(Constants.Swerve.DRIVE_CONVERSION_FACTOR);
 
         // Turn motor configuration
-        this.turnMotor = new CANSparkMax(moduleConfig.turnEncoderCANID, CANSparkMax.MotorType.kBrushless);
+        this.turnMotor =
+                new CANSparkMax(moduleConfig.turnEncoderCANID, CANSparkMax.MotorType.kBrushless);
         this.turnMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
         this.turnMotor.setSmartCurrentLimit(Constants.Swerve.TURN_CURRENT_LIMIT);
 
@@ -82,7 +81,8 @@ public class SwerveModule extends SubsystemBase {
 
         ErrorCode error = this.turnEncoder.configAllSettings(encoderConfig);
         if (error != ErrorCode.OK) {
-            System.out.println("Error configuring CANCoder " + moduleConfig.turnEncoderCANID + ":" + error);
+            System.out.println(
+                    "Error configuring CANCoder " + moduleConfig.turnEncoderCANID + ":" + error);
         }
 
         // Turn controller configuration
@@ -93,7 +93,7 @@ public class SwerveModule extends SubsystemBase {
 
     /**
      * Kinematics
-     * 
+     *
      * @param state The desired state of the module.
      */
     public void setModuleState(SwerveModuleState state) {
@@ -107,9 +107,7 @@ public class SwerveModule extends SubsystemBase {
         this.state = optimizedState;
     }
 
-    /**
-     * Odometry (angle and speed)
-     */
+    /** Odometry (angle and speed) */
     public SwerveModuleState getState() {
         // Get the current angle from the turn encoder.
         Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getAbsolutePosition());
@@ -120,9 +118,7 @@ public class SwerveModule extends SubsystemBase {
         return new SwerveModuleState(currentSpeed, currentAngle);
     }
 
-    /**
-     * Odometry (angle and distance)
-     */
+    /** Odometry (angle and distance) */
     public SwerveModulePosition getPosition() {
         // Get the current angle from the turn encoder.
         Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
@@ -133,13 +129,13 @@ public class SwerveModule extends SubsystemBase {
         return new SwerveModulePosition(position, currentAngle);
     }
 
-    /**
-     * Periodically called by the subsystem.
-     */
+    /** Periodically called by the subsystem. */
     @Override
     public void periodic() {
         // Set the drive motor to target the desired speed.
-        this.driveMotor.getPIDController().setReference(this.state.speedMetersPerSecond, ControlType.kVelocity);
+        this.driveMotor
+                .getPIDController()
+                .setReference(this.state.speedMetersPerSecond, ControlType.kVelocity);
 
         // Set the turn pid controller to target the desired angle.
         this.turnController.setSetpoint(this.state.angle.getDegrees());
@@ -155,53 +151,68 @@ public class SwerveModule extends SubsystemBase {
         builder.setSmartDashboardType(getName());
 
         // measured speed
-        builder.addDoubleProperty("Drive speed (m/s)", this.driveMotor.getEncoder()::getVelocity, null);
-        builder.addDoubleProperty("Turn angle (degrees)", this.turnEncoder::getAbsolutePosition, null);
+        builder.addDoubleProperty(
+                "Drive speed (m/s)", this.driveMotor.getEncoder()::getVelocity, null);
+        builder.addDoubleProperty(
+                "Turn angle (degrees)", this.turnEncoder::getAbsolutePosition, null);
 
         // setpoints
-        builder.addDoubleProperty("Drive setpoint (m/s)", () -> { return this.state.speedMetersPerSecond; }, null);
-        builder.addDoubleProperty("Turn setpoint (degrees)", () -> { return this.state.angle.getDegrees(); }, null);
+        builder.addDoubleProperty(
+                "Drive setpoint (m/s)",
+                () -> {
+                    return this.state.speedMetersPerSecond;
+                },
+                null);
+        builder.addDoubleProperty(
+                "Turn setpoint (degrees)",
+                () -> {
+                    return this.state.angle.getDegrees();
+                },
+                null);
     }
 
     /**
      * Set drive motor P constant.
-     * 
+     *
      * @param kP
      */
     public void setDriveP(double kP) {
         REVLibError error = this.driveMotor.getPIDController().setP(kP);
         if (error != REVLibError.kOk) {
-            System.out.println("Error setting drive motor " + this.driveMotor.getDeviceId() + " kP:" + error);
+            System.out.println(
+                    "Error setting drive motor " + this.driveMotor.getDeviceId() + " kP:" + error);
         }
     }
 
     /**
      * Set drive motor I constant.
-     * 
+     *
      * @param kI
      */
     public void setDriveI(double kI) {
         REVLibError error = this.driveMotor.getPIDController().setI(kI);
         if (error != REVLibError.kOk) {
-            System.out.println("Error setting drive motor " + this.driveMotor.getDeviceId() + " kI:" + error);
+            System.out.println(
+                    "Error setting drive motor " + this.driveMotor.getDeviceId() + " kI:" + error);
         }
     }
 
     /**
      * Set drive motor D constant.
-     * 
+     *
      * @param kD
      */
     public void setDriveD(double kD) {
         REVLibError error = this.driveMotor.getPIDController().setD(kD);
         if (error != REVLibError.kOk) {
-            System.out.println("Error setting drive motor " + this.driveMotor.getDeviceId() + " kD:" + error);
+            System.out.println(
+                    "Error setting drive motor " + this.driveMotor.getDeviceId() + " kD:" + error);
         }
     }
 
     /**
      * Set drive motor PID constants.
-     * 
+     *
      * @param kP
      * @param kI
      * @param kD
@@ -212,30 +223,24 @@ public class SwerveModule extends SubsystemBase {
         this.setDriveD(kD);
     }
 
-    /**
-     * Set turn motor P constant.
-     */
+    /** Set turn motor P constant. */
     public void setTurnP(double kP) {
         this.turnController.setP(kP);
     }
 
-    /**
-     * Set turn motor I constant.
-     */
+    /** Set turn motor I constant. */
     public void setTurnI(double kI) {
         this.turnController.setI(kI);
     }
 
-    /**
-     * Set turn motor D constant.
-     */
+    /** Set turn motor D constant. */
     public void setTurnD(double kD) {
         this.turnController.setD(kD);
     }
 
     /**
      * Set turn motor PID constants.
-     * 
+     *
      * @param kP
      * @param kI
      * @param kD
