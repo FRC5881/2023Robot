@@ -18,6 +18,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
@@ -34,12 +35,20 @@ public class SwerveModule extends SubsystemBase {
     // Additional absolute encoder for module heading.
     private final CANCoder turnEncoder;
 
-    // PID controller for the turn motor. Using the turnEncoder as the feedback
-    // sensor.
-    //
-    // Input range is -180 to 180 degrees where 180 and -180 are equivalent.
-    // Output range is -1 to 1.
+    /**
+     * PID controller for the turn motor. Using the turnEncoder as the feedback
+     * sensor.
+     * <p>
+     * Input range is -180 to 180 degrees where 180 and -180 are equivalent.
+     * <p>
+     * Output range is -1 to 1.
+     */
     private final PIDController turnController;
+
+    /**
+     * The target module state. Assumed to be optimized and desaturated.
+     */
+    private SwerveModuleState state;
 
     /**
      * Creates a new SwerveModule.
@@ -47,21 +56,24 @@ public class SwerveModule extends SubsystemBase {
      * After constructing a SwerveModule you should call setDrivePID and setTurnPID
      */
     public SwerveModule(SwerveModuleConstants moduleConfig) {
-        this.turnEncoder = new CANCoder(moduleConfig.turnEncoderCANID);
+        setName(moduleConfig.name);
 
+        // Drive motor configuration
         this.driveMotor = new CANSparkMax(moduleConfig.driveMotorCANID, CANSparkMax.MotorType.kBrushless);
         this.driveMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
         this.driveMotor.setSmartCurrentLimit(Constants.Swerve.DRIVE_CURRENT_LIMIT);
-        this.driveMotor.getAbsoluteEncoder(Type.kDutyCycle)
+        this.driveMotor.getEncoder()
                 .setPositionConversionFactor(Constants.Swerve.DRIVE_CONVERSION_FACTOR);
-        this.driveMotor.getAbsoluteEncoder(Type.kDutyCycle)
+        this.driveMotor.getEncoder()
                 .setVelocityConversionFactor(Constants.Swerve.DRIVE_CONVERSION_FACTOR);
 
+        // Turn motor configuration
         this.turnMotor = new CANSparkMax(moduleConfig.turnEncoderCANID, CANSparkMax.MotorType.kBrushless);
         this.turnMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
         this.turnMotor.setSmartCurrentLimit(Constants.Swerve.TURN_CURRENT_LIMIT);
 
         // Turn encoder configuration.
+        this.turnEncoder = new CANCoder(moduleConfig.turnEncoderCANID);
         CANCoderConfiguration encoderConfig = new CANCoderConfiguration();
         encoderConfig.absoluteSensorRange = AbsoluteSensorRange.Unsigned_0_to_360;
         encoderConfig.magnetOffsetDegrees = moduleConfig.turnEncoderOffset;
@@ -73,12 +85,14 @@ public class SwerveModule extends SubsystemBase {
             System.out.println("Error configuring CANCoder " + moduleConfig.turnEncoderCANID + ":" + error);
         }
 
+        // Turn controller configuration
         this.turnController = new PIDController(0, 0, 0);
         this.turnController.enableContinuousInput(-180, 180);
+        this.turnController.setSetpoint(0); // initially target 0 degrees
     }
 
     /**
-     * Kinematics. Sets the targets module state.
+     * Kinematics
      * 
      * @param state The desired state of the module.
      */
@@ -90,17 +104,13 @@ public class SwerveModule extends SubsystemBase {
         Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getAbsolutePosition());
         SwerveModuleState optimizedState = SwerveModuleState.optimize(state, currentAngle);
 
-        // Set the drive motor to target the desired speed.
-        this.driveMotor.getPIDController().setReference(optimizedState.speedMetersPerSecond, ControlType.kVelocity);
-
-        // Set the turn pid controller to target the desired angle.
-        this.turnController.setSetpoint(optimizedState.angle.getDegrees());
+        this.state = optimizedState;
     }
 
     /**
-     * Odometry. Gets the current module state. (angle and speed)
+     * Odometry (angle and speed)
      */
-    public SwerveModuleState getModuleState() {
+    public SwerveModuleState getState() {
         // Get the current angle from the turn encoder.
         Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getAbsolutePosition());
 
@@ -111,13 +121,11 @@ public class SwerveModule extends SubsystemBase {
     }
 
     /**
-     * Odometry. Get the current module position. (angle and distance)
-     * 
-     * @return The current module position.
+     * Odometry (angle and distance)
      */
-    public SwerveModulePosition getModulePosition() {
+    public SwerveModulePosition getPosition() {
         // Get the current angle from the turn encoder.
-        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getAbsolutePosition());
+        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
 
         // Get the distance traveled from the drive encoder.
         double position = this.driveMotor.getEncoder().getPosition();
@@ -130,10 +138,29 @@ public class SwerveModule extends SubsystemBase {
      */
     @Override
     public void periodic() {
+        // Set the drive motor to target the desired speed.
+        this.driveMotor.getPIDController().setReference(this.state.speedMetersPerSecond, ControlType.kVelocity);
+
+        // Set the turn pid controller to target the desired angle.
+        this.turnController.setSetpoint(this.state.angle.getDegrees());
+
         // Update the turn motor with the turn pid controller output.
         double setpoint = this.turnController.calculate(this.turnEncoder.getAbsolutePosition());
         setpoint = MathUtil.clamp(setpoint, -1.0, 1.0);
         this.turnMotor.set(setpoint);
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.setSmartDashboardType(getName());
+
+        // measured speed
+        builder.addDoubleProperty("Drive speed (m/s)", this.driveMotor.getEncoder()::getVelocity, null);
+        builder.addDoubleProperty("Turn angle (degrees)", this.turnEncoder::getAbsolutePosition, null);
+
+        // setpoints
+        builder.addDoubleProperty("Drive setpoint (m/s)", () -> { return this.state.speedMetersPerSecond; }, null);
+        builder.addDoubleProperty("Turn setpoint (degrees)", () -> { return this.state.angle.getDegrees(); }, null);
     }
 
     /**

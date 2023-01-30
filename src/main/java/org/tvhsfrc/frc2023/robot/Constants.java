@@ -56,7 +56,7 @@ public final class Constants {
         /**
          * The physical wheel diameter in meters.
          */
-        public static final double WHEEL_DIAMETER = 0.10033;
+        public static final double WHEEL_DIAMETER = Units.inchesToMeters(3.95);
 
         /**
          * The reduction factor from drive encoder revolutions revolutions to wheel
@@ -93,6 +93,11 @@ public final class Constants {
          */
         public static final double DRIVETRAIN_WHEELBASE_METERS = Units.inchesToMeters(22.5);
 
+        /**
+         * The maximum velocity of the drivetrain in meters per second.
+         */
+        public static final double MAX_VELOCITY_METERS_PER_SECOND = 5880.0 / 60.0 * DRIVE_REDUCTION_FACTOR
+                * WHEEL_DIAMETER * Math.PI;
     }
 
     /**
@@ -119,28 +124,34 @@ public final class Constants {
          */
         public final double turnEncoderOffset;
 
+        /**
+         * Subsystem name. For example: "Front Left Swerve"
+         */
+        public final String name;
+
         public SwerveModuleConstants(int turnMotorCANID, int driveMotorCANID, int turnEncoderCANID,
-                double turnEncoderOffset) {
+                double turnEncoderOffset, String name) {
             this.turnMotorCANID = turnMotorCANID;
             this.driveMotorCANID = driveMotorCANID;
             this.turnEncoderCANID = turnEncoderCANID;
             this.turnEncoderOffset = turnEncoderOffset;
+            this.name = name;
         }
     }
 
     public static final SwerveModuleConstants FRONT_LEFT_SWERVE_MODULE = new SwerveModuleConstants(
             CANConstants.FRONT_LEFT_MODULE_STEER_MOTOR, CANConstants.FRONT_LEFT_MODULE_DRIVE_MOTOR,
-            CANConstants.FRONT_LEFT_MODULE_STEER_ENCODER, -Math.toRadians(43.6816));
+            CANConstants.FRONT_LEFT_MODULE_STEER_ENCODER, -Math.toRadians(43.6816), "Front Left Swerve");
 
     public static final SwerveModuleConstants FRONT_RIGHT_SWERVE_MODULE = new SwerveModuleConstants(
             CANConstants.FRONT_RIGHT_MODULE_STEER_MOTOR, CANConstants.FRONT_RIGHT_MODULE_DRIVE_MOTOR,
-            CANConstants.FRONT_RIGHT_MODULE_STEER_ENCODER, -Math.toRadians(40.166));
+            CANConstants.FRONT_RIGHT_MODULE_STEER_ENCODER, -Math.toRadians(40.166), "Front Right Swerve");
 
     public static final SwerveModuleConstants BACK_LEFT_SWERVE_MODULE = new SwerveModuleConstants(
             CANConstants.BACK_LEFT_MODULE_STEER_MOTOR, CANConstants.BACK_LEFT_MODULE_DRIVE_MOTOR,
-            CANConstants.BACK_LEFT_MODULE_STEER_ENCODER, -Math.toRadians(135.9667));
+            CANConstants.BACK_LEFT_MODULE_STEER_ENCODER, -Math.toRadians(135.9667), "Back Left Swerve");
 
     public static final SwerveModuleConstants BACK_RIGHT_SWERVE_MODULE = new SwerveModuleConstants(
             CANConstants.BACK_RIGHT_MODULE_STEER_MOTOR, CANConstants.BACK_RIGHT_MODULE_DRIVE_MOTOR,
-            CANConstants.BACK_RIGHT_MODULE_STEER_ENCODER, -Math.toRadians(73.3886));
+            CANConstants.BACK_RIGHT_MODULE_STEER_ENCODER, -Math.toRadians(73.3886), "Back Right Swerve");
 }
