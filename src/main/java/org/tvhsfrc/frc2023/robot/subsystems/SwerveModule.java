@@ -58,8 +58,6 @@ public class SwerveModule extends SubsystemBase {
                 new CANSparkMax(moduleConfig.driveMotorCANID, CANSparkMax.MotorType.kBrushless);
         this.driveMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
         this.driveMotor.setSmartCurrentLimit(Constants.Swerve.DRIVE_CURRENT_LIMIT);
-        // TODO: Test if we need to set both PositionConversionFactor and
-        // VelocityConversionFactor
         this.driveMotor
                 .getEncoder()
                 .setPositionConversionFactor(Constants.Swerve.DRIVE_CONVERSION_FACTOR);
@@ -87,8 +85,7 @@ public class SwerveModule extends SubsystemBase {
                     "Error configuring CANCoder " + moduleConfig.turnEncoderCANID + ":" + error);
         }
 
-        // Turn controller configuration
-        // TODO: tune with sys-id
+        // Turn controller configuration TODO: tune with sys-id
         this.turnController = new PIDController(1.0, 0, 0.1);
         this.turnController.enableContinuousInput(-180, 180);
         this.turnController.setSetpoint(0); // initially target 0 degrees
@@ -104,7 +101,7 @@ public class SwerveModule extends SubsystemBase {
         // direction.
         // For example, if the angle is currently 180 degrees and the desired angle is
         // -180 degrees, we can flip the drive direction and set the angle to 0 degrees.
-        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getAbsolutePosition());
+        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
         SwerveModuleState optimizedState = SwerveModuleState.optimize(state, currentAngle);
 
         this.state = optimizedState;
@@ -113,7 +110,7 @@ public class SwerveModule extends SubsystemBase {
     /** Odometry (angle and speed) */
     public SwerveModuleState getState() {
         // Get the current angle from the turn encoder.
-        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getAbsolutePosition());
+        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
 
         // Get the current speed from the drive encoder.
         double currentSpeed = this.driveMotor.getAbsoluteEncoder(Type.kDutyCycle).getVelocity();
@@ -124,7 +121,7 @@ public class SwerveModule extends SubsystemBase {
     /** Odometry (angle and distance) */
     public SwerveModulePosition getPosition() {
         // Get the current angle from the turn encoder.
-        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getAbsolutePosition());
+        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
 
         // Get the distance traveled from the drive encoder.
         double position = this.driveMotor.getEncoder().getPosition();
@@ -144,7 +141,7 @@ public class SwerveModule extends SubsystemBase {
         this.turnController.setSetpoint(this.state.angle.getDegrees());
 
         // Update the turn motor with the turn pid controller output.
-        double setpoint = this.turnController.calculate(this.turnEncoder.getAbsolutePosition());
+        double setpoint = this.turnController.calculate(this.turnEncoder.getPosition());
         setpoint = MathUtil.clamp(setpoint, -1.0, 1.0);
         this.turnMotor.set(setpoint);
     }
@@ -156,8 +153,7 @@ public class SwerveModule extends SubsystemBase {
         // measured speed
         builder.addDoubleProperty(
                 "Drive speed (m/s)", this.driveMotor.getEncoder()::getVelocity, null);
-        builder.addDoubleProperty(
-                "Turn angle (degrees)", this.turnEncoder::getAbsolutePosition, null);
+        builder.addDoubleProperty("Turn angle (degrees)", this.turnEncoder::getPosition, null);
 
         // setpoints
         builder.addDoubleProperty(
