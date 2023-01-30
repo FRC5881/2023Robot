@@ -115,6 +115,8 @@ public final class Constants {
         }
     }
 
+    // TODO: Update offsets for this year's bot
+
     public static final SwerveModuleConstants FRONT_LEFT_SWERVE_MODULE =
             new SwerveModuleConstants(
                     CANConstants.FRONT_LEFT_MODULE_STEER_MOTOR,

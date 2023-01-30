@@ -58,6 +58,8 @@ public class SwerveModule extends SubsystemBase {
                 new CANSparkMax(moduleConfig.driveMotorCANID, CANSparkMax.MotorType.kBrushless);
         this.driveMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
         this.driveMotor.setSmartCurrentLimit(Constants.Swerve.DRIVE_CURRENT_LIMIT);
+        // TODO: Test if we need to set both PositionConversionFactor and
+        // VelocityConversionFactor
         this.driveMotor
                 .getEncoder()
                 .setPositionConversionFactor(Constants.Swerve.DRIVE_CONVERSION_FACTOR);
@@ -67,7 +69,7 @@ public class SwerveModule extends SubsystemBase {
 
         // Turn motor configuration
         this.turnMotor =
-                new CANSparkMax(moduleConfig.turnEncoderCANID, CANSparkMax.MotorType.kBrushless);
+                new CANSparkMax(moduleConfig.turnMotorCANID, CANSparkMax.MotorType.kBrushless);
         this.turnMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
         this.turnMotor.setSmartCurrentLimit(Constants.Swerve.TURN_CURRENT_LIMIT);
 
@@ -86,7 +88,8 @@ public class SwerveModule extends SubsystemBase {
         }
 
         // Turn controller configuration
-        this.turnController = new PIDController(0, 0, 0);
+        // TODO: tune with sys-id
+        this.turnController = new PIDController(1.0, 0, 0.1);
         this.turnController.enableContinuousInput(-180, 180);
         this.turnController.setSetpoint(0); // initially target 0 degrees
     }
@@ -121,7 +124,7 @@ public class SwerveModule extends SubsystemBase {
     /** Odometry (angle and distance) */
     public SwerveModulePosition getPosition() {
         // Get the current angle from the turn encoder.
-        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
+        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getAbsolutePosition());
 
         // Get the distance traveled from the drive encoder.
         double position = this.driveMotor.getEncoder().getPosition();
