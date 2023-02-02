@@ -6,8 +6,8 @@ import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderConfiguration;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.REVLibError;
+import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
@@ -36,14 +36,15 @@ public class SwerveModule extends SubsystemBase {
     /**
      * PID controller for the turn motor. Using the turnEncoder as the feedback sensor.
      *
-     * <p>Input range is -180 to 180 degrees where 180 and -180 are equivalent.
-     *
-     * <p>Output range is -1 to 1.
+     * <p>If you are looking to turn this PID controller you should use Shuffleboard. In DriveTrain
+     * the subsystem there are persisent sliders for the PID constants.
      */
-    private final PIDController turnController;
+    private final PIDController turnController = new PIDController(0, 0, 0);
 
     /** The target module state. Assumed to be optimized and desaturated. */
     private SwerveModuleState state;
+
+    private double turnOutput;
 
     /**
      * Creates a new SwerveModule.
@@ -85,10 +86,10 @@ public class SwerveModule extends SubsystemBase {
                     "Error configuring CANCoder " + moduleConfig.turnEncoderCANID + ":" + error);
         }
 
-        // Turn controller configuration TODO: tune with sys-id
-        this.turnController = new PIDController(1.0, 0, 0.1);
-        this.turnController.enableContinuousInput(-180, 180);
+        // Turn PID controller configuration
+        this.turnController.enableContinuousInput(0, 360);
         this.turnController.setSetpoint(0); // initially target 0 degrees
+        this.turnController.setTolerance(0.25);
     }
 
     /**
@@ -101,10 +102,12 @@ public class SwerveModule extends SubsystemBase {
         // direction.
         // For example, if the angle is currently 180 degrees and the desired angle is
         // -180 degrees, we can flip the drive direction and set the angle to 0 degrees.
-        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
-        SwerveModuleState optimizedState = SwerveModuleState.optimize(state, currentAngle);
 
-        this.state = optimizedState;
+        // TODO: Re-enable this when we're more confident with PID values.
+        // Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
+        // SwerveModuleState optimizedState = SwerveModuleState.optimize(state, currentAngle);
+
+        this.state = state;
     }
 
     /** Odometry (angle and speed) */
@@ -141,9 +144,9 @@ public class SwerveModule extends SubsystemBase {
         this.turnController.setSetpoint(this.state.angle.getDegrees());
 
         // Update the turn motor with the turn pid controller output.
-        double setpoint = this.turnController.calculate(this.turnEncoder.getPosition());
-        setpoint = MathUtil.clamp(setpoint, -1.0, 1.0);
-        this.turnMotor.set(setpoint);
+        this.turnOutput = this.turnController.calculate(this.turnEncoder.getPosition());
+        this.turnOutput = MathUtil.clamp(turnOutput, -1, 1);
+        this.turnMotor.set(this.turnOutput);
     }
 
     @Override
@@ -152,22 +155,36 @@ public class SwerveModule extends SubsystemBase {
 
         // measured speed
         builder.addDoubleProperty(
-                "Drive speed (m/s)", this.driveMotor.getEncoder()::getVelocity, null);
-        builder.addDoubleProperty("Turn angle (degrees)", this.turnEncoder::getPosition, null);
+                "Drive speed (mps)", this.driveMotor.getEncoder()::getVelocity, null);
+
+        builder.addDoubleProperty(
+                "Turn Absolute Position (degrees)", this.turnEncoder::getAbsolutePosition, null);
+
+        builder.addDoubleProperty(
+                "Turn PID output",
+                () -> {
+                    return this.turnOutput;
+                },
+                null);
+
+        builder.addDoubleProperty("Drive applied output", this.driveMotor::getAppliedOutput, null);
 
         // setpoints
         builder.addDoubleProperty(
-                "Drive setpoint (m/s)",
+                "Drive setpoint (mps)",
                 () -> {
                     return this.state.speedMetersPerSecond;
                 },
-                null);
+                (speed) -> {
+                    this.state.speedMetersPerSecond = speed;
+                });
+
         builder.addDoubleProperty(
                 "Turn setpoint (degrees)",
-                () -> {
-                    return this.state.angle.getDegrees();
-                },
-                null);
+                this.state.angle::getDegrees,
+                (angle) -> {
+                    this.state.angle = Rotation2d.fromDegrees(angle);
+                });
     }
 
     /**
@@ -176,6 +193,11 @@ public class SwerveModule extends SubsystemBase {
      * @param kP
      */
     public void setDriveP(double kP) {
+        // Only make the change if the value is different.
+        if (kP == this.driveMotor.getPIDController().getP()) {
+            return;
+        }
+
         REVLibError error = this.driveMotor.getPIDController().setP(kP);
         if (error != REVLibError.kOk) {
             System.out.println(
@@ -189,6 +211,11 @@ public class SwerveModule extends SubsystemBase {
      * @param kI
      */
     public void setDriveI(double kI) {
+        // Only make the change if the value is different.
+        if (kI == this.driveMotor.getPIDController().getI()) {
+            return;
+        }
+
         REVLibError error = this.driveMotor.getPIDController().setI(kI);
         if (error != REVLibError.kOk) {
             System.out.println(
@@ -202,6 +229,11 @@ public class SwerveModule extends SubsystemBase {
      * @param kD
      */
     public void setDriveD(double kD) {
+        // Only make the change if the value is different.
+        if (kD == this.driveMotor.getPIDController().getD()) {
+            return;
+        }
+
         REVLibError error = this.driveMotor.getPIDController().setD(kD);
         if (error != REVLibError.kOk) {
             System.out.println(

@@ -63,7 +63,7 @@ public final class Constants {
 
         /** Conversion factor from drive encoder revolutions to lienar distance. */
         public static final double DRIVE_CONVERSION_FACTOR =
-                (WHEEL_DIAMETER * Math.PI) / DRIVE_REDUCTION_FACTOR;
+                (WHEEL_DIAMETER * Math.PI) * DRIVE_REDUCTION_FACTOR;
 
         /**
          * The left-to-right distance between the drivetrain wheels
@@ -82,6 +82,19 @@ public final class Constants {
         /** The maximum velocity of the drivetrain in meters per second. */
         public static final double MAX_VELOCITY_METERS_PER_SECOND =
                 5880.0 / 60.0 * DRIVE_REDUCTION_FACTOR * WHEEL_DIAMETER * Math.PI;
+
+        /**
+         * The maximum angular velocity of the robot in radians per second.
+         *
+         * <p>This is a measure of how fast the robot can rotate in place.
+         */
+        // Here we calculate the theoretical maximum angular velocity. You can also
+        // replace this with a measured amount.
+        public static final double MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND =
+                MAX_VELOCITY_METERS_PER_SECOND
+                        / Math.hypot(
+                                DRIVETRAIN_TRACKWIDTH_METERS / 2.0,
+                                DRIVETRAIN_WHEELBASE_METERS / 2.0);
     }
 
     /** SwerveModuleConstants contains constants unique to each swerve module. */
@@ -122,7 +135,7 @@ public final class Constants {
                     CANConstants.FRONT_LEFT_MODULE_STEER_MOTOR,
                     CANConstants.FRONT_LEFT_MODULE_DRIVE_MOTOR,
                     CANConstants.FRONT_LEFT_MODULE_STEER_ENCODER,
-                    -Math.toRadians(43.6816),
+                    136.75,
                     "Front Left Swerve");
 
     public static final SwerveModuleConstants FRONT_RIGHT_SWERVE_MODULE =
@@ -130,7 +143,7 @@ public final class Constants {
                     CANConstants.FRONT_RIGHT_MODULE_STEER_MOTOR,
                     CANConstants.FRONT_RIGHT_MODULE_DRIVE_MOTOR,
                     CANConstants.FRONT_RIGHT_MODULE_STEER_ENCODER,
-                    -Math.toRadians(40.166),
+                    139.92,
                     "Front Right Swerve");
 
     public static final SwerveModuleConstants BACK_LEFT_SWERVE_MODULE =
@@ -138,7 +151,7 @@ public final class Constants {
                     CANConstants.BACK_LEFT_MODULE_STEER_MOTOR,
                     CANConstants.BACK_LEFT_MODULE_DRIVE_MOTOR,
                     CANConstants.BACK_LEFT_MODULE_STEER_ENCODER,
-                    -Math.toRadians(135.9667),
+                    42.45,
                     "Back Left Swerve");
 
     public static final SwerveModuleConstants BACK_RIGHT_SWERVE_MODULE =
@@ -146,6 +159,6 @@ public final class Constants {
                     CANConstants.BACK_RIGHT_MODULE_STEER_MOTOR,
                     CANConstants.BACK_RIGHT_MODULE_DRIVE_MOTOR,
                     CANConstants.BACK_RIGHT_MODULE_STEER_ENCODER,
-                    -Math.toRadians(73.3886),
+                    107.75,
                     "Back Right Swerve");
 }

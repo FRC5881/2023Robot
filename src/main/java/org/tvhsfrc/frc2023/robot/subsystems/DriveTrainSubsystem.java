@@ -3,12 +3,15 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -74,9 +77,46 @@ public class DriveTrainSubsystem extends SubsystemBase {
                     },
                     new Pose2d());
 
+    private final ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
+
+    // Many DoubleEntries are used to allow for easy access to PID values.
+    private final DoubleEntry driveKp =
+            (DoubleEntry)
+                    tab.addPersistent("Drive kP", 0)
+                            .withWidget(BuiltInWidgets.kTextView)
+                            .getEntry("double");
+
+    private final DoubleEntry driveKi =
+            (DoubleEntry)
+                    tab.addPersistent("Drive kI", 0)
+                            .withWidget(BuiltInWidgets.kTextView)
+                            .getEntry("double");
+
+    private final DoubleEntry driveKd =
+            (DoubleEntry)
+                    tab.addPersistent("Drive kD", 0)
+                            .withWidget(BuiltInWidgets.kTextView)
+                            .getEntry("double");
+
+    private final DoubleEntry turnKp =
+            (DoubleEntry)
+                    tab.addPersistent("Turn kP", 0)
+                            .withWidget(BuiltInWidgets.kTextView)
+                            .getEntry("double");
+
+    private final DoubleEntry turnKi =
+            (DoubleEntry)
+                    tab.addPersistent("Turn kI", 0)
+                            .withWidget(BuiltInWidgets.kTextView)
+                            .getEntry("double");
+
+    private final DoubleEntry turnKd =
+            (DoubleEntry)
+                    tab.addPersistent("Turn kD", 0)
+                            .withWidget(BuiltInWidgets.kTextView)
+                            .getEntry("double");
+
     public DriveTrainSubsystem() {
-        // TODO: Does this shuffleboard layout look good?
-        ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
         tab.add(navx);
 
         tab.add(frontLeftModule);
@@ -101,6 +141,17 @@ public class DriveTrainSubsystem extends SubsystemBase {
         poseEstimator.update(navx.getRotation2d(), getModulePositions());
 
         // TODO: Improve Odometry w/ Vision
+
+        // Update PID values
+        frontLeftModule.setDrivePID(driveKp.get(0.0), driveKi.get(0.0), driveKd.get(0.0));
+        frontRightModule.setDrivePID(driveKp.get(0.0), driveKi.get(0.0), driveKd.get(0.0));
+        backLeftModule.setDrivePID(driveKp.get(0.0), driveKi.get(0.0), driveKd.get(0.0));
+        backRightModule.setDrivePID(driveKp.get(0.0), driveKi.get(0.0), driveKd.get(0.0));
+
+        frontLeftModule.setTurnPID(turnKp.get(0.0), turnKi.get(0.0), turnKd.get(0.0));
+        frontRightModule.setTurnPID(turnKp.get(0.0), turnKi.get(0.0), turnKd.get(0.0));
+        backLeftModule.setTurnPID(turnKp.get(0.0), turnKi.get(0.0), turnKd.get(0.0));
+        backRightModule.setTurnPID(turnKp.get(0.0), turnKi.get(0.0), turnKd.get(0.0));
     }
 
     private SwerveModulePosition[] getModulePositions() {
@@ -120,6 +171,15 @@ public class DriveTrainSubsystem extends SubsystemBase {
      */
     public void drive(ChassisSpeeds chassisSpeeds) {
         this.chassisSpeeds = chassisSpeeds;
+    }
+
+    /**
+     * Get the gyro rotation of the bot
+     *
+     * @return Rotation2d
+     */
+    public Rotation2d getGyroRotation2d() {
+        return this.navx.getRotation2d();
     }
 
     /**
