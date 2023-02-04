@@ -5,8 +5,6 @@
 
 package org.tvhsfrc.frc2023.robot;
 
-import edu.wpi.first.math.util.Units;
-
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -152,7 +150,7 @@ public final class Constants {
                     CANConstants.FRONT_RIGHT_MODULE_STEER_MOTOR,
                     CANConstants.FRONT_RIGHT_MODULE_DRIVE_MOTOR,
                     CANConstants.FRONT_RIGHT_MODULE_STEER_ENCODER,
-                136.494,
+                    136.494,
                     "Front Right Swerve");
 
     public static final SwerveModuleConstants BACK_LEFT_SWERVE_MODULE =

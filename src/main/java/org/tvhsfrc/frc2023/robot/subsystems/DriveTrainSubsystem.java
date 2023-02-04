@@ -120,8 +120,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         ticks += 1;
 
         // Kinematics
-        SwerveModuleState[] moduleStates =
-                m_kinematics.toSwerveModuleStates(this.chassisSpeeds);
+        SwerveModuleState[] moduleStates = m_kinematics.toSwerveModuleStates(this.chassisSpeeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(
                 moduleStates, Constants.Swerve.MAX_VELOCITY_METERS_PER_SECOND);
 
