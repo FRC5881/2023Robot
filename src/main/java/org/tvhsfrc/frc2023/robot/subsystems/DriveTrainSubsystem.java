@@ -9,13 +9,11 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
 
@@ -83,34 +81,28 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     // Many DoubleEntries are used to allow for easy access to PID values.
     private final GenericEntry driveKp =
-                    tab.addPersistent("Drive kP", 0)
-                            .withWidget(BuiltInWidgets.kTextView)
-                            .getEntry("double");
+            tab.addPersistent("Drive kP", 0)
+                    .withWidget(BuiltInWidgets.kTextView)
+                    .getEntry("double");
 
     private final GenericEntry driveKi =
-                    tab.addPersistent("Drive kI", 0)
-                            .withWidget(BuiltInWidgets.kTextView)
-                            .getEntry("double");
+            tab.addPersistent("Drive kI", 0)
+                    .withWidget(BuiltInWidgets.kTextView)
+                    .getEntry("double");
 
     private final GenericEntry driveKd =
-                    tab.addPersistent("Drive kD", 0)
-                            .withWidget(BuiltInWidgets.kTextView)
-                            .getEntry("double");
+            tab.addPersistent("Drive kD", 0)
+                    .withWidget(BuiltInWidgets.kTextView)
+                    .getEntry("double");
 
     private final GenericEntry turnKp =
-                    tab.addPersistent("Turn kP", 0)
-                            .withWidget(BuiltInWidgets.kTextView)
-                            .getEntry("double");
+            tab.addPersistent("Turn kP", 0).withWidget(BuiltInWidgets.kTextView).getEntry("double");
 
     private final GenericEntry turnKi =
-                    tab.addPersistent("Turn kI", 0)
-                            .withWidget(BuiltInWidgets.kTextView)
-                            .getEntry("double");
+            tab.addPersistent("Turn kI", 0).withWidget(BuiltInWidgets.kTextView).getEntry("double");
 
     private final GenericEntry turnKd =
-                    tab.addPersistent("Turn kD", 0)
-                            .withWidget(BuiltInWidgets.kTextView)
-                            .getEntry("double");
+            tab.addPersistent("Turn kD", 0).withWidget(BuiltInWidgets.kTextView).getEntry("double");
 
     public DriveTrainSubsystem() {
         tab.add(navx);
@@ -139,15 +131,23 @@ public class DriveTrainSubsystem extends SubsystemBase {
         // TODO: Improve Odometry w/ Vision
 
         // Update PID values
-        frontLeftModule.setDrivePID(driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
-        frontRightModule.setDrivePID(driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
-        backLeftModule.setDrivePID(driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
-        backRightModule.setDrivePID(driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+        frontLeftModule.setDrivePID(
+                driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+        frontRightModule.setDrivePID(
+                driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+        backLeftModule.setDrivePID(
+                driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+        backRightModule.setDrivePID(
+                driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
 
-        frontLeftModule.setTurnPID(turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
-        frontRightModule.setTurnPID(turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
-        backLeftModule.setTurnPID(turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
-        backRightModule.setTurnPID(turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
+        frontLeftModule.setTurnPID(
+                turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
+        frontRightModule.setTurnPID(
+                turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
+        backLeftModule.setTurnPID(
+                turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
+        backRightModule.setTurnPID(
+                turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
     }
 
     private SwerveModulePosition[] getModulePositions() {
