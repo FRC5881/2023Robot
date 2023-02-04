@@ -104,6 +104,8 @@ public class DriveTrainSubsystem extends SubsystemBase {
     private final GenericEntry turnKd =
             tab.addPersistent("Turn kD", 0).withWidget(BuiltInWidgets.kTextView).getEntry("double");
 
+    private int ticks = 0;
+
     public DriveTrainSubsystem() {
         tab.add(navx);
 
@@ -115,8 +117,11 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        ticks += 1;
+
         // Kinematics
-        SwerveModuleState[] moduleStates = m_kinematics.toSwerveModuleStates(this.chassisSpeeds);
+        SwerveModuleState[] moduleStates =
+                m_kinematics.toSwerveModuleStates(this.chassisSpeeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(
                 moduleStates, Constants.Swerve.MAX_VELOCITY_METERS_PER_SECOND);
 
@@ -130,24 +135,33 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
         // TODO: Improve Odometry w/ Vision
 
-        // Update PID values
-        frontLeftModule.setDrivePID(
-                driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
-        frontRightModule.setDrivePID(
-                driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
-        backLeftModule.setDrivePID(
-                driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
-        backRightModule.setDrivePID(
-                driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+        if (ticks % 40 == 0) {
+            frontLeftModule.setDrivePID(
+                    driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+            frontLeftModule.setTurnPID(
+                    turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
+        }
 
-        frontLeftModule.setTurnPID(
-                turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
-        frontRightModule.setTurnPID(
-                turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
-        backLeftModule.setTurnPID(
-                turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
-        backRightModule.setTurnPID(
-                turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
+        if (ticks % 40 == 10) {
+            frontRightModule.setDrivePID(
+                    driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+            frontRightModule.setTurnPID(
+                    turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
+        }
+
+        if (ticks % 40 == 20) {
+            backLeftModule.setDrivePID(
+                    driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+            backLeftModule.setTurnPID(
+                    turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
+        }
+
+        if (ticks % 40 == 30) {
+            backRightModule.setDrivePID(
+                    driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+            backRightModule.setTurnPID(
+                    turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
+        }
     }
 
     private SwerveModulePosition[] getModulePositions() {

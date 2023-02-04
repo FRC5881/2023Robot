@@ -104,16 +104,16 @@ public class SwerveModule extends SubsystemBase {
         // -180 degrees, we can flip the drive direction and set the angle to 0 degrees.
 
         // TODO: Re-enable this when we're more confident with PID values.
-        // Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
-        // SwerveModuleState optimizedState = SwerveModuleState.optimize(state, currentAngle);
+        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
+        SwerveModuleState optimizedState = SwerveModuleState.optimize(state, currentAngle);
 
-        this.state = state;
+        this.state = optimizedState;
     }
 
     /** Odometry (angle and speed) */
     public SwerveModuleState getState() {
         // Get the current angle from the turn encoder.
-        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
+        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getAbsolutePosition());
 
         // Get the current speed from the drive encoder.
         double currentSpeed = this.driveMotor.getAbsoluteEncoder(Type.kDutyCycle).getVelocity();
@@ -124,7 +124,7 @@ public class SwerveModule extends SubsystemBase {
     /** Odometry (angle and distance) */
     public SwerveModulePosition getPosition() {
         // Get the current angle from the turn encoder.
-        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
+        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getAbsolutePosition());
 
         // Get the distance traveled from the drive encoder.
         double position = this.driveMotor.getEncoder().getPosition();
@@ -144,7 +144,7 @@ public class SwerveModule extends SubsystemBase {
         this.turnController.setSetpoint(this.state.angle.getDegrees());
 
         // Update the turn motor with the turn pid controller output.
-        this.turnOutput = this.turnController.calculate(this.turnEncoder.getPosition());
+        this.turnOutput = this.turnController.calculate(this.turnEncoder.getAbsolutePosition());
         this.turnOutput = MathUtil.clamp(turnOutput, -1, 1);
         this.turnMotor.set(this.turnOutput);
     }

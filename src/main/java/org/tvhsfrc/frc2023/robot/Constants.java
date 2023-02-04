@@ -22,18 +22,25 @@ public final class Constants {
 
     /** Identifiers for all of the CAN devices on the robot. */
     public static class CANConstants {
-        public static final int FRONT_LEFT_MODULE_STEER_ENCODER = 1;
-        public static final int FRONT_RIGHT_MODULE_STEER_ENCODER = 2;
-        public static final int BACK_RIGHT_MODULE_STEER_ENCODER = 3;
-        public static final int BACK_LEFT_MODULE_STEER_ENCODER = 4;
-        public static final int FRONT_LEFT_MODULE_DRIVE_MOTOR = 10;
-        public static final int FRONT_LEFT_MODULE_STEER_MOTOR = 11;
-        public static final int FRONT_RIGHT_MODULE_DRIVE_MOTOR = 12;
-        public static final int FRONT_RIGHT_MODULE_STEER_MOTOR = 13;
-        public static final int BACK_RIGHT_MODULE_DRIVE_MOTOR = 14;
-        public static final int BACK_RIGHT_MODULE_STEER_MOTOR = 15;
-        public static final int BACK_LEFT_MODULE_DRIVE_MOTOR = 16;
-        public static final int BACK_LEFT_MODULE_STEER_MOTOR = 17;
+        public static final int FRONT_RIGHT_MODULE_STEER_ENCODER = 1;
+
+        public static final int FRONT_LEFT_MODULE_STEER_ENCODER = 2;
+
+        public static final int BACK_LEFT_MODULE_STEER_ENCODER = 3;
+
+        public static final int BACK_RIGHT_MODULE_STEER_ENCODER = 4;
+
+        public static final int FRONT_RIGHT_MODULE_DRIVE_MOTOR = 10;
+        public static final int FRONT_RIGHT_MODULE_STEER_MOTOR = 11;
+
+        public static final int FRONT_LEFT_MODULE_DRIVE_MOTOR = 12;
+        public static final int FRONT_LEFT_MODULE_STEER_MOTOR = 13;
+
+        public static final int BACK_LEFT_MODULE_DRIVE_MOTOR = 14;
+        public static final int BACK_LEFT_MODULE_STEER_MOTOR = 15;
+
+        public static final int BACK_RIGHT_MODULE_DRIVE_MOTOR = 16;
+        public static final int BACK_RIGHT_MODULE_STEER_MOTOR = 17;
     }
 
     public static final class Swerve {
@@ -44,15 +51,15 @@ public final class Constants {
         public static final int DRIVE_CURRENT_LIMIT = 40;
 
         /** The physical wheel diameter in meters. */
-        public static final double WHEEL_DIAMETER = Units.inchesToMeters(3.95);
+        public static final double WHEEL_DIAMETER = 0.10033;
+        // Units.inchesToMeters(3.95);
 
         /**
          * The reduction factor from drive encoder revolutions revolutions to wheel revolutions.
          *
          * <p>This is 1 / (gear ratio)
          */
-        public static final double DRIVE_REDUCTION_FACTOR =
-                (16.0 / 48.0) * (28.0 / 16.0) * (15.0 / 60.0);
+        public static final double DRIVE_REDUCTION_FACTOR = 1 / 8.14;
 
         /**
          * The reduction factor from turn encoder motor revolutions to turning wheel revolutions.
@@ -63,21 +70,23 @@ public final class Constants {
 
         /** Conversion factor from drive encoder revolutions to lienar distance. */
         public static final double DRIVE_CONVERSION_FACTOR =
-                (WHEEL_DIAMETER * Math.PI) * DRIVE_REDUCTION_FACTOR;
+                (WHEEL_DIAMETER * Math.PI) * DRIVE_REDUCTION_FACTOR / 60;
 
         /**
          * The left-to-right distance between the drivetrain wheels
          *
          * <p>Should be measured from center to center.
          */
-        public static final double DRIVETRAIN_TRACKWIDTH_METERS = Units.inchesToMeters(22.5);
+        // public static final double DRIVETRAIN_TRACKWIDTH_METERS = Units.inchesToMeters(22.5);
+        public static final double DRIVETRAIN_TRACKWIDTH_METERS = 0.4445;
 
         /**
          * The front-to-back distance between the drivetrain wheels.
          *
          * <p>Should be measured from center to center.
          */
-        public static final double DRIVETRAIN_WHEELBASE_METERS = Units.inchesToMeters(22.5);
+        // public static final double DRIVETRAIN_WHEELBASE_METERS = Units.inchesToMeters(22.5);
+        public static final double DRIVETRAIN_WHEELBASE_METERS = 0.7239;
 
         /** The maximum velocity of the drivetrain in meters per second. */
         public static final double MAX_VELOCITY_METERS_PER_SECOND =
@@ -135,7 +144,7 @@ public final class Constants {
                     CANConstants.FRONT_LEFT_MODULE_STEER_MOTOR,
                     CANConstants.FRONT_LEFT_MODULE_DRIVE_MOTOR,
                     CANConstants.FRONT_LEFT_MODULE_STEER_ENCODER,
-                    136.75,
+                    138.86,
                     "Front Left Swerve");
 
     public static final SwerveModuleConstants FRONT_RIGHT_SWERVE_MODULE =
@@ -143,7 +152,7 @@ public final class Constants {
                     CANConstants.FRONT_RIGHT_MODULE_STEER_MOTOR,
                     CANConstants.FRONT_RIGHT_MODULE_DRIVE_MOTOR,
                     CANConstants.FRONT_RIGHT_MODULE_STEER_ENCODER,
-                    139.92,
+                136.494,
                     "Front Right Swerve");
 
     public static final SwerveModuleConstants BACK_LEFT_SWERVE_MODULE =
@@ -151,7 +160,7 @@ public final class Constants {
                     CANConstants.BACK_LEFT_MODULE_STEER_MOTOR,
                     CANConstants.BACK_LEFT_MODULE_DRIVE_MOTOR,
                     CANConstants.BACK_LEFT_MODULE_STEER_ENCODER,
-                    42.45,
+                    107.05,
                     "Back Left Swerve");
 
     public static final SwerveModuleConstants BACK_RIGHT_SWERVE_MODULE =
@@ -159,6 +168,6 @@ public final class Constants {
                     CANConstants.BACK_RIGHT_MODULE_STEER_MOTOR,
                     CANConstants.BACK_RIGHT_MODULE_DRIVE_MOTOR,
                     CANConstants.BACK_RIGHT_MODULE_STEER_ENCODER,
-                    107.75,
+                    42.89,
                     "Back Right Swerve");
 }
