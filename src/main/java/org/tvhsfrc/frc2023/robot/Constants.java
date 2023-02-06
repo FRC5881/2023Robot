@@ -5,6 +5,8 @@
 
 package org.tvhsfrc.frc2023.robot;
 
+import javax.swing.plaf.PanelUI;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -39,6 +41,9 @@ public final class Constants {
 
         public static final int BACK_RIGHT_MODULE_DRIVE_MOTOR = 16;
         public static final int BACK_RIGHT_MODULE_STEER_MOTOR = 17;
+        public static final int VACUUM_ONE = 18;
+        public static final int VACUUM_TWO = 19;
+        public static final int VACUUM_THREE = 20;
     }
 
     public static final class Swerve {
@@ -168,4 +173,12 @@ public final class Constants {
                     CANConstants.BACK_RIGHT_MODULE_STEER_ENCODER,
                     42.89,
                     "Back Right Swerve");
+
+    public static class VacuumConstants{
+        /**
+         * This is the maximum power the vacuum is supposed to reach.
+         * Any higher and something is wrong.
+         */
+        public static final double VacuumVelocity = 6000;
+    }
 }
