@@ -2,6 +2,7 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
 
@@ -27,7 +28,13 @@ public class VacuumSubsystem extends SubsystemBase {
         vacuum1.getPIDController().setD(0.002);
         vacuum1.getPIDController().setFF(0.0001);
         vacuum1.setIdleMode(CANSparkMax.IdleMode.kCoast);
-        vacuum1.getPIDController().setOutputRange(0, 0.6);
+        /*
+         * Original motor was rated for 5500 RPM.
+         * Our motor is rated for ~11000 RPM.
+         * 0.6 current limiting keeps it from exceeding the original rating by an excessive amount.
+         */
+        vacuum1.getPIDController().setOutputRange(0, Constants.VacuumConstants.maxOutput);
+        vacuum1.setClosedLoopRampRate(0.5);
     }
 
     @Override
@@ -43,7 +50,7 @@ public class VacuumSubsystem extends SubsystemBase {
     }
 
     /**
-     * Toggles the vacuum. When the method is called, set isEnabled to true. Otherwise, it is false.
+     * Toggles the vacuum on and off.
      */
     public void toggle() {
         isEnabled = !isEnabled;

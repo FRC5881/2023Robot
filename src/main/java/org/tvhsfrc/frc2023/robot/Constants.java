@@ -174,9 +174,9 @@ public final class Constants {
 
     public static class VacuumConstants {
         /**
-         * This is the maximum power the vacuum is supposed to reach. Any higher and something is
-         * wrong.
+         * This is the target velocity in RPM.
          */
         public static final double VacuumVelocity = 6000;
+        public static final double maxOutput = 0.6;
     }
 }
