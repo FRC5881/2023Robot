@@ -5,8 +5,6 @@
 
 package org.tvhsfrc.frc2023.robot;
 
-import javax.swing.plaf.PanelUI;
-
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -174,10 +172,10 @@ public final class Constants {
                     42.89,
                     "Back Right Swerve");
 
-    public static class VacuumConstants{
+    public static class VacuumConstants {
         /**
-         * This is the maximum power the vacuum is supposed to reach.
-         * Any higher and something is wrong.
+         * This is the maximum power the vacuum is supposed to reach. Any higher and something is
+         * wrong.
          */
         public static final double VacuumVelocity = 6000;
     }

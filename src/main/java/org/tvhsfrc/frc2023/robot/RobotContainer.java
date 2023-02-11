@@ -12,8 +12,11 @@ import java.util.function.DoubleSupplier;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
 import org.tvhsfrc.frc2023.robot.commands.Autos;
 import org.tvhsfrc.frc2023.robot.commands.DefaultDriveCommand;
+import org.tvhsfrc.frc2023.robot.commands.HoldVacuumCommand;
+import org.tvhsfrc.frc2023.robot.commands.VacuumToggleCommand;
 import org.tvhsfrc.frc2023.robot.subsystems.DriveTrainSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.ExampleSubsystem;
+import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -25,6 +28,7 @@ public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
     private final DriveTrainSubsystem driveTrainSubsystem = new DriveTrainSubsystem();
+    private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem();
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
     private final CommandXboxController driverController =
@@ -34,7 +38,18 @@ public class RobotContainer {
     public RobotContainer() {
         // Configure the trigger bindings
         configureBindings();
+    }
 
+    /**
+     * Use this method to define your trigger->command mappings. Triggers can be created via the
+     * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
+     * predicate, or via the named factories in {@link
+     * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
+     * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
+     * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
+     * joysticks}.
+     */
+    private void configureBindings() {
         DoubleSupplier vx =
                 () ->
                         -modifyAxis(driverController.getLeftY())
@@ -50,18 +65,10 @@ public class RobotContainer {
 
         driveTrainSubsystem.setDefaultCommand(
                 new DefaultDriveCommand(driveTrainSubsystem, vx, vy, angle));
-    }
 
-    /**
-     * Use this method to define your trigger->command mappings. Triggers can be created via the
-     * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
-     * predicate, or via the named factories in {@link
-     * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
-     * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-     * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-     * joysticks}.
-     */
-    private void configureBindings() {}
+        driverController.a().toggleOnTrue(new VacuumToggleCommand(vacuumSubsystem));
+        driverController.b().whileTrue(new HoldVacuumCommand(vacuumSubsystem));
+    }
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
