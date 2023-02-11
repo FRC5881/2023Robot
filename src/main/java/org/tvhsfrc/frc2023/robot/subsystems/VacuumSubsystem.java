@@ -2,7 +2,6 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
 
@@ -44,9 +43,7 @@ public class VacuumSubsystem extends SubsystemBase {
         }
     }
 
-    /**
-     * Toggles the vacuum on and off.
-     */
+    /** Toggles the vacuum on and off. */
     public void toggle() {
         isEnabled = !isEnabled;
     }
