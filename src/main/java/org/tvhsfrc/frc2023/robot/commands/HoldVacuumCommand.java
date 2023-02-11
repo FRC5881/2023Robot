@@ -3,10 +3,7 @@ package org.tvhsfrc.frc2023.robot.commands;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
 
-/**
- * Runs until canceled.
- * Keeps vacuum on while running.
- */
+/** Runs until canceled. Keeps vacuum on while running. */
 public class HoldVacuumCommand extends CommandBase {
     private final VacuumSubsystem vacuumSubsystem;
 
