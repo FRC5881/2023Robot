@@ -28,11 +28,6 @@ public class VacuumSubsystem extends SubsystemBase {
         vacuum1.getPIDController().setD(0.002);
         vacuum1.getPIDController().setFF(0.0001);
         vacuum1.setIdleMode(CANSparkMax.IdleMode.kCoast);
-        /*
-         * Original motor was rated for 5500 RPM.
-         * Our motor is rated for ~11000 RPM.
-         * 0.6 current limiting keeps it from exceeding the original rating by an excessive amount.
-         */
         vacuum1.getPIDController().setOutputRange(0, Constants.VacuumConstants.maxOutput);
         vacuum1.setClosedLoopRampRate(0.5);
     }

@@ -177,6 +177,11 @@ public final class Constants {
          * This is the target velocity in RPM.
          */
         public static final double VacuumVelocity = 6000;
+        /*
+         * Original motor was rated for 5500 RPM.
+         * Our motor is rated for ~11000 RPM.
+         * 0.6 current limiting keeps it from exceeding the original rating by an excessive amount.
+         */
         public static final double maxOutput = 0.6;
     }
 }
