@@ -13,7 +13,6 @@ import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
 import org.tvhsfrc.frc2023.robot.commands.Autos;
 import org.tvhsfrc.frc2023.robot.commands.DefaultDriveCommand;
 import org.tvhsfrc.frc2023.robot.subsystems.DriveTrainSubsystem;
-import org.tvhsfrc.frc2023.robot.subsystems.ExampleSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -23,7 +22,6 @@ import org.tvhsfrc.frc2023.robot.subsystems.ExampleSubsystem;
  */
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
-    private final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
     private final DriveTrainSubsystem driveTrainSubsystem = new DriveTrainSubsystem();
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
@@ -69,8 +67,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        // An example command will be run in autonomous
-        return Autos.exampleAuto(exampleSubsystem);
+        return Autos.doNothing();
     }
 
     private static double deadband(double value, double deadband) {
