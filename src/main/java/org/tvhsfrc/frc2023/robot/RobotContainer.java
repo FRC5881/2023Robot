@@ -15,7 +15,6 @@ import org.tvhsfrc.frc2023.robot.commands.DefaultDriveCommand;
 import org.tvhsfrc.frc2023.robot.commands.HoldVacuumCommand;
 import org.tvhsfrc.frc2023.robot.commands.VacuumToggleCommand;
 import org.tvhsfrc.frc2023.robot.subsystems.DriveTrainSubsystem;
-import org.tvhsfrc.frc2023.robot.subsystems.ExampleSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
 
 /**
@@ -26,7 +25,6 @@ import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
  */
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
-    private final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
     private final DriveTrainSubsystem driveTrainSubsystem = new DriveTrainSubsystem();
     private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem();
 
@@ -76,8 +74,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        // An example command will be run in autonomous
-        return Autos.exampleAuto(exampleSubsystem);
+        return Autos.doNothing();
     }
 
     private static double deadband(double value, double deadband) {
