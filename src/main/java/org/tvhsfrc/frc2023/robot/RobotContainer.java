@@ -5,6 +5,8 @@
 
 package org.tvhsfrc.frc2023.robot;
 
+import edu.wpi.first.hal.simulation.RoboRioDataJNI;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -29,9 +31,12 @@ public class RobotContainer {
     private final DriveTrainSubsystem driveTrainSubsystem = new DriveTrainSubsystem();
     private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem();
 
-    // Replace with CommandPS4Controller or CommandJoystick if needed
+    // Driver controller
     private final CommandXboxController driverController =
             new CommandXboxController(OperatorConstants.DRIVER_CONTROLLER_PORT);
+
+    // ROBORIO "User" button
+    Trigger userButton = new Trigger(RobotController::getUserButton);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -49,6 +54,7 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
+
         DoubleSupplier vx =
                 () ->
                         -modifyAxis(driverController.getLeftY())
@@ -70,8 +76,12 @@ public class RobotContainer {
                 .x()
                 .onTrue(Commands.runOnce(driveTrainSubsystem::zeroHeading, driveTrainSubsystem));
 
+        userButton.onTrue(driveTrainSubsystem.calibrate());
+
         driverController.a().toggleOnTrue(new VacuumToggleCommand(vacuumSubsystem));
         driverController.b().whileTrue(new HoldVacuumCommand(vacuumSubsystem));
+
+
     }
 
     /**

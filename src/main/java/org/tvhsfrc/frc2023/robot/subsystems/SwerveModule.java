@@ -44,7 +44,7 @@ public class SwerveModule extends SubsystemBase {
     // The previous output of the turnController
     private double turnOutput;
 
-    // Previous targetted state
+    // Previous targeted state
     private SwerveModuleState state;
 
     /**

@@ -135,6 +135,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
         navx.reset();
     }
 
+    private void _calibrate() {
+        navx.calibrate();
+    }
+
     /** Returns the current gyro heading. In degrees between 0 and 360. */
     public double getHeading() {
         return Math.IEEEremainder(navx.getAngle(), 360);
@@ -255,13 +259,21 @@ public class DriveTrainSubsystem extends SubsystemBase {
     }
 
     /** Creates a command to stop the motors */
-    public InstantCommand halt() {
+    public InstantCommand stop() {
         return new InstantCommand(this::_stop, this);
     }
 
     /** Creates a command to zero the gyro */
     public InstantCommand zeroHeading() {
         return new InstantCommand(this::_zeroHeading, this);
+    }
+
+    public Command calibrate() {
+        if (!this.navx.isCalibrating()) {
+            return new InstantCommand(this::_calibrate, this);
+        } else {
+            return Commands.none();
+        }
     }
 
     /**
@@ -316,7 +328,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         tab.add(backRightModule);
     }
 
-    // Send and recieve values from shuffleboard.
+    // Send and receive values from shuffleboard.
     private void updateShuffleboard() {
         if (ticks % 40 == 0) {
             frontLeftModule.setDrivePID(
