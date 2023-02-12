@@ -110,6 +110,9 @@ public class DriveTrainSubsystem extends SubsystemBase {
                 useVision = false;
             }
         }
+
+        // Load the PID values once at the start of the subsystem
+        _updatePID();
     }
 
     @Override
