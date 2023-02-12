@@ -205,11 +205,6 @@ public class SwerveModule extends SubsystemBase {
      * @param kP
      */
     public void setDriveP(double kP) {
-        // Only make the change if the value is different.
-        if (kP == driveMotor.getPIDController().getP()) {
-            return;
-        }
-
         REVLibError error = driveMotor.getPIDController().setP(kP);
         if (error != REVLibError.kOk) {
             System.out.println(
@@ -223,11 +218,6 @@ public class SwerveModule extends SubsystemBase {
      * @param kI
      */
     public void setDriveI(double kI) {
-        // Only make the change if the value is different.
-        if (kI == driveMotor.getPIDController().getI()) {
-            return;
-        }
-
         REVLibError error = driveMotor.getPIDController().setI(kI);
         if (error != REVLibError.kOk) {
             System.out.println(
@@ -241,11 +231,6 @@ public class SwerveModule extends SubsystemBase {
      * @param kD
      */
     public void setDriveD(double kD) {
-        // Only make the change if the value is different.
-        if (kD == driveMotor.getPIDController().getD()) {
-            return;
-        }
-
         REVLibError error = driveMotor.getPIDController().setD(kD);
         if (error != REVLibError.kOk) {
             System.out.println(
