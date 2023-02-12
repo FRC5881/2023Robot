@@ -6,21 +6,21 @@ import java.util.function.DoubleSupplier;
 import org.tvhsfrc.frc2023.robot.subsystems.DriveTrainSubsystem;
 
 public class DefaultDriveCommand extends CommandBase {
-    private final DriveTrainSubsystem m_drivetrainSubsystem;
+    private final DriveTrainSubsystem drivetrainSubsystem;
 
-    private final DoubleSupplier m_translationXSupplier;
-    private final DoubleSupplier m_translationYSupplier;
-    private final DoubleSupplier m_rotationSupplier;
+    private final DoubleSupplier xSpeedSupplier;
+    private final DoubleSupplier ySpeedSupplier;
+    private final DoubleSupplier rotationSupplier;
 
     public DefaultDriveCommand(
             DriveTrainSubsystem drivetrainSubsystem,
-            DoubleSupplier translationXSupplier,
-            DoubleSupplier translationYSupplier,
+            DoubleSupplier xSpeedSupplier,
+            DoubleSupplier ySpeedSupplier,
             DoubleSupplier rotationSupplier) {
-        this.m_drivetrainSubsystem = drivetrainSubsystem;
-        this.m_translationXSupplier = translationXSupplier;
-        this.m_translationYSupplier = translationYSupplier;
-        this.m_rotationSupplier = rotationSupplier;
+        this.drivetrainSubsystem = drivetrainSubsystem;
+        this.xSpeedSupplier = xSpeedSupplier;
+        this.ySpeedSupplier = ySpeedSupplier;
+        this.rotationSupplier = rotationSupplier;
 
         addRequirements(drivetrainSubsystem);
     }
@@ -29,20 +29,21 @@ public class DefaultDriveCommand extends CommandBase {
     public void execute() {
         // You can use `new ChassisSpeeds(...)` for robot-oriented movement instead of
         // field-oriented movement
-        m_drivetrainSubsystem.drive(
+        drivetrainSubsystem.drive(
                 ChassisSpeeds.fromFieldRelativeSpeeds(
-                        m_translationXSupplier.getAsDouble(),
-                        m_translationYSupplier.getAsDouble(),
-                        m_rotationSupplier.getAsDouble(),
-                        m_drivetrainSubsystem.getGyroRotation2d()));
-
-        // m_drivetrainSubsystem.drive(
-        //         ChassisSpeeds.fromFieldRelativeSpeeds(
-        //                 0.0, 0.0, 0.0, m_drivetrainSubsystem.getGyroRotation2d()));
+                        xSpeedSupplier.getAsDouble(),
+                        ySpeedSupplier.getAsDouble(),
+                        rotationSupplier.getAsDouble(),
+                        drivetrainSubsystem.getRotation2d()));
     }
 
     @Override
     public void end(boolean interrupted) {
-        m_drivetrainSubsystem.drive(new ChassisSpeeds(0.0, 0.0, 0.0));
+        drivetrainSubsystem._stop();
+    }
+
+    @Override
+    public boolean isFinished() {
+        return false;
     }
 }

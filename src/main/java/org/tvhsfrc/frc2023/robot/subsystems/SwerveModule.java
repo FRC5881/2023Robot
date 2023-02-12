@@ -41,10 +41,11 @@ public class SwerveModule extends SubsystemBase {
      */
     private final PIDController turnController = new PIDController(0, 0, 0);
 
-    /** The target module state. Assumed to be optimized and desaturated. */
-    private SwerveModuleState state;
-
+    // The previous output of the turnController
     private double turnOutput;
+
+    // Previous targetted state
+    private SwerveModuleState state;
 
     /**
      * Creates a new SwerveModule.
@@ -90,24 +91,44 @@ public class SwerveModule extends SubsystemBase {
         this.turnController.enableContinuousInput(0, 360);
         this.turnController.setSetpoint(0); // initially target 0 degrees
         this.turnController.setTolerance(0.25);
+
+        resetEncoder();
     }
 
     /**
-     * Kinematics
+     * Kinematics.
      *
      * @param state The desired state of the module.
      */
-    public void setModuleState(SwerveModuleState state) {
+    public void drive(SwerveModuleState state) {
+        this.state = state;
+
+        // If there is no meaningful speed, stop.
+        // This prevents WPILIB from recentering the wheels when you release the controller.
+        if (Math.abs(state.speedMetersPerSecond) < 0.001) {
+            stop();
+        }
+
         // Optimize the state to minimize the turn angle by flipping the drive
         // direction.
+        //
         // For example, if the angle is currently 180 degrees and the desired angle is
         // -180 degrees, we can flip the drive direction and set the angle to 0 degrees.
-
-        // TODO: Re-enable this when we're more confident with PID values.
         Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
         SwerveModuleState optimizedState = SwerveModuleState.optimize(state, currentAngle);
 
-        this.state = optimizedState;
+        // Set the drive motor to target the desired speed.
+        this.driveMotor
+                .getPIDController()
+                .setReference(optimizedState.speedMetersPerSecond, ControlType.kVelocity);
+
+        // Set the turn pid controller to target the desired angle.
+        this.turnController.setSetpoint(optimizedState.angle.getDegrees());
+
+        // Update the turn motor with the turn pid controller output.
+        this.turnOutput = this.turnController.calculate(this.turnEncoder.getAbsolutePosition());
+        this.turnOutput = MathUtil.clamp(turnOutput, -1, 1);
+        this.turnMotor.set(this.turnOutput);
     }
 
     /** Odometry (angle and speed) */
@@ -132,21 +153,14 @@ public class SwerveModule extends SubsystemBase {
         return new SwerveModulePosition(position, currentAngle);
     }
 
-    /** Periodically called by the subsystem. */
-    @Override
-    public void periodic() {
-        // Set the drive motor to target the desired speed.
-        this.driveMotor
-                .getPIDController()
-                .setReference(this.state.speedMetersPerSecond, ControlType.kVelocity);
+    /** Zeros the drive encoder */
+    public void resetEncoder() {
+        this.driveMotor.getEncoder().setPosition(0);
+    }
 
-        // Set the turn pid controller to target the desired angle.
-        this.turnController.setSetpoint(this.state.angle.getDegrees());
-
-        // Update the turn motor with the turn pid controller output.
-        this.turnOutput = this.turnController.calculate(this.turnEncoder.getAbsolutePosition());
-        this.turnOutput = MathUtil.clamp(turnOutput, -1, 1);
-        this.turnMotor.set(this.turnOutput);
+    public void stop() {
+        this.driveMotor.stopMotor();
+        this.turnMotor.stopMotor();
     }
 
     @Override

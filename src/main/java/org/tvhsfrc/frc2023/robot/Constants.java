@@ -5,6 +5,13 @@
 
 package org.tvhsfrc.frc2023.robot;
 
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -78,16 +85,16 @@ public final class Constants {
          *
          * <p>Should be measured from center to center.
          */
-        // public static final double DRIVETRAIN_TRACKWIDTH_METERS = Units.inchesToMeters(22.5);
-        public static final double DRIVETRAIN_TRACKWIDTH_METERS = 0.4445;
+        // public static final double TRACKWIDTH = Units.inchesToMeters(22.5);
+        public static final double TRACKWIDTH = 0.4445;
 
         /**
          * The front-to-back distance between the drivetrain wheels.
          *
          * <p>Should be measured from center to center.
          */
-        // public static final double DRIVETRAIN_WHEELBASE_METERS = Units.inchesToMeters(22.5);
-        public static final double DRIVETRAIN_WHEELBASE_METERS = 0.7239;
+        // public static final double WHEELBASE = Units.inchesToMeters(22.5);
+        public static final double WHEELBASE = 0.7239;
 
         /** The maximum velocity of the drivetrain in meters per second. */
         public static final double MAX_VELOCITY_METERS_PER_SECOND =
@@ -101,10 +108,34 @@ public final class Constants {
         // Here we calculate the theoretical maximum angular velocity. You can also
         // replace this with a measured amount.
         public static final double MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND =
-                MAX_VELOCITY_METERS_PER_SECOND
-                        / Math.hypot(
-                                DRIVETRAIN_TRACKWIDTH_METERS / 2.0,
-                                DRIVETRAIN_WHEELBASE_METERS / 2.0);
+                MAX_VELOCITY_METERS_PER_SECOND / Math.hypot(TRACKWIDTH / 2.0, WHEELBASE / 2.0);
+
+        /**
+         * The kinematics object for the swerve drive. This is used to convert a desired "chassis
+         * speed" into individual module speeds.
+         */
+        public static final SwerveDriveKinematics KINEMATICS =
+                new SwerveDriveKinematics(
+                        new Translation2d(TRACKWIDTH / 2, WHEELBASE / 2),
+                        new Translation2d(TRACKWIDTH / 2, -WHEELBASE / 2),
+                        new Translation2d(-TRACKWIDTH / 2, WHEELBASE / 2),
+                        new Translation2d(-TRACKWIDTH / 2, -WHEELBASE / 2));
+    }
+
+    /** Constants related to PhotoVision, the camera, and the raspberry pi. */
+    public static final class Vision {
+        /**
+         * Position and angle of the camera relative to the center of the bot
+         *
+         * <p>TODO: define bot axes
+         */
+        public static final Transform3d CAMERA_TRANSFORM =
+                new Transform3d(new Translation3d(), new Rotation3d());
+
+        /** The april tag layout to use */
+        public static final String FIELD_LAYOUT = AprilTagFields.k2023ChargedUp.m_resourceFile;
+
+        public static final String CAMERA_NAME = "camera";
     }
 
     /** SwerveModuleConstants contains constants unique to each swerve module. */
@@ -137,8 +168,6 @@ public final class Constants {
             this.name = name;
         }
     }
-
-    // TODO: Update offsets for this year's bot
 
     public static final SwerveModuleConstants FRONT_LEFT_SWERVE_MODULE =
             new SwerveModuleConstants(
@@ -180,5 +209,13 @@ public final class Constants {
          * limiting keeps it from exceeding the original rating by an excessive amount.
          */
         public static final double maxOutput = 0.6;
+    }
+
+    public static class Autonomous {
+        /** Maximum speed m/s */
+        public static final double MAX_SPEED = 0.25 * Swerve.MAX_VELOCITY_METERS_PER_SECOND;
+
+        /** Maximum acceleration m/s^s */
+        public static final double MAX_ACCELERATION = 2;
     }
 }
