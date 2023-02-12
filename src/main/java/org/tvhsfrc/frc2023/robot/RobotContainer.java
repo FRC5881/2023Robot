@@ -5,7 +5,6 @@
 
 package org.tvhsfrc.frc2023.robot;
 
-import edu.wpi.first.hal.simulation.RoboRioDataJNI;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -80,8 +79,6 @@ public class RobotContainer {
 
         driverController.a().toggleOnTrue(new VacuumToggleCommand(vacuumSubsystem));
         driverController.b().whileTrue(new HoldVacuumCommand(vacuumSubsystem));
-
-
     }
 
     /**
