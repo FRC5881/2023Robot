@@ -14,10 +14,12 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -45,7 +47,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
     /** Desired chassis speed. */
     private ChassisSpeeds chassisSpeeds;
 
-    /** Odometry produced from the swerve drive */
+    /** Odometry produced from the swerve drive and vision */
     private final SwerveDrivePoseEstimator poseEstimator;
 
     // ------
@@ -112,8 +114,6 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        ticks += 1;
-
         // Update using odometry
         poseEstimator.update(getRotation2d(), getModulePositions());
 
@@ -127,8 +127,6 @@ public class DriveTrainSubsystem extends SubsystemBase {
                                         measurement.timestampSeconds);
                             });
         }
-
-        updateShuffleboard();
     }
 
     private void _zeroHeading() {
@@ -160,7 +158,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
 
         // Kinematics
         SwerveModuleState[] moduleStates =
-                Constants.Swerve.KINEMATICS.toSwerveModuleStates(this.chassisSpeeds);
+                Constants.Swerve.KINEMATICS.toSwerveModuleStates(chassisSpeeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(
                 moduleStates, Constants.Swerve.MAX_VELOCITY_METERS_PER_SECOND);
 
@@ -203,7 +201,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
      *
      * <p>This is most helpful for initializing autonmous commands.
      */
-    public void setPose(Pose2d pose) {
+    private void _setPose(Pose2d pose) {
         resetModules();
         poseEstimator.resetPosition(getRotation2d(), getModulePositions(), pose);
     }
@@ -218,9 +216,10 @@ public class DriveTrainSubsystem extends SubsystemBase {
         return photonPoseEstimator.update();
     }
 
-    // public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d prevEstimatedRobotPose) {
-    //     photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
-    //     return photonPoseEstimator.update();
+    // public Optional<EstimatedRobotPose> getEstimatedGlobalPose(Pose2d
+    // prevEstimatedRobotPose) {
+    // photonPoseEstimator.setReferencePose(prevEstimatedRobotPose);
+    // return photonPoseEstimator.update();
     // }
 
     /// ----------------
@@ -235,17 +234,17 @@ public class DriveTrainSubsystem extends SubsystemBase {
      * @param path A trajectory created by PathPlanner
      * @param isFirstPath Initialize odometry for the first path during auto
      */
-    public Command followTrajectory(PathPlannerTrajectory path, boolean isFirstPath) {
+    public CommandBase followTrajectory(PathPlannerTrajectory path, boolean isFirstPath) {
         // TODO: Tune these pid controllers
         PIDController xController = new PIDController(0, 0, 0);
         PIDController yController = new PIDController(0, 0, 0);
         PIDController thetaController = new PIDController(0, 0, 0);
 
         return Commands.sequence(
-                this.runOnce(
+                runOnce(
                         () -> {
                             if (isFirstPath) {
-                                this.setPose(path.getInitialHolonomicPose());
+                                _setPose(path.getInitialHolonomicPose());
                             }
                         }),
                 new PPSwerveControllerCommand(
@@ -268,8 +267,13 @@ public class DriveTrainSubsystem extends SubsystemBase {
         return new InstantCommand(this::_zeroHeading, this);
     }
 
-    public Command calibrate() {
-        if (!this.navx.isCalibrating()) {
+    /**
+     * Creates a command to calibrates the navx
+     *
+     * <p>If the navx is already calibrating, this command will do nothing.
+     */
+    public CommandBase calibrate() {
+        if (!navx.isCalibrating()) {
             return new InstantCommand(this::_calibrate, this);
         } else {
             return Commands.none();
@@ -281,8 +285,21 @@ public class DriveTrainSubsystem extends SubsystemBase {
      *
      * <p>Creates a command that balances the robot on the charging station
      */
-    public Command balance() {
+    public CommandBase balance() {
         return Commands.none();
+    }
+
+    /**
+     * This command will update PID values from Shuffleboard. This comamnd will almost certianly
+     * cause a loop-overrun
+     */
+    private CommandBase updatePID() {
+        return new InstantCommand(this::_updatePID, this);
+    }
+
+    /** This command will update set the robot's pose estimate to the given pose. */
+    public InstantCommand setPose(Pose2d pose) {
+        return new InstantCommand(() -> _setPose(pose), this);
     }
 
     /// ------------
@@ -317,45 +334,55 @@ public class DriveTrainSubsystem extends SubsystemBase {
     private final GenericEntry turnKd =
             tab.addPersistent("Turn kD", 0).withWidget(BuiltInWidgets.kTextView).getEntry("double");
 
-    private int ticks = 0;
-
     private void initShuffleboard() {
+        // Gyro
+        // TODO: The navx has a lot more useful data, but only the yaw is currently displayed
         tab.add(navx);
 
-        tab.add(frontLeftModule);
-        tab.add(frontRightModule);
-        tab.add(backLeftModule);
-        tab.add(backRightModule);
+        // Module widgets
+        final int moduleWidth = 2;
+        final int moduleHeight = 2;
+        tab.add(backLeftModule).withSize(moduleWidth, moduleHeight).withPosition(0, 0);
+        tab.add(backRightModule).withSize(moduleWidth, moduleHeight).withPosition(moduleWidth, 0);
+        tab.add(frontLeftModule).withSize(moduleWidth, moduleHeight).withPosition(0, moduleHeight);
+        tab.add(frontRightModule)
+                .withSize(moduleWidth, moduleHeight)
+                .withPosition(moduleWidth, moduleHeight);
+
+        // Command list
+        ShuffleboardLayout commands = tab.getLayout("Commands", BuiltInLayouts.kList);
+        commands.add(calibrate());
+        commands.add(updatePID());
+        commands.add(stop());
+        commands.add(zeroHeading());
+        commands.add("Reset Pose", setPose(new Pose2d()));
+
+        // TODO: Use a Field2d widget
+        tab.add("Pose Estimator", poseEstimator);
+        tab.add("Vision Pose Estimator", photonPoseEstimator);
+        tab.add("Use Vision", useVision).withWidget(BuiltInWidgets.kBooleanBox);
+
+        // Current targetted chassis speeds
+        tab.add("Chassis Speed", chassisSpeeds).withWidget(BuiltInWidgets.kNumberBar);
     }
 
     // Send and receive values from shuffleboard.
-    private void updateShuffleboard() {
-        if (ticks % 40 == 0) {
-            frontLeftModule.setDrivePID(
-                    driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
-            frontLeftModule.setTurnPID(
-                    turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
-        }
-
-        if (ticks % 40 == 10) {
-            frontRightModule.setDrivePID(
-                    driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
-            frontRightModule.setTurnPID(
-                    turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
-        }
-
-        if (ticks % 40 == 20) {
-            backLeftModule.setDrivePID(
-                    driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
-            backLeftModule.setTurnPID(
-                    turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
-        }
-
-        if (ticks % 40 == 30) {
-            backRightModule.setDrivePID(
-                    driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
-            backRightModule.setTurnPID(
-                    turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
-        }
+    private void _updatePID() {
+        frontLeftModule.setDrivePID(
+                driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+        frontLeftModule.setTurnPID(
+                turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
+        frontRightModule.setDrivePID(
+                driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+        frontRightModule.setTurnPID(
+                turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
+        backLeftModule.setDrivePID(
+                driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+        backLeftModule.setTurnPID(
+                turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
+        backRightModule.setDrivePID(
+                driveKp.getDouble(0.0), driveKi.getDouble(0.0), driveKd.getDouble(0.0));
+        backRightModule.setTurnPID(
+                turnKp.getDouble(0.0), turnKi.getDouble(0.0), turnKd.getDouble(0.0));
     }
 }

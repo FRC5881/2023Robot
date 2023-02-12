@@ -56,41 +56,40 @@ public class SwerveModule extends SubsystemBase {
         setName(moduleConfig.name);
 
         // Drive motor configuration
-        this.driveMotor =
+        driveMotor =
                 new CANSparkMax(moduleConfig.driveMotorCANID, CANSparkMax.MotorType.kBrushless);
-        this.driveMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
-        this.driveMotor.setSmartCurrentLimit(Constants.Swerve.DRIVE_CURRENT_LIMIT);
-        this.driveMotor
+        driveMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
+        driveMotor.setSmartCurrentLimit(Constants.Swerve.DRIVE_CURRENT_LIMIT);
+        driveMotor
                 .getEncoder()
                 .setPositionConversionFactor(Constants.Swerve.DRIVE_CONVERSION_FACTOR);
-        this.driveMotor
+        driveMotor
                 .getEncoder()
                 .setVelocityConversionFactor(Constants.Swerve.DRIVE_CONVERSION_FACTOR);
 
         // Turn motor configuration
-        this.turnMotor =
-                new CANSparkMax(moduleConfig.turnMotorCANID, CANSparkMax.MotorType.kBrushless);
-        this.turnMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
-        this.turnMotor.setSmartCurrentLimit(Constants.Swerve.TURN_CURRENT_LIMIT);
+        turnMotor = new CANSparkMax(moduleConfig.turnMotorCANID, CANSparkMax.MotorType.kBrushless);
+        turnMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
+        turnMotor.setSmartCurrentLimit(Constants.Swerve.TURN_CURRENT_LIMIT);
 
         // Turn encoder configuration.
-        this.turnEncoder = new CANCoder(moduleConfig.turnEncoderCANID);
+        turnEncoder = new CANCoder(moduleConfig.turnEncoderCANID);
         CANCoderConfiguration encoderConfig = new CANCoderConfiguration();
         encoderConfig.absoluteSensorRange = AbsoluteSensorRange.Unsigned_0_to_360;
         encoderConfig.magnetOffsetDegrees = moduleConfig.turnEncoderOffset;
         encoderConfig.sensorDirection = true; // clockwise -> positive
         encoderConfig.initializationStrategy = SensorInitializationStrategy.BootToAbsolutePosition;
 
-        ErrorCode error = this.turnEncoder.configAllSettings(encoderConfig);
+        ErrorCode error = turnEncoder.configAllSettings(encoderConfig);
         if (error != ErrorCode.OK) {
             System.out.println(
                     "Error configuring CANCoder " + moduleConfig.turnEncoderCANID + ":" + error);
         }
 
         // Turn PID controller configuration
-        this.turnController.enableContinuousInput(0, 360);
-        this.turnController.setSetpoint(0); // initially target 0 degrees
-        this.turnController.setTolerance(0.25);
+        turnController.enableContinuousInput(0, 360);
+        turnController.setSetpoint(0); // initially target 0 degrees
+        turnController.setTolerance(0.25);
 
         resetEncoder();
     }
@@ -114,30 +113,30 @@ public class SwerveModule extends SubsystemBase {
         //
         // For example, if the angle is currently 180 degrees and the desired angle is
         // -180 degrees, we can flip the drive direction and set the angle to 0 degrees.
-        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getPosition());
+        Rotation2d currentAngle = Rotation2d.fromDegrees(turnEncoder.getPosition());
         SwerveModuleState optimizedState = SwerveModuleState.optimize(state, currentAngle);
 
         // Set the drive motor to target the desired speed.
-        this.driveMotor
+        driveMotor
                 .getPIDController()
                 .setReference(optimizedState.speedMetersPerSecond, ControlType.kVelocity);
 
         // Set the turn pid controller to target the desired angle.
-        this.turnController.setSetpoint(optimizedState.angle.getDegrees());
+        turnController.setSetpoint(optimizedState.angle.getDegrees());
 
         // Update the turn motor with the turn pid controller output.
-        this.turnOutput = this.turnController.calculate(this.turnEncoder.getAbsolutePosition());
-        this.turnOutput = MathUtil.clamp(turnOutput, -1, 1);
-        this.turnMotor.set(this.turnOutput);
+        turnOutput = turnController.calculate(turnEncoder.getAbsolutePosition());
+        turnOutput = MathUtil.clamp(turnOutput, -1, 1);
+        turnMotor.set(turnOutput);
     }
 
     /** Odometry (angle and speed) */
     public SwerveModuleState getState() {
         // Get the current angle from the turn encoder.
-        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getAbsolutePosition());
+        Rotation2d currentAngle = Rotation2d.fromDegrees(turnEncoder.getAbsolutePosition());
 
         // Get the current speed from the drive encoder.
-        double currentSpeed = this.driveMotor.getAbsoluteEncoder(Type.kDutyCycle).getVelocity();
+        double currentSpeed = driveMotor.getAbsoluteEncoder(Type.kDutyCycle).getVelocity();
 
         return new SwerveModuleState(currentSpeed, currentAngle);
     }
@@ -145,22 +144,22 @@ public class SwerveModule extends SubsystemBase {
     /** Odometry (angle and distance) */
     public SwerveModulePosition getPosition() {
         // Get the current angle from the turn encoder.
-        Rotation2d currentAngle = Rotation2d.fromDegrees(this.turnEncoder.getAbsolutePosition());
+        Rotation2d currentAngle = Rotation2d.fromDegrees(turnEncoder.getAbsolutePosition());
 
         // Get the distance traveled from the drive encoder.
-        double position = this.driveMotor.getEncoder().getPosition();
+        double position = driveMotor.getEncoder().getPosition();
 
         return new SwerveModulePosition(position, currentAngle);
     }
 
     /** Zeros the drive encoder */
     public void resetEncoder() {
-        this.driveMotor.getEncoder().setPosition(0);
+        driveMotor.getEncoder().setPosition(0);
     }
 
     public void stop() {
-        this.driveMotor.stopMotor();
-        this.turnMotor.stopMotor();
+        driveMotor.stopMotor();
+        turnMotor.stopMotor();
     }
 
     @Override
@@ -168,36 +167,35 @@ public class SwerveModule extends SubsystemBase {
         builder.setSmartDashboardType(getName());
 
         // measured speed
-        builder.addDoubleProperty(
-                "Drive speed (mps)", this.driveMotor.getEncoder()::getVelocity, null);
+        builder.addDoubleProperty("Drive speed (mps)", driveMotor.getEncoder()::getVelocity, null);
 
         builder.addDoubleProperty(
-                "Turn Absolute Position (degrees)", this.turnEncoder::getAbsolutePosition, null);
+                "Turn Absolute Position (degrees)", turnEncoder::getAbsolutePosition, null);
 
         builder.addDoubleProperty(
                 "Turn PID output",
                 () -> {
-                    return this.turnOutput;
+                    return turnOutput;
                 },
                 null);
 
-        builder.addDoubleProperty("Drive applied output", this.driveMotor::getAppliedOutput, null);
+        builder.addDoubleProperty("Drive applied output", driveMotor::getAppliedOutput, null);
 
         // setpoints
         builder.addDoubleProperty(
                 "Drive setpoint (mps)",
                 () -> {
-                    return this.state.speedMetersPerSecond;
+                    return state.speedMetersPerSecond;
                 },
                 (speed) -> {
-                    this.state.speedMetersPerSecond = speed;
+                    state.speedMetersPerSecond = speed;
                 });
 
         builder.addDoubleProperty(
                 "Turn setpoint (degrees)",
-                this.state.angle::getDegrees,
+                state.angle::getDegrees,
                 (angle) -> {
-                    this.state.angle = Rotation2d.fromDegrees(angle);
+                    state.angle = Rotation2d.fromDegrees(angle);
                 });
     }
 
@@ -208,14 +206,14 @@ public class SwerveModule extends SubsystemBase {
      */
     public void setDriveP(double kP) {
         // Only make the change if the value is different.
-        if (kP == this.driveMotor.getPIDController().getP()) {
+        if (kP == driveMotor.getPIDController().getP()) {
             return;
         }
 
-        REVLibError error = this.driveMotor.getPIDController().setP(kP);
+        REVLibError error = driveMotor.getPIDController().setP(kP);
         if (error != REVLibError.kOk) {
             System.out.println(
-                    "Error setting drive motor " + this.driveMotor.getDeviceId() + " kP:" + error);
+                    "Error setting drive motor " + driveMotor.getDeviceId() + " kP:" + error);
         }
     }
 
@@ -226,14 +224,14 @@ public class SwerveModule extends SubsystemBase {
      */
     public void setDriveI(double kI) {
         // Only make the change if the value is different.
-        if (kI == this.driveMotor.getPIDController().getI()) {
+        if (kI == driveMotor.getPIDController().getI()) {
             return;
         }
 
-        REVLibError error = this.driveMotor.getPIDController().setI(kI);
+        REVLibError error = driveMotor.getPIDController().setI(kI);
         if (error != REVLibError.kOk) {
             System.out.println(
-                    "Error setting drive motor " + this.driveMotor.getDeviceId() + " kI:" + error);
+                    "Error setting drive motor " + driveMotor.getDeviceId() + " kI:" + error);
         }
     }
 
@@ -244,14 +242,14 @@ public class SwerveModule extends SubsystemBase {
      */
     public void setDriveD(double kD) {
         // Only make the change if the value is different.
-        if (kD == this.driveMotor.getPIDController().getD()) {
+        if (kD == driveMotor.getPIDController().getD()) {
             return;
         }
 
-        REVLibError error = this.driveMotor.getPIDController().setD(kD);
+        REVLibError error = driveMotor.getPIDController().setD(kD);
         if (error != REVLibError.kOk) {
             System.out.println(
-                    "Error setting drive motor " + this.driveMotor.getDeviceId() + " kD:" + error);
+                    "Error setting drive motor " + driveMotor.getDeviceId() + " kD:" + error);
         }
     }
 
@@ -263,24 +261,24 @@ public class SwerveModule extends SubsystemBase {
      * @param kD
      */
     public void setDrivePID(double kP, double kI, double kD) {
-        this.setDriveP(kP);
-        this.setDriveI(kI);
-        this.setDriveD(kD);
+        setDriveP(kP);
+        setDriveI(kI);
+        setDriveD(kD);
     }
 
     /** Set turn motor P constant. */
     public void setTurnP(double kP) {
-        this.turnController.setP(kP);
+        turnController.setP(kP);
     }
 
     /** Set turn motor I constant. */
     public void setTurnI(double kI) {
-        this.turnController.setI(kI);
+        turnController.setI(kI);
     }
 
     /** Set turn motor D constant. */
     public void setTurnD(double kD) {
-        this.turnController.setD(kD);
+        turnController.setD(kD);
     }
 
     /**
@@ -291,8 +289,8 @@ public class SwerveModule extends SubsystemBase {
      * @param kD
      */
     public void setTurnPID(double kP, double kI, double kD) {
-        this.setTurnP(kP);
-        this.setTurnI(kI);
-        this.setTurnD(kD);
+        setTurnP(kP);
+        setTurnI(kI);
+        setTurnD(kD);
     }
 }

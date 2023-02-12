@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.util.Units;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -81,20 +82,22 @@ public final class Constants {
                 (WHEEL_DIAMETER * Math.PI) * DRIVE_REDUCTION_FACTOR / 60;
 
         /**
-         * The left-to-right distance between the drivetrain wheels
+         * The left-to-right distance between the drivetrain wheels in meters
          *
          * <p>Should be measured from center to center.
+         *
+         * <p>TODO: This is for the practice bot. The competition bot is 22.5 inches;
          */
-        // public static final double TRACKWIDTH = Units.inchesToMeters(22.5);
-        public static final double TRACKWIDTH = 0.4445;
+        public static final double TRACKWIDTH = Units.inchesToMeters(17.5);
 
         /**
-         * The front-to-back distance between the drivetrain wheels.
+         * The front-to-back distance between the drivetrain wheels in meters
          *
          * <p>Should be measured from center to center.
+         *
+         * <p>TODO: This is for the practice bot. The competition bot is 22.5 inches;
          */
-        // public static final double WHEELBASE = Units.inchesToMeters(22.5);
-        public static final double WHEELBASE = 0.7239;
+        public static final double WHEELBASE = Units.inchesToMeters(28.5);
 
         /** The maximum velocity of the drivetrain in meters per second. */
         public static final double MAX_VELOCITY_METERS_PER_SECOND =
@@ -135,7 +138,7 @@ public final class Constants {
         /** The april tag layout to use */
         public static final String FIELD_LAYOUT = AprilTagFields.k2023ChargedUp.m_resourceFile;
 
-        public static final String CAMERA_NAME = "camera";
+        public static final String CAMERA_NAME = "photonvision";
     }
 
     /** SwerveModuleConstants contains constants unique to each swerve module. */
@@ -204,6 +207,7 @@ public final class Constants {
     public static class VacuumConstants {
         /** This is the target velocity in RPM. */
         public static final double VacuumVelocity = 6000;
+
         /**
          * Original motor was rated for 5500 RPM. Our motor is rated for ~11000 RPM. 0.6 current
          * limiting keeps it from exceeding the original rating by an excessive amount.
@@ -212,6 +216,8 @@ public final class Constants {
     }
 
     public static class Autonomous {
+        // TODO: Tune these values and add more as needed
+
         /** Maximum speed m/s */
         public static final double MAX_SPEED = 0.25 * Swerve.MAX_VELOCITY_METERS_PER_SECOND;
 
