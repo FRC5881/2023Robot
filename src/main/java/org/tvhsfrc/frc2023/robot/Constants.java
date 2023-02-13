@@ -5,6 +5,8 @@
 
 package org.tvhsfrc.frc2023.robot;
 
+import edu.wpi.first.math.util.Units;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -39,6 +41,15 @@ public final class Constants {
 
         public static final int BACK_RIGHT_MODULE_DRIVE_MOTOR = 16;
         public static final int BACK_RIGHT_MODULE_STEER_MOTOR = 17;
+    }
+
+    public static final class Arm {
+
+        /** Length of the first stage of the arm in meters */
+        public static final double STAGE_1_LENGTH = Units.inchesToMeters(38.136);
+
+        /** Length of the second stage of the arm in meters */
+        public static final double STAGE_2_LENGTH = Units.inchesToMeters(35);
     }
 
     public static final class Swerve {
