@@ -32,8 +32,8 @@ public class ArmSubsystem extends SubsystemBase {
         return new Pair<>(Rotation2d.fromRadians(alpha), Rotation2d.fromRadians(beta));
     }
 
-    //Take a and delta, return x and y
-    private static Translation2d kinematics(Rotation2d alpha, Rotation2d beta) {
+    //Take a and delta, return x and y as a Double Pair.
+    private static Pair<Double, Double> kinematics(Rotation2d alpha, Rotation2d beta) {
 
         double delta = alpha.getRadians() + beta.getRadians() - 0.5*Math.PI;
 
@@ -41,8 +41,7 @@ public class ArmSubsystem extends SubsystemBase {
         double y_arm = (STAGE_1_LENGTH * alpha.getSin() + STAGE_2_LENGTH * beta.getSin());
 
 
-
-        return null;
+        return new Pair<>(x_arm, y_arm);
     }
 
     public void setTargetPos(Pose2d targetPos) {
