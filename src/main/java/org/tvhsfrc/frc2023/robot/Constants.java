@@ -29,11 +29,9 @@ public final class Constants {
     /** Identifiers for all of the CAN devices on the robot. */
     public static class CANConstants {
         public static final int FRONT_RIGHT_MODULE_STEER_ENCODER = 1;
-
         public static final int FRONT_LEFT_MODULE_STEER_ENCODER = 2;
 
         public static final int BACK_LEFT_MODULE_STEER_ENCODER = 3;
-
         public static final int BACK_RIGHT_MODULE_STEER_ENCODER = 4;
 
         public static final int FRONT_RIGHT_MODULE_DRIVE_MOTOR = 10;
@@ -47,9 +45,14 @@ public final class Constants {
 
         public static final int BACK_RIGHT_MODULE_DRIVE_MOTOR = 16;
         public static final int BACK_RIGHT_MODULE_STEER_MOTOR = 17;
-        public static final int VACUUM_ONE = 18;
-        public static final int VACUUM_TWO = 19;
-        public static final int VACUUM_THREE = 20;
+
+        public static final int VACUUM_ONE = 20;
+        public static final int VACUUM_TWO = 21;
+        public static final int VACUUM_THREE = 22;
+
+        public static final int ARM_STAGE_ONE = 31;
+        public static final int ARM_STAGE_TWO = 32;
+        public static final int ARM_STAGE_THREE = 33;
     }
 
     public static final class Arm {
@@ -58,7 +61,10 @@ public final class Constants {
 
         /** Length of the second stage of the arm in meters */
         public static final double STAGE_2_LENGTH = Units.inchesToMeters(35);
+
     }
+
+
 
     public static final class Swerve {
         /** Current limit to protect swerve module turn motors. */
@@ -183,7 +189,7 @@ public final class Constants {
     public static final SwerveModuleConstants FRONT_LEFT_SWERVE_MODULE =
             new SwerveModuleConstants(
                     CANConstants.FRONT_LEFT_MODULE_STEER_MOTOR,
-                    CANConstants.FRONT_LEFT_MODULE_DRIVE_MOTOR,
+                    Constants.CANConstants.FRONT_LEFT_MODULE_DRIVE_MOTOR,
                     CANConstants.FRONT_LEFT_MODULE_STEER_ENCODER,
                     138.86,
                     "Front Left Swerve");
