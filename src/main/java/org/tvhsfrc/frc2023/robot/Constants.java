@@ -135,7 +135,7 @@ public final class Constants {
         public static final Transform3d CAMERA_TRANSFORM =
                 new Transform3d(new Translation3d(), new Rotation3d());
 
-        /** The april tag layout to use */
+        /** The offical april tag layout this */
         public static final String FIELD_LAYOUT = AprilTagFields.k2023ChargedUp.m_resourceFile;
 
         public static final String CAMERA_NAME = "photonvision";
@@ -219,9 +219,9 @@ public final class Constants {
         // TODO: Tune these values and add more as needed
 
         /** Maximum speed m/s */
-        public static final double MAX_SPEED = 0.25 * Swerve.MAX_VELOCITY_METERS_PER_SECOND;
+        public static final double MAX_SPEED = 0.125 * Swerve.MAX_VELOCITY_METERS_PER_SECOND;
 
         /** Maximum acceleration m/s^s */
-        public static final double MAX_ACCELERATION = 2;
+        public static final double MAX_ACCELERATION = 1;
     }
 }

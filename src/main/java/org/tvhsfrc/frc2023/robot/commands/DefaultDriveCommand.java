@@ -1,6 +1,5 @@
 package org.tvhsfrc.frc2023.robot.commands;
 
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import java.util.function.DoubleSupplier;
 import org.tvhsfrc.frc2023.robot.subsystems.DriveTrainSubsystem;
@@ -29,17 +28,15 @@ public class DefaultDriveCommand extends CommandBase {
     public void execute() {
         // You can use `new ChassisSpeeds(...)` for robot-oriented movement instead of
         // field-oriented movement
-        drivetrainSubsystem.drive(
-                ChassisSpeeds.fromFieldRelativeSpeeds(
-                        xSpeedSupplier.getAsDouble(),
-                        ySpeedSupplier.getAsDouble(),
-                        rotationSupplier.getAsDouble(),
-                        drivetrainSubsystem.getRotation2d()));
+        drivetrainSubsystem.orientedDrive(
+                xSpeedSupplier.getAsDouble(),
+                ySpeedSupplier.getAsDouble(),
+                rotationSupplier.getAsDouble());
     }
 
     @Override
     public void end(boolean interrupted) {
-        drivetrainSubsystem._stop();
+        drivetrainSubsystem.stop();
     }
 
     @Override

@@ -28,7 +28,11 @@ public final class Autos {
         if (path == null) {
             return Optional.empty();
         } else {
-            return Optional.of(driveTrainSubsystem.followTrajectory(path, true));
+            return Optional.of(
+                    Commands.sequence(
+                            driveTrainSubsystem.cSetPose(path.getInitialState().poseMeters),
+                            driveTrainSubsystem.cFollowTrajectory(path),
+                            driveTrainSubsystem.cStop()));
         }
     }
 

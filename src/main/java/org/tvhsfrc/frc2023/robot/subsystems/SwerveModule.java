@@ -14,8 +14,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.Constants.SwerveModuleConstants;
 
@@ -25,7 +25,7 @@ import org.tvhsfrc.frc2023.robot.Constants.SwerveModuleConstants;
  * <p>This class is responsible for controlling individual swerve modules by passing in wpilib
  * SwerveModuleState objects.
  */
-public class SwerveModule extends SubsystemBase {
+public class SwerveModule implements Sendable {
     // Two RevNeo motors per module.
     private final CANSparkMax driveMotor;
     private final CANSparkMax turnMotor;
@@ -45,7 +45,7 @@ public class SwerveModule extends SubsystemBase {
     private double turnOutput;
 
     // Previous targeted state
-    private SwerveModuleState state;
+    private SwerveModuleState state = new SwerveModuleState();
 
     /**
      * Creates a new SwerveModule.
@@ -53,8 +53,6 @@ public class SwerveModule extends SubsystemBase {
      * <p>After constructing a SwerveModule you should call setDrivePID and setTurnPID
      */
     public SwerveModule(SwerveModuleConstants moduleConfig) {
-        setName(moduleConfig.name);
-
         // Drive motor configuration
         driveMotor =
                 new CANSparkMax(moduleConfig.driveMotorCANID, CANSparkMax.MotorType.kBrushless);
@@ -164,7 +162,7 @@ public class SwerveModule extends SubsystemBase {
 
     @Override
     public void initSendable(SendableBuilder builder) {
-        builder.setSmartDashboardType(getName());
+        builder.setSmartDashboardType("Swerve Module");
 
         // measured speed
         builder.addDoubleProperty("Drive speed (mps)", driveMotor.getEncoder()::getVelocity, null);

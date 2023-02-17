@@ -7,17 +7,13 @@ package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
 import org.tvhsfrc.frc2023.robot.commands.Autos;
 import org.tvhsfrc.frc2023.robot.commands.DefaultDriveCommand;
-import org.tvhsfrc.frc2023.robot.commands.HoldVacuumCommand;
-import org.tvhsfrc.frc2023.robot.commands.VacuumToggleCommand;
 import org.tvhsfrc.frc2023.robot.subsystems.DriveTrainSubsystem;
-import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -27,8 +23,8 @@ import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
  */
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
-    private final DriveTrainSubsystem driveTrainSubsystem = new DriveTrainSubsystem();
-    private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem();
+    public final DriveTrainSubsystem driveTrainSubsystem = new DriveTrainSubsystem();
+    // private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem();
 
     // Driver controller
     private final CommandXboxController driverController =
@@ -56,7 +52,7 @@ public class RobotContainer {
 
         DoubleSupplier vx =
                 () ->
-                        -modifyAxis(driverController.getLeftY())
+                        modifyAxis(driverController.getLeftY())
                                 * Constants.Swerve.MAX_VELOCITY_METERS_PER_SECOND;
         DoubleSupplier vy =
                 () ->
@@ -71,14 +67,12 @@ public class RobotContainer {
                 new DefaultDriveCommand(driveTrainSubsystem, vx, vy, angle));
 
         // Resets the field heading
-        driverController
-                .x()
-                .onTrue(Commands.runOnce(driveTrainSubsystem::zeroHeading, driveTrainSubsystem));
+        driverController.x().onTrue(driveTrainSubsystem.cZeroHeading());
 
-        userButton.onTrue(driveTrainSubsystem.calibrate());
+        userButton.onTrue(driveTrainSubsystem.cCalibrateGyro());
 
-        driverController.a().toggleOnTrue(new VacuumToggleCommand(vacuumSubsystem));
-        driverController.b().whileTrue(new HoldVacuumCommand(vacuumSubsystem));
+        // driverController.a().toggleOnTrue(new VacuumToggleCommand(vacuumSubsystem));
+        // driverController.b().whileTrue(new HoldVacuumCommand(vacuumSubsystem));
     }
 
     /**
@@ -87,7 +81,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return Autos.doNothing();
+        return Autos.loadPath("test", driveTrainSubsystem).get();
     }
 
     private static double deadband(double value, double deadband) {
