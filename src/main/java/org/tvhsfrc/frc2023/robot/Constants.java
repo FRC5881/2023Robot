@@ -62,9 +62,28 @@ public final class Constants {
         /** Length of the second stage of the arm in meters */
         public static final double STAGE_2_LENGTH = Units.inchesToMeters(35);
 
+        /** 1 degree of rotation is currently 1/6 motor revolution */
+        private static final int LIMIT_DEGREE_STAGE_1 = 60;
+
+        private static final int GEARBOX_RATIO_STAGE_1 = 3 * 4 * 5;
+        public static final int STAGE_1_LIMIT =
+                (GEARBOX_RATIO_STAGE_1 / 360) * LIMIT_DEGREE_STAGE_1;
+
+        /** 1 degree of rotation is currently 5/24 motor revolution */
+        private static final int LIMIT_DEGREE_STAGE_2 = 180;
+
+        private static final int GEARBOX_RATIO_STAGE_2 = 3 * 5 * 5;
+        public static final int STAGE_2_LIMIT =
+                (GEARBOX_RATIO_STAGE_2 / 360) * LIMIT_DEGREE_STAGE_2;
+
+        /** 1 degree of rotation is currently 2/15 motor revolution */
+        private static final int LIMIT_DEGREE_STAGE_3 =
+                60; // TODO Find out the exact degree range. 60 probably isn't it
+
+        private static final int GEARBOX_RATIO_STAGE_3 = 3 * 4 * 4;
+        public static final int STAGE_3_LIMIT =
+                (GEARBOX_RATIO_STAGE_3 / 360) * LIMIT_DEGREE_STAGE_3;
     }
-
-
 
     public static final class Swerve {
         /** Current limit to protect swerve module turn motors. */
