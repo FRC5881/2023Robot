@@ -42,7 +42,7 @@ public class ArmSubsystem extends SubsystemBase {
         stage1.setClosedLoopRampRate(1);
         stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
-        stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, STAGE_1_LIMIT);
+        stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float)STAGE_1_LIMIT);
         stage1.getPIDController()
                 .setOutputRange(0, stage1.getSoftLimit(CANSparkMax.SoftLimitDirection.kReverse));
 
@@ -54,7 +54,7 @@ public class ArmSubsystem extends SubsystemBase {
         stage2.setClosedLoopRampRate(1);
         stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
-        stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, STAGE_2_LIMIT);
+        stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float)STAGE_2_LIMIT);
         stage2.getPIDController()
                 .setOutputRange(0, stage2.getSoftLimit(CANSparkMax.SoftLimitDirection.kForward));
 
@@ -66,7 +66,7 @@ public class ArmSubsystem extends SubsystemBase {
         stage3.setClosedLoopRampRate(1);
         stage3.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
-        stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, STAGE_3_LIMIT);
+        stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float)STAGE_3_LIMIT);
         stage3.getPIDController()
                 .setOutputRange(0, stage3.getSoftLimit(CANSparkMax.SoftLimitDirection.kForward));
     }
@@ -162,6 +162,18 @@ public class ArmSubsystem extends SubsystemBase {
         this.targetPose = pose;
     }
 
+    public void setStage1(double angle){
+        stage1.getPIDController().setReference(angle * (GEARBOX_RATIO_STAGE_1 / 360d), CANSparkMax.ControlType.kPosition);
+    }
+
+    public void setStage2(double angle){
+        stage1.getPIDController().setReference(angle * (GEARBOX_RATIO_STAGE_2 / 360d), CANSparkMax.ControlType.kPosition);
+    }
+
+    public void setStage3(double angle){
+        stage1.getPIDController().setReference(angle * (GEARBOX_RATIO_STAGE_3 / 360d), CANSparkMax.ControlType.kPosition);
+    }
+
     @Override
     public void periodic() {
         // Do the math
@@ -199,9 +211,5 @@ public class ArmSubsystem extends SubsystemBase {
         double y_arm = (STAGE_1_LENGTH * alpha.getSin() + STAGE_2_LENGTH * beta.getSin());
 
         return new Pair<>(x_arm, y_arm);
-    }
-
-    public void setTargetPos(Pose2d targetPose) {
-        this.targetPose = targetPose;
     }
 }

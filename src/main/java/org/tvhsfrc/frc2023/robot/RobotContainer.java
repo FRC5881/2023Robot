@@ -16,6 +16,7 @@ import org.tvhsfrc.frc2023.robot.commands.Autos;
 import org.tvhsfrc.frc2023.robot.commands.DefaultDriveCommand;
 import org.tvhsfrc.frc2023.robot.commands.HoldVacuumCommand;
 import org.tvhsfrc.frc2023.robot.commands.VacuumToggleCommand;
+import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.DriveTrainSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
 
@@ -29,6 +30,7 @@ public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final DriveTrainSubsystem driveTrainSubsystem = new DriveTrainSubsystem();
     private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem();
+    private final ArmSubsystem armSubsystem = new ArmSubsystem();
 
     // Driver controller
     private final CommandXboxController driverController =
