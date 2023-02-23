@@ -365,7 +365,7 @@ public class DriveTrainSubsystem extends SubsystemBase {
         tab.add("Vision Pose Estimator", photonPoseEstimator);
         tab.add("Use Vision", useVision).withWidget(BuiltInWidgets.kBooleanBox);
 
-        // Current targetted chassis speeds
+        // Current targeted chassis speeds
         tab.add("Chassis Speed", chassisSpeeds).withWidget(BuiltInWidgets.kNumberBar);
     }
 

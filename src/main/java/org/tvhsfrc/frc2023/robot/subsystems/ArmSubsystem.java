@@ -155,30 +155,6 @@ public class ArmSubsystem extends SubsystemBase {
                     stage3.getPIDController().setI(stage3Ki.getDouble(0));
                     stage3.getPIDController().setD(stage3Kd.getDouble(0));
                 });
-        // TODO: This statement needs to be fixed.
-    }
-
-    public void setTargetPose(Pose2d pose) {
-        this.targetPose = pose;
-    }
-
-    public void setStage1(double angle){
-        stage1.getPIDController().setReference(angle * (GEARBOX_RATIO_STAGE_1 / 360d), CANSparkMax.ControlType.kPosition);
-    }
-
-    public void setStage2(double angle){
-        stage1.getPIDController().setReference(angle * (GEARBOX_RATIO_STAGE_2 / 360d), CANSparkMax.ControlType.kPosition);
-    }
-
-    public void setStage3(double angle){
-        stage1.getPIDController().setReference(angle * (GEARBOX_RATIO_STAGE_3 / 360d), CANSparkMax.ControlType.kPosition);
-    }
-
-    @Override
-    public void periodic() {
-        // Do the math
-
-        // Drive motors
     }
 
     /**
@@ -193,6 +169,13 @@ public class ArmSubsystem extends SubsystemBase {
         return Math.acos((a * a + b * b - c) / (2 * a * b));
     }
 
+    /**
+     * This uses the lawOfCosines to find theta and beta.
+     * With theta, we find alpha
+     *
+     * @param translation
+     * @return This returns alpha and beta
+     */
     private static Pair<Rotation2d, Rotation2d> inverseKinematics(Translation2d translation) {
         double theta = lawOfCosines(STAGE_1_LENGTH, translation.getNorm(), STAGE_2_LENGTH);
         double alpha = translation.getAngle().getRadians() + theta;
@@ -203,13 +186,47 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     /** Take a and delta, return x and y as a Double Pair. */
-    private static Pair<Double, Double> kinematics(Rotation2d alpha, Rotation2d beta) {
 
-        double delta = alpha.getRadians() + beta.getRadians() - 0.5 * Math.PI;
+    public static void kinematics(Rotation2d alpha, Rotation2d beta, Rotation2d theta) {
 
-        double x_arm = (STAGE_1_LENGTH * alpha.getCos() + STAGE_2_LENGTH * beta.getCos());
-        double y_arm = (STAGE_1_LENGTH * alpha.getSin() + STAGE_2_LENGTH * beta.getSin());
+        double delta = Math.PI - (theta.getRadians() + beta.getRadians());
+        double betaHorizontal = alpha.getRadians() + beta.getRadians() - Math.PI;
 
-        return new Pair<>(x_arm, y_arm);
+        double x_arm = (STAGE_1_LENGTH * alpha.getCos() + STAGE_2_LENGTH * Math.cos(betaHorizontal));
+        double y_arm = (STAGE_1_LENGTH * alpha.getSin() + STAGE_2_LENGTH * Math.sin(betaHorizontal));
     }
+    //Do we need/want Stage 3 included here?
+
+    /**
+     *
+     * @param x_arm The x component of the distance from the base of the arm to the tip of the arm
+     * @param y_arm The y component of the distance from the base of the arm to the tip of the arm
+     */
+    //Is the tip of the arm the end of stage 2, or the end of stage 3/the grabber?
+    //I.E. should stage 3 be included in kinematics?
+
+    public void boundaryEst(double x_arm, double y_arm) {
+
+        if (x_arm > 5) {
+            setTargetPos(new Pose2d());
+        }
+
+        if (y_arm > 5) {
+            setTargetPos(new Pose2d());
+        }
+
+    }
+
+
+
+    public void setTargetPos(Pose2d targetPose) {
+        this.targetPose = targetPose;
+    }
+
+    @Override
+    public void periodic() {
+        // Do the math
+        // Drive motors
+    }
+
 }
