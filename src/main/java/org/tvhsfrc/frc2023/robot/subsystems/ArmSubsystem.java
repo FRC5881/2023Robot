@@ -42,7 +42,7 @@ public class ArmSubsystem extends SubsystemBase {
         stage1.setClosedLoopRampRate(1);
         stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
-        stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float)STAGE_1_LIMIT);
+        stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) STAGE_1_LIMIT);
         stage1.getPIDController()
                 .setOutputRange(0, stage1.getSoftLimit(CANSparkMax.SoftLimitDirection.kReverse));
 
@@ -54,7 +54,7 @@ public class ArmSubsystem extends SubsystemBase {
         stage2.setClosedLoopRampRate(1);
         stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
-        stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float)STAGE_2_LIMIT);
+        stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_2_LIMIT);
         stage2.getPIDController()
                 .setOutputRange(0, stage2.getSoftLimit(CANSparkMax.SoftLimitDirection.kForward));
 
@@ -66,7 +66,7 @@ public class ArmSubsystem extends SubsystemBase {
         stage3.setClosedLoopRampRate(1);
         stage3.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
-        stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float)STAGE_3_LIMIT);
+        stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_3_LIMIT);
         stage3.getPIDController()
                 .setOutputRange(0, stage3.getSoftLimit(CANSparkMax.SoftLimitDirection.kForward));
     }
@@ -170,8 +170,7 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     /**
-     * This uses the lawOfCosines to find theta and beta.
-     * With theta, we find alpha
+     * This uses the lawOfCosines to find theta and beta. With theta, we find alpha
      *
      * @param translation
      * @return This returns alpha and beta
@@ -186,24 +185,24 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     /** Take a and delta, return x and y as a Double Pair. */
-
     public static void kinematics(Rotation2d alpha, Rotation2d beta, Rotation2d theta) {
 
         double delta = Math.PI - (theta.getRadians() + beta.getRadians());
         double betaHorizontal = alpha.getRadians() + beta.getRadians() - Math.PI;
 
-        double x_arm = (STAGE_1_LENGTH * alpha.getCos() + STAGE_2_LENGTH * Math.cos(betaHorizontal));
-        double y_arm = (STAGE_1_LENGTH * alpha.getSin() + STAGE_2_LENGTH * Math.sin(betaHorizontal));
+        double x_arm =
+                (STAGE_1_LENGTH * alpha.getCos() + STAGE_2_LENGTH * Math.cos(betaHorizontal));
+        double y_arm =
+                (STAGE_1_LENGTH * alpha.getSin() + STAGE_2_LENGTH * Math.sin(betaHorizontal));
     }
-    //Do we need/want Stage 3 included here?
+    // Do we need/want Stage 3 included here?
 
     /**
-     *
      * @param x_arm The x component of the distance from the base of the arm to the tip of the arm
      * @param y_arm The y component of the distance from the base of the arm to the tip of the arm
      */
-    //Is the tip of the arm the end of stage 2, or the end of stage 3/the grabber?
-    //I.E. should stage 3 be included in kinematics?
+    // Is the tip of the arm the end of stage 2, or the end of stage 3/the grabber?
+    // I.E. should stage 3 be included in kinematics?
 
     public void boundaryEst(double x_arm, double y_arm) {
 
@@ -214,10 +213,7 @@ public class ArmSubsystem extends SubsystemBase {
         if (y_arm > 5) {
             setTargetPos(new Pose2d());
         }
-
     }
-
-
 
     public void setTargetPos(Pose2d targetPose) {
         this.targetPose = targetPose;
@@ -228,5 +224,4 @@ public class ArmSubsystem extends SubsystemBase {
         // Do the math
         // Drive motors
     }
-
 }

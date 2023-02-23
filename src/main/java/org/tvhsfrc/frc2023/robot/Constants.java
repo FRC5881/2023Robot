@@ -64,7 +64,7 @@ public final class Constants {
 
         /** Length of the third stage of the arm/the grabber in meters */
         public static final double STAGE_3_LENGTH = Units.inchesToMeters(0);
-        //TODO: Fill in the length of the third stage
+        // TODO: Fill in the length of the third stage
 
         /** 1 degree of rotation is currently 1/6 motor revolution */
         private static final int LIMIT_DEGREE_STAGE_1 = 60;
