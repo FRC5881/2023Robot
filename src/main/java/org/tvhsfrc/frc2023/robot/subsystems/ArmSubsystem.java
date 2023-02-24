@@ -157,6 +157,18 @@ public class ArmSubsystem extends SubsystemBase {
                 });
     }
 
+    public void setStage1(double angle){
+        stage1.getPIDController().setReference(angle * (GEARBOX_RATIO_STAGE_1 / 360d), CANSparkMax.ControlType.kPosition);
+    }
+
+    public void setStage2(double angle){
+        stage1.getPIDController().setReference(angle * (GEARBOX_RATIO_STAGE_2 / 360d), CANSparkMax.ControlType.kPosition);
+    }
+
+    public void setStage3(double angle){
+        stage1.getPIDController().setReference(angle * (GEARBOX_RATIO_STAGE_3 / 360d), CANSparkMax.ControlType.kPosition);
+    }
+
     /**
      * This just takes the inputs for the Law of Cosines, and spits out the desired angle, gamma.
      *
