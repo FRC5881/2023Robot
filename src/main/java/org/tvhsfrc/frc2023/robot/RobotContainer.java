@@ -5,18 +5,22 @@
 
 package org.tvhsfrc.frc2023.robot;
 
+import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import java.util.function.DoubleSupplier;
+import java.io.File;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
 import org.tvhsfrc.frc2023.robot.commands.Autos;
-import org.tvhsfrc.frc2023.robot.commands.DefaultDriveCommand;
-import org.tvhsfrc.frc2023.robot.commands.HoldVacuumCommand;
-import org.tvhsfrc.frc2023.robot.commands.VacuumToggleCommand;
-import org.tvhsfrc.frc2023.robot.subsystems.DriveTrainSubsystem;
+import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteDrive;
+import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteFieldDrive;
+import org.tvhsfrc.frc2023.robot.commands.drive.TeleopDrive;
+import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
 
 /**
@@ -27,12 +31,14 @@ import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
  */
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
-    private final DriveTrainSubsystem driveTrainSubsystem = new DriveTrainSubsystem();
+    // private final DriveTrainSubsystem driveTrainSubsystem = new DriveTrainSubsystem();
+    private final SwerveSubsystem swerveSubsystem =
+            new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
     private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem();
 
     // Driver controller
-    private final CommandXboxController driverController =
-            new CommandXboxController(OperatorConstants.DRIVER_CONTROLLER_PORT);
+    private final XboxController driverController =
+            new XboxController(OperatorConstants.DRIVER_CONTROLLER_PORT);
 
     // ROBORIO "User" button
     Trigger userButton = new Trigger(RobotController::getUserButton);
@@ -41,6 +47,47 @@ public class RobotContainer {
     public RobotContainer() {
         // Configure the trigger bindings
         configureBindings();
+
+        AbsoluteDrive closedAbsoluteDrive =
+                new AbsoluteDrive(
+                        swerveSubsystem,
+                        // Applies deadbands and inverts controls because joysticks
+                        // are back-right positive while robot
+                        // controls are front-left positive
+                        () -> deadband(driverController.getLeftY()),
+                        () -> deadband(driverController.getLeftX()),
+                        () -> -driverController.getRightX(),
+                        () -> -driverController.getRightY(),
+                        false);
+
+        AbsoluteFieldDrive closedFieldAbsoluteDrive =
+                new AbsoluteFieldDrive(
+                        swerveSubsystem,
+                        () -> deadband(driverController.getLeftY()),
+                        () -> deadband(driverController.getLeftX()),
+                        () -> driverController.getRawAxis(2),
+                        false);
+        TeleopDrive simClosedFieldRel =
+                new TeleopDrive(
+                        swerveSubsystem,
+                        () -> deadband(driverController.getLeftY()),
+                        () -> deadband(driverController.getLeftX()),
+                        () -> driverController.getRawAxis(2),
+                        () -> true,
+                        false,
+                        true);
+        TeleopDrive closedFieldRel =
+                new TeleopDrive(
+                        swerveSubsystem,
+                        () -> deadband(driverController.getLeftY()),
+                        () -> deadband(driverController.getLeftX()),
+                        () -> -driverController.getRawAxis(3),
+                        () -> true,
+                        false,
+                        true);
+
+        swerveSubsystem.setDefaultCommand(
+                !RobotBase.isSimulation() ? closedAbsoluteDrive : closedFieldAbsoluteDrive);
     }
 
     /**
@@ -53,32 +100,13 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
+        new JoystickButton(driverController, 8)
+                .onTrue((new InstantCommand(swerveSubsystem::zeroGyro)));
+        // new JoystickButton(driverController, 3).onTrue(new
+        // InstantCommand(drivebase::addFakeVisionReading));
 
-        DoubleSupplier vx =
-                () ->
-                        -modifyAxis(driverController.getLeftY())
-                                * Constants.Swerve.MAX_VELOCITY_METERS_PER_SECOND;
-        DoubleSupplier vy =
-                () ->
-                        -modifyAxis(driverController.getLeftX())
-                                * Constants.Swerve.MAX_VELOCITY_METERS_PER_SECOND;
-        DoubleSupplier angle =
-                () ->
-                        -modifyAxis(driverController.getRightX())
-                                * Constants.Swerve.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND;
+        // userButton.onTrue(driveTrainSubsystem.calibrate());
 
-        driveTrainSubsystem.setDefaultCommand(
-                new DefaultDriveCommand(driveTrainSubsystem, vx, vy, angle));
-
-        // Resets the field heading
-        driverController
-                .x()
-                .onTrue(Commands.runOnce(driveTrainSubsystem::zeroHeading, driveTrainSubsystem));
-
-        userButton.onTrue(driveTrainSubsystem.calibrate());
-
-        driverController.a().toggleOnTrue(new VacuumToggleCommand(vacuumSubsystem));
-        driverController.b().whileTrue(new HoldVacuumCommand(vacuumSubsystem));
     }
 
     /**
@@ -90,16 +118,12 @@ public class RobotContainer {
         return Autos.doNothing();
     }
 
+    private static double deadband(double value) {
+        return deadband(value, 0.07);
+    }
+
     private static double deadband(double value, double deadband) {
-        if (Math.abs(value) > deadband) {
-            if (value > 0.0) {
-                return (value - deadband) / (1.0 - deadband);
-            } else {
-                return (value + deadband) / (1.0 - deadband);
-            }
-        } else {
-            return 0.0;
-        }
+        return Math.abs(value) > deadband ? value : 0.0;
     }
 
     private static double modifyAxis(double value) {
