@@ -4,7 +4,6 @@ import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -16,6 +15,7 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
+import org.tvhsfrc.utils.Triple;
 
 public class ArmSubsystem extends SubsystemBase {
     private Pose2d targetPose;
@@ -157,20 +157,28 @@ public class ArmSubsystem extends SubsystemBase {
                 });
     }
 
-    public void setStage1(double angle){
-        stage1.getPIDController().setReference(angle * (GEARBOX_RATIO_STAGE_1 / 360d), CANSparkMax.ControlType.kPosition);
+    public void setStage1(double angle) {
+        stage1.getPIDController()
+                .setReference(
+                        angle * (GEARBOX_RATIO_STAGE_1 / 360d), CANSparkMax.ControlType.kPosition);
     }
 
-    public void setStage2(double angle){
-        stage1.getPIDController().setReference(angle * (GEARBOX_RATIO_STAGE_2 / 360d), CANSparkMax.ControlType.kPosition);
+    public void setStage2(double angle) {
+        stage1.getPIDController()
+                .setReference(
+                        angle * (GEARBOX_RATIO_STAGE_2 / 360d), CANSparkMax.ControlType.kPosition);
     }
 
-    public void setStage3(double angle){
-        stage1.getPIDController().setReference(angle * (GEARBOX_RATIO_STAGE_3 / 360d), CANSparkMax.ControlType.kPosition);
+    public void setStage3(double angle) {
+        stage1.getPIDController()
+                .setReference(
+                        angle * (GEARBOX_RATIO_STAGE_3 / 360d), CANSparkMax.ControlType.kPosition);
     }
 
     /**
      * This just takes the inputs for the Law of Cosines, and spits out the desired angle, gamma.
+     *
+     * <p>If the edges suggest the triangle is impossible thsi returns NaN.
      *
      * @param a a leg
      * @param b a leg
@@ -178,36 +186,86 @@ public class ArmSubsystem extends SubsystemBase {
      * @return Gives the value of gamma in radians
      */
     private static double lawOfCosines(double a, double b, double c) {
-        return Math.acos((a * a + b * b - c) / (2 * a * b));
+        return Math.acos((a * a + b * b - c * c) / (2 * a * b));
     }
 
     /**
-     * This uses the lawOfCosines to find theta and beta. With theta, we find alpha
+     * Given a Pose2d (a position & a angle) of the end effector return the angles of the joints.
      *
-     * @param translation
-     * @return This returns alpha and beta
+     * <p>If the target is out of reach, stage 1 and 2 will be made into a straight line that points
+     * to the target.
+     *
+     * @param pose The position and angle of the end effector
+     * @return The angles of the joints
      */
-    private static Pair<Rotation2d, Rotation2d> inverseKinematics(Translation2d translation) {
-        double theta = lawOfCosines(STAGE_1_LENGTH, translation.getNorm(), STAGE_2_LENGTH);
-        double alpha = translation.getAngle().getRadians() + theta;
+    public static Triple<Rotation2d, Rotation2d, Rotation2d> inverseKinematics(Pose2d pose) {
+        Translation2d translation = pose.getTranslation();
+        double c = translation.getNorm();
 
-        double beta = lawOfCosines(STAGE_1_LENGTH, STAGE_2_LENGTH, translation.getNorm());
+        // Outside the outer circle of the donut
+        if (c >= STAGE_1_LENGTH + STAGE_2_LENGTH) {
+            System.out.println("Target is out of reach");
+            Rotation2d r1 = translation.getAngle();
+            Rotation2d r2 = Rotation2d.fromDegrees(180);
+            Rotation2d r3 = pose.getRotation().minus(r1).minus(r2);
+            return new Triple<>(Rotation2d.fromDegrees(90).minus(r1), r2, r3);
+        }
 
-        return new Pair<>(Rotation2d.fromRadians(alpha), Rotation2d.fromRadians(beta));
+        // Inside the inner circle of the donut
+        if (c <= Math.abs(STAGE_1_LENGTH - STAGE_2_LENGTH)) {
+            System.out.println("Target is too close");
+            Rotation2d r1 = translation.getAngle();
+            Rotation2d r2 = Rotation2d.fromDegrees(0);
+            Rotation2d r3 = pose.getRotation().minus(r1).minus(r2);
+            return new Triple<>(Rotation2d.fromDegrees(90).minus(r1), r2, r3);
+        }
+
+        double r1 =
+                lawOfCosines(STAGE_1_LENGTH, c, STAGE_2_LENGTH)
+                        + translation.getAngle().getRadians();
+        double r2 = lawOfCosines(STAGE_1_LENGTH, STAGE_2_LENGTH, c);
+        double r3 = pose.getRotation().getRadians() - r1 - r2;
+
+        return new Triple<>(
+                Rotation2d.fromRadians(0.5 * Math.PI - r1),
+                Rotation2d.fromRadians(r2),
+                Rotation2d.fromRadians(r3));
     }
 
-    /** Take a and delta, return x and y as a Double Pair. */
-    public static void kinematics(Rotation2d alpha, Rotation2d beta, Rotation2d theta) {
+    /**
+     * Given the angles of the joints, return the position and angle of the end effector.
+     *
+     * @param a The angle of the first joint
+     * @param b The angle of the second joint
+     * @param c The angle of the third joint
+     * @return The position and angle of the end effector
+     */
+    public static Pose2d forwardKinematics(Rotation2d r1, Rotation2d r2, Rotation2d r3) {
+        r1 = Rotation2d.fromDegrees(90).minus(r1);
+        System.out.println("r1: " + r1.getDegrees());
 
-        double delta = Math.PI - (theta.getRadians() + beta.getRadians());
-        double betaHorizontal = alpha.getRadians() + beta.getRadians() - Math.PI;
+        double x1 = STAGE_1_LENGTH * r1.getCos();
+        double y1 = STAGE_1_LENGTH * r1.getSin();
+        System.out.println("x1: " + x1 + " y1: " + y1);
 
-        double x_arm =
-                (STAGE_1_LENGTH * alpha.getCos() + STAGE_2_LENGTH * Math.cos(betaHorizontal));
-        double y_arm =
-                (STAGE_1_LENGTH * alpha.getSin() + STAGE_2_LENGTH * Math.sin(betaHorizontal));
+        // -(180-r1-r2)
+        // -180 + r1 + r2
+        Rotation2d angle2 = r1.plus(r2).minus(Rotation2d.fromDegrees(180));
+        System.out.println("angle2: " + angle2.getDegrees());
+
+        double x2 = STAGE_2_LENGTH * angle2.getCos();
+        double y2 = STAGE_2_LENGTH * angle2.getSin();
+        System.out.println("x2: " + x2 + " y2: " + y2);
+
+        // -(180-a2-r3)
+        // a2 + r3 - 180
+        // -180 + r1 + r2 + r3 - 180
+        // r1 + r2 + r3
+        Rotation2d theta = r1.plus(r2).plus(r3);
+        System.out.println("theta: " + theta.getDegrees());
+
+        return new Pose2d(x1 + x2, y1 + y2, theta);
     }
-    // Do we need/want Stage 3 included here?
 
     /**
      * @param x_arm The x component of the distance from the base of the arm to the tip of the arm
@@ -217,7 +275,6 @@ public class ArmSubsystem extends SubsystemBase {
     // I.E. should stage 3 be included in kinematics?
 
     public void boundaryEst(double x_arm, double y_arm) {
-
         if (x_arm > 5) {
             setTargetPos(new Pose2d());
         }
