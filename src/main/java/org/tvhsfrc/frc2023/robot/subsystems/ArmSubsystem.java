@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
-import org.tvhsfrc.utils.Triple;
+import org.tvhsfrc.frc2023.robot.utils.Triple;
 
 public class ArmSubsystem extends SubsystemBase {
     private Pose2d targetPose;
@@ -204,7 +204,6 @@ public class ArmSubsystem extends SubsystemBase {
 
         // Outside the outer circle of the donut
         if (c >= STAGE_1_LENGTH + STAGE_2_LENGTH) {
-            System.out.println("Target is out of reach");
             Rotation2d r1 = translation.getAngle();
             Rotation2d r2 = Rotation2d.fromDegrees(180);
             Rotation2d r3 = pose.getRotation().minus(r1).minus(r2);
@@ -213,7 +212,6 @@ public class ArmSubsystem extends SubsystemBase {
 
         // Inside the inner circle of the donut
         if (c <= Math.abs(STAGE_1_LENGTH - STAGE_2_LENGTH)) {
-            System.out.println("Target is too close");
             Rotation2d r1 = translation.getAngle();
             Rotation2d r2 = Rotation2d.fromDegrees(0);
             Rotation2d r3 = pose.getRotation().minus(r1).minus(r2);
@@ -242,28 +240,15 @@ public class ArmSubsystem extends SubsystemBase {
      */
     public static Pose2d forwardKinematics(Rotation2d r1, Rotation2d r2, Rotation2d r3) {
         r1 = Rotation2d.fromDegrees(90).minus(r1);
-        System.out.println("r1: " + r1.getDegrees());
 
         double x1 = STAGE_1_LENGTH * r1.getCos();
         double y1 = STAGE_1_LENGTH * r1.getSin();
-        System.out.println("x1: " + x1 + " y1: " + y1);
 
-        // -(180-r1-r2)
-        // -180 + r1 + r2
         Rotation2d angle2 = r1.plus(r2).minus(Rotation2d.fromDegrees(180));
-        System.out.println("angle2: " + angle2.getDegrees());
-
         double x2 = STAGE_2_LENGTH * angle2.getCos();
         double y2 = STAGE_2_LENGTH * angle2.getSin();
-        System.out.println("x2: " + x2 + " y2: " + y2);
 
-        // -(180-a2-r3)
-        // a2 + r3 - 180
-        // -180 + r1 + r2 + r3 - 180
-        // r1 + r2 + r3
         Rotation2d theta = r1.plus(r2).plus(r3);
-        System.out.println("theta: " + theta.getDegrees());
-
         return new Pose2d(x1 + x2, y1 + y2, theta);
     }
 

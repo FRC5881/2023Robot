@@ -1,4 +1,4 @@
-package org.tvhsfrc.utils;
+package org.tvhsfrc.frc2023.robot.utils;
 
 /** A class that represents a triplet of objects. */
 public class Triple<A, B, C> {
