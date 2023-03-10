@@ -202,8 +202,11 @@ public class ArmSubsystem extends SubsystemBase {
         Translation2d translation = pose.getTranslation();
         double c = translation.getNorm();
 
+        System.out.println(c);
+        System.out.println(STAGE_1_LENGTH - STAGE_2_LENGTH);
+
         // Outside the outer circle of the donut
-        if (c >= STAGE_1_LENGTH + STAGE_2_LENGTH) {
+        if (c > STAGE_1_LENGTH + STAGE_2_LENGTH || Math.abs(c - (STAGE_1_LENGTH + STAGE_2_LENGTH)) < 10e-6) {
             Rotation2d r1 = translation.getAngle();
             Rotation2d r2 = Rotation2d.fromDegrees(180);
             Rotation2d r3 = pose.getRotation().minus(r1).minus(r2);
@@ -211,7 +214,7 @@ public class ArmSubsystem extends SubsystemBase {
         }
 
         // Inside the inner circle of the donut
-        if (c <= Math.abs(STAGE_1_LENGTH - STAGE_2_LENGTH)) {
+        if (c > STAGE_1_LENGTH - STAGE_2_LENGTH || Math.abs(c - (STAGE_1_LENGTH - STAGE_2_LENGTH)) < 10e-6) {
             Rotation2d r1 = translation.getAngle();
             Rotation2d r2 = Rotation2d.fromDegrees(0);
             Rotation2d r3 = pose.getRotation().minus(r1).minus(r2);
