@@ -50,14 +50,12 @@ public class VacuumSubsystem extends SubsystemBase {
                 .setReference(
                         Constants.VacuumConstants.VacuumVelocity,
                         CANSparkMax.ControlType.kVelocity);
-
         pdh.setSwitchableChannel(false);
         isEnabled = true;
     }
 
     public void disable() {
-        vacuum1.getPIDController().setReference(0.0, CANSparkMax.ControlType.kVelocity);
-
+        vacuum1.stopMotor();
         pdh.setSwitchableChannel(true);
         isEnabled = false;
     }
