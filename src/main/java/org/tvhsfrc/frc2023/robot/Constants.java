@@ -6,10 +6,7 @@
 package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 
@@ -69,24 +66,80 @@ public final class Constants {
         /** 1 degree of rotation is currently 1/6 motor revolution */
         public static final int LIMIT_DEGREE_STAGE_1 = 60;
 
-        public static final int GEARBOX_RATIO_STAGE_1 = 3 * 4 * 5;
-        public static final double STAGE_1_LIMIT =
-                (GEARBOX_RATIO_STAGE_1 / 360d) * LIMIT_DEGREE_STAGE_1;
+        public static final double GEARBOX_RATIO_STAGE_1 = 3 * 3 * 4 * 5;
+        public static final double STAGE_1_LIMIT = LIMIT_DEGREE_STAGE_1 / 360d;
 
         /** 1 degree of rotation is currently 5/24 motor revolution */
         public static final int LIMIT_DEGREE_STAGE_2 = 180;
 
-        public static final int GEARBOX_RATIO_STAGE_2 = 3 * 5 * 5;
-        public static final double STAGE_2_LIMIT =
-                (GEARBOX_RATIO_STAGE_2 / 360d) * LIMIT_DEGREE_STAGE_2;
+        public static final double GEARBOX_RATIO_STAGE_2 = 3 * 5 * 5;
+        public static final double STAGE_2_LIMIT = LIMIT_DEGREE_STAGE_2 / 360d;
 
         /** 1 degree of rotation is currently 2/15 motor revolution */
         // TODO Find out the exact degree range
         public static final int LIMIT_DEGREE_STAGE_3 = 270;
 
-        public static final int GEARBOX_RATIO_STAGE_3 = 3 * 4 * 4;
-        public static final double STAGE_3_LIMIT =
-                (GEARBOX_RATIO_STAGE_3 / 360d) * LIMIT_DEGREE_STAGE_3;
+        public static final double GEARBOX_RATIO_STAGE_3 = 85.75;
+        public static final double STAGE_3_LIMIT = LIMIT_DEGREE_STAGE_3 / 360d;
+
+        // TODO Change the constants to what the bots actual constants are
+        public static final double angleConstant = 10;
+        public static final double distanceConstant = Units.inchesToMeters(1);
+    }
+
+    public enum WayPoints {
+        HOME(new Pose2d()),
+        SAFE(new Pose2d()),
+        CUBE_BOTTOM(new Pose2d()),
+        CUBE_MIDDLE(new Pose2d()),
+        CUBE_TOP(new Pose2d()),
+        CUBE_STORE(new Pose2d()),
+        CONE_BOTTOM(new Pose2d()),
+        CONE_MIDDLE(new Pose2d()),
+        CONE_TOP(new Pose2d()),
+        CONE_STORE(new Pose2d());
+
+        public final Pose2d pose;
+
+        WayPoints(Pose2d pose) {
+            this.pose = pose;
+        }
+
+        public boolean insideBot() {
+            switch (this) {
+                case HOME:
+                case CONE_STORE:
+                case CUBE_STORE:
+                case SAFE:
+                    return true;
+                case CUBE_BOTTOM:
+                case CONE_TOP:
+                case CONE_MIDDLE:
+                case CONE_BOTTOM:
+                case CUBE_TOP:
+                case CUBE_MIDDLE:
+                    return false;
+            }
+            return false;
+        }
+
+        public boolean outsideBot() {
+            switch (this) {
+                case HOME:
+                case CONE_STORE:
+                case CUBE_STORE:
+                    return false;
+                case SAFE:
+                case CONE_TOP:
+                case CONE_MIDDLE:
+                case CONE_BOTTOM:
+                case CUBE_TOP:
+                case CUBE_MIDDLE:
+                case CUBE_BOTTOM:
+                    return true;
+            }
+            return false;
+        }
     }
 
     public static final class Swerve {
