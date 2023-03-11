@@ -47,44 +47,32 @@ public final class Constants {
         public static final int VACUUM_TWO = 21;
         public static final int VACUUM_THREE = 22;
 
-        public static final int ARM_STAGE_ONE = 31;
-        public static final int ARM_STAGE_TWO = 32;
-        public static final int ARM_STAGE_THREE = 33;
+        public static final int ARM_STAGE_ONE = 30;
+        public static final int ARM_STAGE_TWO = 31;
+        public static final int ARM_STAGE_THREE = 32;
     }
 
     public static final class Arm {
         /** Length of the first stage of the arm in meters */
         public static final double STAGE_1_LENGTH = Units.inchesToMeters(38.136);
+        public static final double GEARBOX_RATIO_STAGE_1 = 3 * 3 * 4 * 5;
+        public static final double STAGE_1_LIMIT = 60 / 360d;
 
         /** Length of the second stage of the arm in meters */
         public static final double STAGE_2_LENGTH = Units.inchesToMeters(35);
 
+        public static final double GEARBOX_RATIO_STAGE_2 = 3 * 5 * 5;
+        public static final double STAGE_2_LIMIT = 180 / 360d;
+
         /** Length of the third stage of the arm/the grabber in meters */
         // TODO: Fill in the length of the third stage
-        public static final double STAGE_3_LENGTH = Units.inchesToMeters(2);
-
-        /** 1 degree of rotation is currently 1/6 motor revolution */
-        public static final int LIMIT_DEGREE_STAGE_1 = 60;
-
-        public static final double GEARBOX_RATIO_STAGE_1 = 3 * 3 * 4 * 5;
-        public static final double STAGE_1_LIMIT = LIMIT_DEGREE_STAGE_1 / 360d;
-
-        /** 1 degree of rotation is currently 5/24 motor revolution */
-        public static final int LIMIT_DEGREE_STAGE_2 = 180;
-
-        public static final double GEARBOX_RATIO_STAGE_2 = 3 * 5 * 5;
-        public static final double STAGE_2_LIMIT = LIMIT_DEGREE_STAGE_2 / 360d;
-
-        /** 1 degree of rotation is currently 2/15 motor revolution */
-        // TODO Find out the exact degree range
-        public static final int LIMIT_DEGREE_STAGE_3 = 270;
-
+        public static final double STAGE_3_LENGTH = Units.inchesToMeters(0);
         public static final double GEARBOX_RATIO_STAGE_3 = 85.75;
-        public static final double STAGE_3_LIMIT = LIMIT_DEGREE_STAGE_3 / 360d;
+        public static final double STAGE_3_LIMIT = 270 / 360d;
 
-        // TODO Change the constants to what the bots actual constants are
-        public static final double angleConstant = 10;
-        public static final double distanceConstant = Units.inchesToMeters(1);
+        // TODO: choose tolerances
+        public static final double ANGLE_TOLERANCE = 2;
+        public static final double DISTANCE_TOLERANCE = Units.inchesToMeters(1);
     }
 
     public enum WayPoints {

@@ -55,7 +55,6 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
-
         DoubleSupplier vx =
                 () ->
                         -modifyAxis(driverController.getLeftY())

@@ -42,9 +42,8 @@ public class ArmSubsystem extends SubsystemBase {
         stage1.getPIDController().setI(0);
         stage1.getPIDController().setD(0);
         stage1.getPIDController().setFF(0);
-        stage1.setClosedLoopRampRate(0);
-        stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
         stage1.getPIDController().setOutputRange(-0.25, 0.25);
+        stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
         stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
         stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) STAGE_1_LIMIT);
@@ -56,9 +55,8 @@ public class ArmSubsystem extends SubsystemBase {
         stage2.getPIDController().setI(0);
         stage2.getPIDController().setD(0.005);
         stage2.getPIDController().setFF(0.001);
-        stage2.setClosedLoopRampRate(0);
-        stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
         stage2.getPIDController().setOutputRange(-0.2, 0.2);
+        stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
         stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
         stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_2_LIMIT);
@@ -70,9 +68,8 @@ public class ArmSubsystem extends SubsystemBase {
         stage3.getPIDController().setI(0);
         stage3.getPIDController().setD(0);
         stage3.getPIDController().setFF(0);
-        stage3.setClosedLoopRampRate(0);
-        stage3.setIdleMode(CANSparkMax.IdleMode.kBrake);
         stage1.getPIDController().setOutputRange(-0.1, 0.1);
+        stage3.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
         stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
         stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_3_LIMIT);
@@ -215,7 +212,7 @@ public class ArmSubsystem extends SubsystemBase {
         double distance = targetPose.getTranslation().getDistance(currentPose.getTranslation());
         double angleDifference =
                 targetPose.getRotation().minus(currentPose.getRotation()).getDegrees();
-        return (distance < distanceConstant && angleDifference < angleConstant);
+        return (distance < DISTANCE_TOLERANCE && angleDifference < ANGLE_TOLERANCE);
     }
 
     public void setLastWaypoint(WayPoints lastWaypoint) {
@@ -283,7 +280,4 @@ public class ArmSubsystem extends SubsystemBase {
     public Command cHome() {
         return new SetArmWaypointCommand(this, WayPoints.HOME);
     }
-
-    @Override
-    public void periodic() {}
 }
