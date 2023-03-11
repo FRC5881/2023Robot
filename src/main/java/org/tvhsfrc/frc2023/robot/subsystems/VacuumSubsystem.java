@@ -2,7 +2,6 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
-
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
@@ -48,10 +47,10 @@ public class VacuumSubsystem extends SubsystemBase {
 
     public void enable() {
         vacuum1.getPIDController()
-                    .setReference(
-                            Constants.VacuumConstants.VacuumVelocity,
-                            CANSparkMax.ControlType.kVelocity);
-        
+                .setReference(
+                        Constants.VacuumConstants.VacuumVelocity,
+                        CANSparkMax.ControlType.kVelocity);
+
         pdh.setSwitchableChannel(false);
         isEnabled = true;
     }
