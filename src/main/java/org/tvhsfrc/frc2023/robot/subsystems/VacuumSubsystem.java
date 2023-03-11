@@ -2,10 +2,14 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
+
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
 
 public class VacuumSubsystem extends SubsystemBase {
+    private final PowerDistribution pdh;
+
     private final CANSparkMax vacuum1 =
             new CANSparkMax(
                     Constants.CANConstants.VACUUM_ONE, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -18,7 +22,9 @@ public class VacuumSubsystem extends SubsystemBase {
 
     private boolean isEnabled;
 
-    public VacuumSubsystem() {
+    public VacuumSubsystem(PowerDistribution pdh) {
+        this.pdh = pdh;
+
         vacuum2.follow(vacuum1);
         vacuum3.follow(vacuum1);
 
@@ -31,28 +37,29 @@ public class VacuumSubsystem extends SubsystemBase {
         vacuum1.setClosedLoopRampRate(0.5);
     }
 
-    @Override
-    public void periodic() {
+    /** Toggles the vacuum on and off. */
+    public void toggle() {
         if (isEnabled) {
-            vacuum1.getPIDController()
-                    .setReference(
-                            Constants.VacuumConstants.VacuumVelocity,
-                            CANSparkMax.ControlType.kVelocity);
+            disable();
         } else {
-            vacuum1.getPIDController().setReference(0.0, CANSparkMax.ControlType.kVelocity);
+            enable();
         }
     }
 
-    /** Toggles the vacuum on and off. */
-    public void toggle() {
-        isEnabled = !isEnabled;
-    }
-
     public void enable() {
+        vacuum1.getPIDController()
+                    .setReference(
+                            Constants.VacuumConstants.VacuumVelocity,
+                            CANSparkMax.ControlType.kVelocity);
+        
+        pdh.setSwitchableChannel(false);
         isEnabled = true;
     }
 
     public void disable() {
+        vacuum1.getPIDController().setReference(0.0, CANSparkMax.ControlType.kVelocity);
+
+        pdh.setSwitchableChannel(true);
         isEnabled = false;
     }
 }

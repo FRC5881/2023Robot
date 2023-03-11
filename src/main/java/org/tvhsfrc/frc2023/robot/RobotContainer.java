@@ -5,6 +5,7 @@
 
 package org.tvhsfrc.frc2023.robot;
 
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -28,7 +29,8 @@ import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final DriveTrainSubsystem driveTrainSubsystem = new DriveTrainSubsystem();
-    private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem();
+    private final PowerDistribution pdh = new PowerDistribution();
+    private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem(pdh);
 
     // Driver controller
     private final CommandXboxController driverController =
