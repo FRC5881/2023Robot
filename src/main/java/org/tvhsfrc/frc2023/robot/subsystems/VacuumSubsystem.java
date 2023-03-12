@@ -2,6 +2,7 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
@@ -58,5 +59,10 @@ public class VacuumSubsystem extends SubsystemBase {
         vacuum1.stopMotor();
         pdh.setSwitchableChannel(true);
         isEnabled = false;
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.addBooleanProperty("Vacuum isEnabled", () -> isEnabled, (b) -> isEnabled = b);
     }
 }

@@ -35,8 +35,6 @@ public class ArmSubsystem extends SubsystemBase {
     private boolean mode = true;
 
     public ArmSubsystem() {
-        // TODO: Configure motor controllers with constants - PID constants
-
         // Stage 1
         stage1.getPIDController().setP(0);
         stage1.getPIDController().setI(0);
@@ -147,7 +145,7 @@ public class ArmSubsystem extends SubsystemBase {
         }
 
         // Inside the inner circle of the donut
-        if (c > STAGE_1_LENGTH - STAGE_2_LENGTH
+        if (c < STAGE_1_LENGTH - STAGE_2_LENGTH
                 || Math.abs(c - (STAGE_1_LENGTH - STAGE_2_LENGTH)) < 10e-6) {
             Rotation2d r1 = translation.getAngle();
             Rotation2d r2 = Rotation2d.fromDegrees(0);

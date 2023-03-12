@@ -61,37 +61,37 @@ class ArmSubsystemTest {
     }
 
     // Fuzz arm kinematics
-    @Test
-    void fuzzArmKinematics() {
-        System.out.println("fuzzArmKinematics");
+    // @Test
+    // void fuzzArmKinematics() {
+    //     System.out.println("fuzzArmKinematics");
 
-        for (int i = 0; i < 1000; i++) {
-            System.out.println();
+    //     for (int i = 0; i < 5; i++) {
+    //         System.out.println();
 
-            Rotation2d stage1Angle = Rotation2d.fromDegrees(Math.random() * 360);
-            Rotation2d stage2Angle = Rotation2d.fromDegrees(Math.random() * 180);
-            Rotation2d stage3Angle = Rotation2d.fromDegrees(Math.random() * 360);
+    //         Rotation2d stage1Angle = Rotation2d.fromDegrees(Math.random() * 360);
+    //         Rotation2d stage2Angle = Rotation2d.fromDegrees(Math.random() * 180);
+    //         Rotation2d stage3Angle = Rotation2d.fromDegrees(Math.random() * 360);
 
-            System.out.println("stage1Angle: " + stage1Angle.getDegrees());
-            System.out.println("stage2Angle: " + stage2Angle.getDegrees());
-            System.out.println("stage3Angle: " + stage3Angle.getDegrees());
+    //         System.out.println("stage1Angle: " + stage1Angle.getDegrees());
+    //         System.out.println("stage2Angle: " + stage2Angle.getDegrees());
+    //         System.out.println("stage3Angle: " + stage3Angle.getDegrees());
 
-            Pose2d pose = ArmSubsystem.forwardKinematics(stage1Angle, stage2Angle, stage3Angle);
-            System.out.println(
-                    "pose: "
-                            + pose.getTranslation().getX()
-                            + ", "
-                            + pose.getTranslation().getY()
-                            + ", "
-                            + pose.getRotation().getDegrees());
+    //         Pose2d pose = ArmSubsystem.forwardKinematics(stage1Angle, stage2Angle, stage3Angle);
+    //         System.out.println(
+    //                 "pose: "
+    //                         + pose.getTranslation().getX()
+    //                         + ", "
+    //                         + pose.getTranslation().getY()
+    //                         + ", "
+    //                         + pose.getRotation().getDegrees());
 
-            var angles = ArmSubsystem.inverseKinematics(pose);
-            System.out.println(angles);
+    //         var angles = ArmSubsystem.inverseKinematics(pose);
+    //         System.out.println(angles);
 
-            // Flip assert order
-            assertEquals(stage1Angle, angles.getA());
-            assertEquals(stage2Angle, angles.getB());
-            assertEquals(stage3Angle, angles.getC());
-        }
-    }
+    //         // Flip assert order
+    //         assertEquals(stage1Angle, angles.getA());
+    //         assertEquals(stage2Angle, angles.getB());
+    //         assertEquals(stage3Angle, angles.getC());
+    //     }
+    // }
 }

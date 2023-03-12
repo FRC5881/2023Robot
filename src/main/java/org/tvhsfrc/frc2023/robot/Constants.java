@@ -55,6 +55,7 @@ public final class Constants {
     public static final class Arm {
         /** Length of the first stage of the arm in meters */
         public static final double STAGE_1_LENGTH = Units.inchesToMeters(38.136);
+
         public static final double GEARBOX_RATIO_STAGE_1 = 3 * 3 * 4 * 5;
         public static final double STAGE_1_LIMIT = 60 / 360d;
 
@@ -65,9 +66,10 @@ public final class Constants {
         public static final double STAGE_2_LIMIT = 180 / 360d;
 
         /** Length of the third stage of the arm/the grabber in meters */
-        // TODO: Fill in the length of the third stage
-        public static final double STAGE_3_LENGTH = Units.inchesToMeters(0);
-        public static final double GEARBOX_RATIO_STAGE_3 = 85.75;
+        public static final double STAGE_3_LENGTH = Units.inchesToMeters(7);
+
+        public static final double GEARBOX_RATIO_STAGE_3 =
+                4 * 4 * (28 / 16d) * (28 / 16d) * (28 / 16d);
         public static final double STAGE_3_LIMIT = 270 / 360d;
 
         // TODO: choose tolerances
