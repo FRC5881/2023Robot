@@ -11,9 +11,10 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.io.File;
+import java.util.Optional;
+import org.photonvision.EstimatedRobotPose;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveKinematics2;
@@ -75,6 +76,14 @@ public class SwerveSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         swerveDrive.updateOdometry();
+
+        Optional<EstimatedRobotPose> visionPose = vision.getEstimatedPose();
+        if (visionPose.isPresent()) {
+            Pose2d pose = visionPose.get().estimatedPose.toPose2d();
+            double timestamp = visionPose.get().timestampSeconds;
+
+            swerveDrive.addVisionMeasurement(pose, timestamp, true, 1);
+        }
     }
 
     @Override
@@ -229,11 +238,5 @@ public class SwerveSubsystem extends SubsystemBase {
     /** Lock the swerve drive to prevent it from moving. */
     public void lock() {
         swerveDrive.lockPose();
-    }
-
-    /** Add a fake vision reading for testing purposes. */
-    public void addFakeVisionReading() {
-        swerveDrive.addVisionMeasurement(
-                new Pose2d(3, 3, Rotation2d.fromDegrees(65)), Timer.getFPGATimestamp(), false, 1);
     }
 }
