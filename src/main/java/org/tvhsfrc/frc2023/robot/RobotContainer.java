@@ -16,12 +16,13 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.io.File;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
-import org.tvhsfrc.frc2023.robot.commands.Autos;
+import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteDrive;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteFieldDrive;
 import org.tvhsfrc.frc2023.robot.commands.drive.TeleopDrive;
 import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
+import org.tvhsfrc.frc2023.robot.subsystems.VisionSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -30,10 +31,9 @@ import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-    // The robot's subsystems and commands are defined here...
-    // private final DriveTrainSubsystem driveTrainSubsystem = new DriveTrainSubsystem();
+    private final VisionSubsystem visionSubsystem = new VisionSubsystem();
     private final SwerveSubsystem swerveSubsystem =
-            new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
+            new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"), visionSubsystem);
     private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem();
 
     // Driver controller
@@ -67,6 +67,7 @@ public class RobotContainer {
                         () -> deadband(driverController.getLeftX()),
                         () -> driverController.getRawAxis(2),
                         false);
+
         TeleopDrive simClosedFieldRel =
                 new TeleopDrive(
                         swerveSubsystem,
@@ -76,6 +77,7 @@ public class RobotContainer {
                         () -> true,
                         false,
                         true);
+
         TeleopDrive closedFieldRel =
                 new TeleopDrive(
                         swerveSubsystem,
@@ -102,11 +104,8 @@ public class RobotContainer {
     private void configureBindings() {
         new JoystickButton(driverController, 8)
                 .onTrue((new InstantCommand(swerveSubsystem::zeroGyro)));
-        // new JoystickButton(driverController, 3).onTrue(new
-        // InstantCommand(drivebase::addFakeVisionReading));
 
-        // userButton.onTrue(driveTrainSubsystem.calibrate());
-
+        userButton.onTrue(new InstantCommand(swerveSubsystem::calibrateGyro));
     }
 
     /**
@@ -124,15 +123,5 @@ public class RobotContainer {
 
     private static double deadband(double value, double deadband) {
         return Math.abs(value) > deadband ? value : 0.0;
-    }
-
-    private static double modifyAxis(double value) {
-        // Deadband
-        value = deadband(value, 0.07);
-
-        // Square the axis
-        value = Math.copySign(value * value, value);
-
-        return value;
     }
 }

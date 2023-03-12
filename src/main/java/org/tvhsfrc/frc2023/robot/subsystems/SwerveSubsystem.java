@@ -1,3 +1,7 @@
+// Copyright (c) FIRST and other WPILib contributors.
+// Open Source Software; you can modify and/or share it under the terms of
+// the WPILib BSD license file in the root directory of this project.
+
 package org.tvhsfrc.frc2023.robot.subsystems;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -5,8 +9,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.io.File;
+
+import com.kauailabs.navx.frc.AHRS;
+
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveKinematics2;
@@ -14,36 +23,34 @@ import swervelib.parser.SwerveControllerConfiguration;
 import swervelib.parser.SwerveDriveConfiguration;
 import swervelib.parser.SwerveParser;
 import swervelib.telemetry.SwerveDriveTelemetry;
+import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 public class SwerveSubsystem extends SubsystemBase {
-    /** Swerve drive object from the YAGSL Library */
+    /// NavX connected over MXP
+    private final AHRS navx = new AHRS(SPI.Port.kMXP);
+
+    /** Swerve drive object. */
     private final SwerveDrive swerveDrive;
+
+    /** PhotonVision object */
+    private final VisionSubsystem vision;
 
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
      *
      * @param directory Directory of swerve drive config files.
      */
-    public SwerveSubsystem(File directory) {
+    public SwerveSubsystem(File directory, VisionSubsystem vision) {
         // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects
         // being created.
-        SwerveDriveTelemetry.verbosity = SwerveDriveTelemetry.TelemetryVerbosity.HIGH;
+        SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
         try {
             swerveDrive = new SwerveParser(directory).createSwerveDrive();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
 
-    /**
-     * Construct the swerve drive manually.
-     *
-     * @param driveCfg SwerveDriveConfiguration for the swerve.
-     * @param controllerCfg Swerve Controller.
-     */
-    public SwerveSubsystem(
-            SwerveDriveConfiguration driveCfg, SwerveControllerConfiguration controllerCfg) {
-        swerveDrive = new SwerveDrive(driveCfg, controllerCfg);
+        this.vision = vision;
     }
 
     /**
@@ -128,6 +135,11 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public void zeroGyro() {
         swerveDrive.zeroGyro();
+    }
+
+    public void calibrateGyro() {
+        swerveDrive.zeroGyro();
+        navx.calibrate();
     }
 
     /**
@@ -220,5 +232,11 @@ public class SwerveSubsystem extends SubsystemBase {
     /** Lock the swerve drive to prevent it from moving. */
     public void lock() {
         swerveDrive.lockPose();
+    }
+
+    /** Add a fake vision reading for testing purposes. */
+    public void addFakeVisionReading() {
+        swerveDrive.addVisionMeasurement(
+                new Pose2d(3, 3, Rotation2d.fromDegrees(65)), Timer.getFPGATimestamp(), false, 1);
     }
 }
