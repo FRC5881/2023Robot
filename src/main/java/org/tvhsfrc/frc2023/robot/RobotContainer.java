@@ -6,8 +6,8 @@
 package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -34,7 +34,8 @@ import org.tvhsfrc.frc2023.robot.subsystems.VisionSubsystem;
 public class RobotContainer {
     private final VisionSubsystem visionSubsystem = new VisionSubsystem();
     private final SwerveSubsystem swerveSubsystem =
-            new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"), visionSubsystem);
+            new SwerveSubsystem(
+                    new File(Filesystem.getDeployDirectory(), "swerve"), visionSubsystem);
     private final PowerDistribution pdh = new PowerDistribution();
     private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem(pdh);
 
