@@ -41,10 +41,12 @@ public class ArmSubsystem extends SubsystemBase {
         stage1.getPIDController().setD(0);
         stage1.getPIDController().setFF(0);
         stage1.getPIDController().setOutputRange(-0.25, 0.25);
-        stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
+        stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
+        stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
+        stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
         stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
-        stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) STAGE_1_LIMIT);
+        stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_1_LIMIT);
         stage1.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
         stage1.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
 
@@ -54,8 +56,10 @@ public class ArmSubsystem extends SubsystemBase {
         stage2.getPIDController().setD(0.005);
         stage2.getPIDController().setFF(0.001);
         stage2.getPIDController().setOutputRange(-0.2, 0.2);
-        stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
+        stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
+        stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
+        stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
         stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
         stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_2_LIMIT);
         stage2.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
@@ -67,12 +71,31 @@ public class ArmSubsystem extends SubsystemBase {
         stage3.getPIDController().setD(0);
         stage3.getPIDController().setFF(0);
         stage1.getPIDController().setOutputRange(-0.1, 0.1);
-        stage3.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
+        stage3.setIdleMode(CANSparkMax.IdleMode.kBrake);
+        stage3.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
+        stage3.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
         stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
         stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_3_LIMIT);
         stage3.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
         stage3.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
+
+        ShuffleboardTab tab = Shuffleboard.getTab("Arm");
+
+        tab.add("Stage 1", stage1);
+        tab.add("Stage 2", stage2);
+        tab.add("Stage 3", stage3);
+
+        ShuffleboardLayout list = tab.getLayout("Commands", BuiltInLayouts.kList);
+        list.add("cToggleMode", cToggleMode());
+        list.add("cSetModeCube", cSetModeCube());
+        list.add("cSetModeCone", cSetModeCone());
+        list.add("cScoreBottom", cScoreBottom());
+        list.add("cScoreMid", cScoreMiddle());
+        list.add("cScoreHigh", cScoreTop());
+        list.add("cStore", cStore());
+        list.add("cSafety", cSafety());
+        list.add("cHome", cHome());
     }
 
     @Override
@@ -90,22 +113,6 @@ public class ArmSubsystem extends SubsystemBase {
                 "Target Pose Theta", () -> lastWaypoint.pose.getRotation().getDegrees(), null);
 
         builder.addBooleanProperty("isCubeMode", () -> mode, (mode) -> this.mode = mode);
-
-        ShuffleboardTab tab = Shuffleboard.getTab("Arm");
-
-        tab.add("Stage 1", stage1);
-        tab.add("Stage 2", stage2);
-        tab.add("Stage 3", stage3);
-
-        ShuffleboardLayout list = tab.getLayout("Commands", BuiltInLayouts.kList);
-        list.add("cSetModeCube", cSetModeCube());
-        list.add("cSetModeCone", cSetModeCone());
-        list.add("cScoreLow", cScoreLow());
-        list.add("cScoreMid", cScoreMid());
-        list.add("cScoreHigh", cScoreHigh());
-        list.add("cStore", cStore());
-        list.add("cSafety", cSafety());
-        list.add("cHome", cHome());
     }
 
     /**
@@ -187,6 +194,12 @@ public class ArmSubsystem extends SubsystemBase {
         return new Pose2d(x1 + x2, y1 + y2, theta);
     }
 
+    /**
+     * Makes arm go straight to a position.
+     * DOES NOT CHECK FOR SAFETY
+     * @param pose Input position the code will tell the arm to go.
+     */
+
     public void setPose(Pose2d pose) {
         Triple<Rotation2d, Rotation2d, Rotation2d> angles = inverseKinematics(pose);
         stage1.getPIDController()
@@ -209,7 +222,7 @@ public class ArmSubsystem extends SubsystemBase {
         Pose2d currentPose = getCurrentPose();
         double distance = targetPose.getTranslation().getDistance(currentPose.getTranslation());
         double angleDifference =
-                targetPose.getRotation().minus(currentPose.getRotation()).getDegrees();
+                Math.abs(targetPose.getRotation().minus(currentPose.getRotation()).getDegrees());
         return (distance < DISTANCE_TOLERANCE && angleDifference < ANGLE_TOLERANCE);
     }
 
@@ -218,8 +231,8 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     public Command buildPath(WayPoints end) {
-        if (lastWaypoint == WayPoints.SAFE || end == WayPoints.SAFE) {
-            return new SetArmWaypointCommand(this, WayPoints.SAFE);
+        if (lastWaypoint.equals(WayPoints.SAFE) || end.equals(WayPoints.SAFE)) {
+            return new SetArmWaypointCommand(this, end);
         }
 
         if (lastWaypoint.insideBot() && end.insideBot()) {
@@ -231,6 +244,10 @@ public class ArmSubsystem extends SubsystemBase {
         }
     }
 
+    public Command cToggleMode() {
+        return runOnce(() -> mode = !mode);
+    }
+
     public Command cSetModeCube() {
         return runOnce(() -> mode = true);
     }
@@ -239,7 +256,7 @@ public class ArmSubsystem extends SubsystemBase {
         return runOnce(() -> mode = false);
     }
 
-    public Command cScoreLow() {
+    public Command cScoreBottom() {
         if (mode) {
             return buildPath(WayPoints.CUBE_BOTTOM);
         } else {
@@ -247,7 +264,7 @@ public class ArmSubsystem extends SubsystemBase {
         }
     }
 
-    public Command cScoreMid() {
+    public Command cScoreMiddle() {
         if (mode) {
             return buildPath(WayPoints.CUBE_MIDDLE);
         } else {
@@ -255,7 +272,7 @@ public class ArmSubsystem extends SubsystemBase {
         }
     }
 
-    public Command cScoreHigh() {
+    public Command cScoreTop() {
         if (mode) {
             return buildPath(WayPoints.CUBE_TOP);
         } else {
@@ -276,6 +293,6 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     public Command cHome() {
-        return new SetArmWaypointCommand(this, WayPoints.HOME);
+        return buildPath(WayPoints.HOME);
     }
 }

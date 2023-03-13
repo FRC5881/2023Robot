@@ -47,16 +47,16 @@ public final class Constants {
         public static final int VACUUM_TWO = 21;
         public static final int VACUUM_THREE = 22;
 
-        public static final int ARM_STAGE_ONE = 30;
-        public static final int ARM_STAGE_TWO = 31;
-        public static final int ARM_STAGE_THREE = 32;
+        public static final int ARM_STAGE_ONE = 25;
+        public static final int ARM_STAGE_TWO = 26;
+        public static final int ARM_STAGE_THREE = 27;
     }
 
     public static final class Arm {
         /** Length of the first stage of the arm in meters */
         public static final double STAGE_1_LENGTH = Units.inchesToMeters(38.136);
 
-        public static final double GEARBOX_RATIO_STAGE_1 = 3 * 3 * 4 * 5;
+        public static final double GEARBOX_RATIO_STAGE_1 = 5 * 5 * 5;
         public static final double STAGE_1_LIMIT = 60 / 360d;
 
         /** Length of the second stage of the arm in meters */
@@ -113,23 +113,6 @@ public final class Constants {
             return false;
         }
 
-        public boolean outsideBot() {
-            switch (this) {
-                case HOME:
-                case CONE_STORE:
-                case CUBE_STORE:
-                    return false;
-                case SAFE:
-                case CONE_TOP:
-                case CONE_MIDDLE:
-                case CONE_BOTTOM:
-                case CUBE_TOP:
-                case CUBE_MIDDLE:
-                case CUBE_BOTTOM:
-                    return true;
-            }
-            return false;
-        }
     }
 
     public static final class Swerve {
