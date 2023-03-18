@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
@@ -81,11 +81,7 @@ public class ArmSubsystem extends SubsystemBase {
         stage3.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
 
         ShuffleboardTab tab = Shuffleboard.getTab("Arm");
-
-        tab.add("Stage 1", stage1);
-        tab.add("Stage 2", stage2);
-        tab.add("Stage 3", stage3);
-
+        
         ShuffleboardLayout list = tab.getLayout("Commands", BuiltInLayouts.kList);
         list.add("cToggleMode", cToggleMode());
         list.add("cSetModeCube", cSetModeCube());
@@ -96,6 +92,8 @@ public class ArmSubsystem extends SubsystemBase {
         list.add("cStore", cStore());
         list.add("cSafety", cSafety());
         list.add("cHome", cHome());
+
+        tab.add(this);
     }
 
     @Override
@@ -103,9 +101,7 @@ public class ArmSubsystem extends SubsystemBase {
         builder.addDoubleProperty("Pose X", () -> getCurrentPose().getTranslation().getX(), null);
         builder.addDoubleProperty("Pose Y", () -> getCurrentPose().getTranslation().getY(), null);
         builder.addDoubleProperty(
-                "Pose Theta",
-                () -> getCurrentPose().getTranslation().getAngle().getDegrees(),
-                null);
+                "Pose Theta", () -> getCurrentPose().getRotation().getDegrees(), null);
 
         builder.addDoubleProperty("Target Pose X", () -> lastWaypoint.pose.getX(), null);
         builder.addDoubleProperty("Target Pose Y", () -> lastWaypoint.pose.getY(), null);
@@ -113,6 +109,10 @@ public class ArmSubsystem extends SubsystemBase {
                 "Target Pose Theta", () -> lastWaypoint.pose.getRotation().getDegrees(), null);
 
         builder.addBooleanProperty("isCubeMode", () -> mode, (mode) -> this.mode = mode);
+
+        builder.addDoubleProperty("Stage 1", () -> stage1.getEncoder().getPosition() * 360, null);
+        builder.addDoubleProperty("Stage 2", () -> stage2.getEncoder().getPosition() * 360, null);
+        builder.addDoubleProperty("Stage 3", () -> stage3.getEncoder().getPosition() * 360, null);
     }
 
     /**
@@ -195,11 +195,10 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     /**
-     * Makes arm go straight to a position.
-     * DOES NOT CHECK FOR SAFETY
+     * Makes arm go straight to a position. DOES NOT CHECK FOR SAFETY
+     *
      * @param pose Input position the code will tell the arm to go.
      */
-
     public void setPose(Pose2d pose) {
         Triple<Rotation2d, Rotation2d, Rotation2d> angles = inverseKinematics(pose);
         stage1.getPIDController()
@@ -230,7 +229,7 @@ public class ArmSubsystem extends SubsystemBase {
         this.lastWaypoint = lastWaypoint;
     }
 
-    public Command buildPath(WayPoints end) {
+    public CommandBase buildPath(WayPoints end) {
         if (lastWaypoint.equals(WayPoints.SAFE) || end.equals(WayPoints.SAFE)) {
             return new SetArmWaypointCommand(this, end);
         }
@@ -244,19 +243,19 @@ public class ArmSubsystem extends SubsystemBase {
         }
     }
 
-    public Command cToggleMode() {
+    public CommandBase cToggleMode() {
         return runOnce(() -> mode = !mode);
     }
 
-    public Command cSetModeCube() {
+    public CommandBase cSetModeCube() {
         return runOnce(() -> mode = true);
     }
 
-    public Command cSetModeCone() {
+    public CommandBase cSetModeCone() {
         return runOnce(() -> mode = false);
     }
 
-    public Command cScoreBottom() {
+    public CommandBase cScoreBottom() {
         if (mode) {
             return buildPath(WayPoints.CUBE_BOTTOM);
         } else {
@@ -264,7 +263,7 @@ public class ArmSubsystem extends SubsystemBase {
         }
     }
 
-    public Command cScoreMiddle() {
+    public CommandBase cScoreMiddle() {
         if (mode) {
             return buildPath(WayPoints.CUBE_MIDDLE);
         } else {
@@ -272,7 +271,7 @@ public class ArmSubsystem extends SubsystemBase {
         }
     }
 
-    public Command cScoreTop() {
+    public CommandBase cScoreTop() {
         if (mode) {
             return buildPath(WayPoints.CUBE_TOP);
         } else {
@@ -280,7 +279,7 @@ public class ArmSubsystem extends SubsystemBase {
         }
     }
 
-    public Command cStore() {
+    public CommandBase cStore() {
         if (mode) {
             return buildPath(WayPoints.CUBE_STORE);
         } else {
@@ -288,11 +287,11 @@ public class ArmSubsystem extends SubsystemBase {
         }
     }
 
-    public Command cSafety() {
+    public CommandBase cSafety() {
         return new SetArmWaypointCommand(this, WayPoints.SAFE);
     }
 
-    public Command cHome() {
+    public CommandBase cHome() {
         return buildPath(WayPoints.HOME);
     }
 }

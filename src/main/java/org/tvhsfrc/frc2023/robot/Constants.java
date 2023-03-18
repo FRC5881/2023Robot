@@ -112,7 +112,6 @@ public final class Constants {
             }
             return false;
         }
-
     }
 
     public static final class Swerve {
@@ -267,15 +266,21 @@ public final class Constants {
                     42.89,
                     "Back Right Swerve");
 
-    public static class VacuumConstants {
+    public static class Vacuum {
         /** This is the target velocity in RPM. */
-        public static final double VacuumVelocity = 6000;
+        public static final double VACUUM_VELOCITY = 6000;
 
         /**
          * Original motor was rated for 5500 RPM. Our motor is rated for ~11000 RPM. 0.6 current
          * limiting keeps it from exceeding the original rating by an excessive amount.
          */
-        public static final double maxOutput = 0.6;
+        public static final double MAX_OUTPUT = 0.6;
+
+        /**
+         * The time in seconds that the vacuum dump valve should be open for when purging the
+         * vacuum.
+         */
+        public static final double DUMP_TIME = 5;
     }
 
     public static class Autonomous {
