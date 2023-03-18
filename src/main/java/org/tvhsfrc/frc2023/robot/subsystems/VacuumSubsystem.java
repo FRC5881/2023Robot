@@ -2,7 +2,6 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
-
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -63,11 +62,14 @@ public class VacuumSubsystem extends SubsystemBase {
         builder.addBooleanProperty("Vacuum state", () -> state, null);
 
         if (Robot.isReal()) {
-            builder.addBooleanProperty("PDH switchable channel", () -> pdh.getSwitchableChannel(), null);
+            builder.addBooleanProperty(
+                    "PDH switchable channel", () -> pdh.getSwitchableChannel(), null);
             builder.addDoubleProperty("Applied Output", () -> vacuum1.getAppliedOutput(), null);
         } else {
-            builder.addBooleanProperty("PDH switchable channel", () -> pdhSim.getBoolean("Value").get(), null);
-            builder.addDoubleProperty("Applied Output", () -> motorsSim.getDouble("Applied Output").get(), null);
+            builder.addBooleanProperty(
+                    "PDH switchable channel", () -> pdhSim.getBoolean("Value").get(), null);
+            builder.addDoubleProperty(
+                    "Applied Output", () -> motorsSim.getDouble("Applied Output").get(), null);
         }
     }
 
@@ -85,7 +87,7 @@ public class VacuumSubsystem extends SubsystemBase {
                                 CANSparkMax.ControlType.kVelocity);
             } else {
                 vacuum1.stopMotor();
-            }    
+            }
         } else {
             motorsSim.getDouble("Applied Output").set(shouldSuck ? 1 : 0);
         }

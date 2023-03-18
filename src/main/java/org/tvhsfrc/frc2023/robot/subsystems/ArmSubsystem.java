@@ -81,7 +81,7 @@ public class ArmSubsystem extends SubsystemBase {
         stage3.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
 
         ShuffleboardTab tab = Shuffleboard.getTab("Arm");
-        
+
         ShuffleboardLayout list = tab.getLayout("Commands", BuiltInLayouts.kList);
         list.add("cToggleMode", cToggleMode());
         list.add("cSetModeCube", cSetModeCube());

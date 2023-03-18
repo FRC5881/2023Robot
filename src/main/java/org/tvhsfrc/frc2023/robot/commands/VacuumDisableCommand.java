@@ -4,9 +4,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
 
-/**
- * Stops the vacuum pump and temporarily opens the dump valve 
- */
+/** Stops the vacuum pump and temporarily opens the dump valve */
 public class VacuumDisableCommand extends CommandBase {
     private final VacuumSubsystem vacuumSubsystem;
 
