@@ -83,7 +83,7 @@ public class VacuumSubsystem extends SubsystemBase {
             if (shouldSuck) {
                 vacuum1.getPIDController()
                         .setReference(
-                                Constants.Vacuum.VACUUM_VELOCITY,
+                                Constants.Vacuum.VELOCITY,
                                 CANSparkMax.ControlType.kVelocity);
             } else {
                 vacuum1.stopMotor();
