@@ -3,20 +3,20 @@
     "x": 11.25,
     "y": 11.25
   },
-  "absoluteEncoderOffset": 138.86,
+  "absoluteEncoderOffset": 223.505859,
   "drive": {
     "type": "sparkmax",
-    "id": 12,
+    "id": 10,
     "canbus": null
   },
   "angle": {
     "type": "sparkmax",
-    "id": 13,
+    "id": 11,
     "canbus": null
   },
   "encoder": {
     "type": "cancoder",
-    "id": 2,
+    "id": 1,
     "canbus": null
   },
   "inverted": {
