@@ -46,7 +46,7 @@ public final class Autos {
                                 swerve)));
     }
 
-    /** Example static factory for an Autonomousomous command. */
+    /** Example static factory for an autonomous command. */
     public static CommandBase exampleAuto(SwerveSubsystem swerve) {
         boolean onTheFly = false; // Use the path defined in code or loaded from PathPlanner.
         PathPlannerTrajectory example;
