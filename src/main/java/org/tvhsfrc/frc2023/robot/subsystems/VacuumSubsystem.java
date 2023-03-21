@@ -45,6 +45,8 @@ public class VacuumSubsystem extends SubsystemBase {
         vacuum1.getPIDController().setOutputRange(0, Constants.Vacuum.MAX_OUTPUT);
         vacuum1.setClosedLoopRampRate(0.5);
 
+        pdh.setSwitchableChannel(false);
+
         vacuum2.follow(vacuum1);
         vacuum3.follow(vacuum1);
 
