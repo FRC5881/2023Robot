@@ -7,7 +7,6 @@ package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.*;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.util.Units;
 import swervelib.math.Matter;
 import swervelib.parser.PIDFConfig;
@@ -139,7 +138,7 @@ public final class Constants {
         public static final String CAMERA_NAME = "photonvision";
     }
 
-    public static class VacuumConstants {
+    public static class Vacuum {
         /** This is the target velocity in RPM. */
         public static final double VACUUM_VELOCITY = 6000;
 

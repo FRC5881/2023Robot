@@ -17,16 +17,11 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.io.File;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
-import org.tvhsfrc.frc2023.robot.commands.Autos;
-import org.tvhsfrc.frc2023.robot.commands.DefaultDriveCommand;
-import org.tvhsfrc.frc2023.robot.commands.HoldVacuumCommand;
-import org.tvhsfrc.frc2023.robot.commands.VacuumToggleCommand;
-import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
-import org.tvhsfrc.frc2023.robot.subsystems.DriveTrainSubsystem;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteDrive;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteFieldDrive;
 import org.tvhsfrc.frc2023.robot.commands.drive.TeleopDrive;
+import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.VisionSubsystem;
@@ -112,15 +107,12 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
-        new JoystickButton(driverController, 8)
+        new JoystickButton(driverController, XboxController.Button.kStart.value)
                 .onTrue((new InstantCommand(swerveSubsystem::zeroGyro)));
 
         userButton.onTrue(new InstantCommand(swerveSubsystem::calibrateGyro));
 
-        driverController.a().toggleOnTrue(new VacuumToggleCommand(vacuumSubsystem));
-        driverController.b().whileTrue(new HoldVacuumCommand(vacuumSubsystem));
-
-        driverController.x().onTrue(arm.cHome());
+        new JoystickButton(driverController, XboxController.Button.kX.value).onTrue(arm.cHome());
     }
 
     /**
