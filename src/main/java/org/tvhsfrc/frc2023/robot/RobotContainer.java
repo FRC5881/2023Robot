@@ -108,9 +108,6 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
-        // Resets the field heading
-        userButton.onTrue(Commands.runOnce(swerveSubsystem::calibrateGyro, swerveSubsystem));
-
         armController.a().onTrue(arm.cScoreBottom());
         armController.b().onTrue(arm.cScoreMiddle());
         armController.y().onTrue(arm.cScoreTop());

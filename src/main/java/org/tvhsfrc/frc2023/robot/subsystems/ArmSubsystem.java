@@ -4,7 +4,6 @@ import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -110,8 +109,7 @@ public class ArmSubsystem extends SubsystemBase {
 
         builder.addBooleanProperty("isCubeMode", () -> mode, (mode) -> this.mode = mode);
 
-        builder.addDoubleProperty(
-                "Stage 1", () -> stage1.getEncoder().getPosition(), null);
+        builder.addDoubleProperty("Stage 1", () -> stage1.getEncoder().getPosition(), null);
         builder.addDoubleProperty("Stage 2", () -> stage2.getEncoder().getPosition(), null);
         builder.addDoubleProperty("Stage 3", () -> stage3.getEncoder().getPosition(), null);
 
@@ -209,26 +207,44 @@ public class ArmSubsystem extends SubsystemBase {
     public void setPose(Pose2d pose) {
         Triple<Rotation2d, Rotation2d, Rotation2d> angles = inverseKinematics(pose);
         stage1.getPIDController()
-                .setReference(angles.getA().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_1, CANSparkMax.ControlType.kSmartMotion);
+                .setReference(
+                        angles.getA().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_1,
+                        CANSparkMax.ControlType.kSmartMotion);
 
-        SmartDashboard.putNumber("Stage 1 reference", angles.getA().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_1);
+        SmartDashboard.putNumber(
+                "Stage 1 reference",
+                angles.getA().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_1);
 
         stage2.getPIDController()
-                .setReference(angles.getB().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_2, CANSparkMax.ControlType.kPosition);
+                .setReference(
+                        angles.getB().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_2,
+                        CANSparkMax.ControlType.kPosition);
 
-        SmartDashboard.putNumber("Stage 2 reference", angles.getB().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_2);
+        SmartDashboard.putNumber(
+                "Stage 2 reference",
+                angles.getB().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_2);
 
         stage3.getPIDController()
-                .setReference(angles.getC().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_3, CANSparkMax.ControlType.kPosition);
+                .setReference(
+                        angles.getC().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_3,
+                        CANSparkMax.ControlType.kPosition);
 
-        SmartDashboard.putNumber("Stage 3 reference", angles.getC().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_3);
+        SmartDashboard.putNumber(
+                "Stage 3 reference",
+                angles.getC().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_3);
     }
 
     public Pose2d getCurrentPose() {
         Rotation2d stage1Angle =
-                Rotation2d.fromRotations(stage1.getEncoder().getPosition() / Arm.GEARBOX_RATIO_STAGE_1 - (10d / 360d));
-        Rotation2d stage2Angle = Rotation2d.fromRotations(stage2.getEncoder().getPosition() / Arm.GEARBOX_RATIO_STAGE_2);
-        Rotation2d stage3Angle = Rotation2d.fromRotations(stage3.getEncoder().getPosition() / Arm.GEARBOX_RATIO_STAGE_3);
+                Rotation2d.fromRotations(
+                        stage1.getEncoder().getPosition() / Arm.GEARBOX_RATIO_STAGE_1
+                                - (10d / 360d));
+        Rotation2d stage2Angle =
+                Rotation2d.fromRotations(
+                        stage2.getEncoder().getPosition() / Arm.GEARBOX_RATIO_STAGE_2);
+        Rotation2d stage3Angle =
+                Rotation2d.fromRotations(
+                        stage3.getEncoder().getPosition() / Arm.GEARBOX_RATIO_STAGE_3);
         return forwardKinematics(stage1Angle, stage2Angle, stage3Angle);
     }
 
@@ -240,7 +256,7 @@ public class ArmSubsystem extends SubsystemBase {
 
         SmartDashboard.putNumber("Distance", distance);
         SmartDashboard.putNumber("Angle difference", angleDifference);
-        
+
         return (distance < DISTANCE_TOLERANCE && angleDifference < ANGLE_TOLERANCE);
     }
 
