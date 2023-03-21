@@ -33,6 +33,8 @@ public final class Constants {
 
     /** Identifiers for all of the CAN devices on the robot. */
     public static class CANConstants {
+        /* Removed as defined in the swerve lib json
+
         public static final int FRONT_RIGHT_MODULE_STEER_ENCODER = 1;
         public static final int FRONT_LEFT_MODULE_STEER_ENCODER = 2;
 
@@ -50,6 +52,7 @@ public final class Constants {
 
         public static final int BACK_RIGHT_MODULE_DRIVE_MOTOR = 16;
         public static final int BACK_RIGHT_MODULE_STEER_MOTOR = 17;
+        */
 
         public static final int VACUUM_ONE = 20;
         public static final int VACUUM_TWO = 21;
@@ -67,11 +70,25 @@ public final class Constants {
         public static final double GEARBOX_RATIO_STAGE_1 = 5 * 5 * 5;
         public static final double STAGE_1_LIMIT = 60 / 360d;
 
+        /** Stage 1 PID Settings */
+        public static final PIDFConfig STAGE_1_PID = new PIDFConfig(0.1, 0.0001, 0, 0);
+        /** Stage 1 Maximum output (as percentage) for PID control */
+        public static final double STAGE_1_MIN_OUTPUT = -0.2;
+        /** Stage 1 Minimum output (as negative percentage) for PID control */
+        public static final double STAGE_1_MAX_OUTPUT = 0.2;
+
         /** Length of the second stage of the arm in meters */
         public static final double STAGE_2_LENGTH = Units.inchesToMeters(35);
 
         public static final double GEARBOX_RATIO_STAGE_2 = 3 * 5 * 5;
         public static final double STAGE_2_LIMIT = 180 / 360d;
+
+        /** Stage 2 PID Settings */
+        public static final PIDFConfig STAGE_2_PID = new PIDFConfig(0.15, 0, 0.05, 0);
+        /** Stage 2 Maximum output (as percentage) for PID control */
+        public static final double STAGE_2_MIN_OUTPUT = -0.15;
+        /** Stage 2 Minimum output (as negative percentage) for PID control */
+        public static final double STAGE_2_MAX_OUTPUT = 0.15;
 
         /** Length of the third stage of the arm/the grabber in meters */
         public static final double STAGE_3_LENGTH = Units.inchesToMeters(7);
@@ -80,22 +97,29 @@ public final class Constants {
                 4 * 4 * (28 / 16d) * (28 / 16d) * (28 / 16d);
         public static final double STAGE_3_LIMIT = 270 / 360d;
 
+        /** Stage 3 PID Settings */
+        public static final PIDFConfig STAGE_3_PID = new PIDFConfig(0.15, 0, 0.3, 0);
+        /** Stage 3 Maximum output (as percentage) for PID control */
+        public static final double STAGE_3_MIN_OUTPUT = -0.2;
+        /** Stage 3 Minimum output (as negative percentage) for PID control */
+        public static final double STAGE_3_MAX_OUTPUT = 0.2;
+
         // TODO: choose tolerances
         public static final double ANGLE_TOLERANCE = 2;
         public static final double DISTANCE_TOLERANCE = Units.inchesToMeters(1);
     }
 
     public enum WayPoints {
-        HOME(new Pose2d()),
-        SAFE(new Pose2d()),
-        CUBE_BOTTOM(new Pose2d()),
-        CUBE_MIDDLE(new Pose2d()),
-        CUBE_TOP(new Pose2d()),
-        CUBE_STORE(new Pose2d()),
-        CONE_BOTTOM(new Pose2d()),
-        CONE_MIDDLE(new Pose2d()),
-        CONE_TOP(new Pose2d()),
-        CONE_STORE(new Pose2d());
+        HOME(new Pose2d(-0.0048, 0.08, Rotation2d.fromDegrees(45))),
+        SAFE(new Pose2d(0.26, 0.17, Rotation2d.fromDegrees(45))),
+        CUBE_BOTTOM(new Pose2d(0.50, 0.2820, Rotation2d.fromDegrees(45))),
+        CUBE_MIDDLE(new Pose2d(0.87, 0.91, Rotation2d.fromDegrees(45))),
+        CUBE_TOP(new Pose2d(1.14, 1.15, Rotation2d.fromDegrees(45))),
+        CONE_BOTTOM(new Pose2d(0.483, 0.113, Rotation2d.fromDegrees(45))),
+        CONE_MIDDLE(new Pose2d(0.870, 0.995, Rotation2d.fromDegrees(-45))),
+        CONE_TOP(new Pose2d(1.098, 1.397, Rotation2d.fromDegrees(45))),
+        CUBE_STORE(new Pose2d(0.366, 0.170, Rotation2d.fromDegrees(45))),
+        CONE_STORE(new Pose2d(0.366, 0.170, Rotation2d.fromDegrees(45)));
 
         public final Pose2d pose;
 

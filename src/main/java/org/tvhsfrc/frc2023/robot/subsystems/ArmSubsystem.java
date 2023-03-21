@@ -36,12 +36,13 @@ public class ArmSubsystem extends SubsystemBase {
 
     public ArmSubsystem() {
         // Stage 1
-        stage1.getPIDController().setP(0);
-        stage1.getPIDController().setI(0);
-        stage1.getPIDController().setD(0);
-        stage1.getPIDController().setFF(0);
-        stage1.getPIDController().setOutputRange(-0.25, 0.25);
+        stage1.getPIDController().setP(STAGE_1_PID.p);
+        stage1.getPIDController().setI(STAGE_1_PID.i);
+        stage1.getPIDController().setD(STAGE_1_PID.d);
+        stage1.getPIDController().setFF(STAGE_1_PID.f);
+        stage1.getPIDController().setOutputRange(STAGE_1_MIN_OUTPUT, STAGE_1_MAX_OUTPUT);
 
+        stage1.setInverted(false);
         stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
         stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
         stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
@@ -51,11 +52,11 @@ public class ArmSubsystem extends SubsystemBase {
         stage1.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
 
         // Stage 2
-        stage2.getPIDController().setP(0.018);
-        stage2.getPIDController().setI(0);
-        stage2.getPIDController().setD(0.005);
-        stage2.getPIDController().setFF(0.001);
-        stage2.getPIDController().setOutputRange(-0.2, 0.2);
+        stage2.getPIDController().setP(STAGE_2_PID.p);
+        stage2.getPIDController().setI(STAGE_2_PID.i);
+        stage2.getPIDController().setD(STAGE_2_PID.d);
+        stage2.getPIDController().setFF(STAGE_2_PID.f);
+        stage2.getPIDController().setOutputRange(STAGE_2_MIN_OUTPUT, STAGE_2_MAX_OUTPUT);
 
         stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
         stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
@@ -66,11 +67,11 @@ public class ArmSubsystem extends SubsystemBase {
         stage2.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
 
         // Stage 3
-        stage3.getPIDController().setP(0);
-        stage3.getPIDController().setI(0);
-        stage3.getPIDController().setD(0);
-        stage3.getPIDController().setFF(0);
-        stage1.getPIDController().setOutputRange(-0.1, 0.1);
+        stage3.getPIDController().setP(STAGE_3_PID.p);
+        stage3.getPIDController().setI(STAGE_3_PID.i);
+        stage3.getPIDController().setD(STAGE_3_PID.d);
+        stage3.getPIDController().setFF(STAGE_3_PID.f);
+        stage1.getPIDController().setOutputRange(STAGE_3_MIN_OUTPUT, STAGE_3_MAX_OUTPUT);
 
         stage3.setIdleMode(CANSparkMax.IdleMode.kBrake);
         stage3.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
@@ -110,9 +111,16 @@ public class ArmSubsystem extends SubsystemBase {
 
         builder.addBooleanProperty("isCubeMode", () -> mode, (mode) -> this.mode = mode);
 
-        builder.addDoubleProperty("Stage 1", () -> stage1.getEncoder().getPosition() * 360, null);
-        builder.addDoubleProperty("Stage 2", () -> stage2.getEncoder().getPosition() * 360, null);
-        builder.addDoubleProperty("Stage 3", () -> stage3.getEncoder().getPosition() * 360, null);
+        builder.addDoubleProperty("Stage 1", () -> stage1.getEncoder().getPosition(), null);
+        builder.addDoubleProperty("Stage 2", () -> stage2.getEncoder().getPosition(), null);
+        builder.addDoubleProperty("Stage 3", () -> stage3.getEncoder().getPosition(), null);
+
+        builder.addDoubleProperty(
+                "GOTO Stage 1", () -> stage1.getEncoder().getPosition(), this::setStage1Rotations);
+        builder.addDoubleProperty(
+                "GOTO Stage 2", () -> stage2.getEncoder().getPosition(), this::setStage2Rotations);
+        builder.addDoubleProperty(
+                "GOTO Stage 3", () -> stage3.getEncoder().getPosition(), this::setStage3Rotations);
     }
 
     /**
@@ -201,12 +209,25 @@ public class ArmSubsystem extends SubsystemBase {
      */
     public void setPose(Pose2d pose) {
         Triple<Rotation2d, Rotation2d, Rotation2d> angles = inverseKinematics(pose);
-        stage1.getPIDController()
-                .setReference(angles.getA().getRotations(), CANSparkMax.ControlType.kPosition);
-        stage2.getPIDController()
-                .setReference(angles.getB().getRotations(), CANSparkMax.ControlType.kPosition);
-        stage3.getPIDController()
-                .setReference(angles.getC().getRotations(), CANSparkMax.ControlType.kPosition);
+        setPose(angles.getA(), angles.getB(), angles.getC());
+    }
+
+    private void setPose(Rotation2d stage1, Rotation2d stage2, Rotation2d stage3) {
+        setStage1Rotations(stage1.getRotations());
+        setStage2Rotations(stage2.getRotations());
+        setStage3Rotations(stage3.getRotations());
+    }
+
+    public void setStage1Rotations(double stage1Rotations) {
+        stage1.getPIDController().setReference(stage1Rotations, CANSparkMax.ControlType.kPosition);
+    }
+
+    public void setStage2Rotations(double stage2Rotations) {
+        stage2.getPIDController().setReference(stage2Rotations, CANSparkMax.ControlType.kPosition);
+    }
+
+    public void setStage3Rotations(double stage3Rotations) {
+        stage3.getPIDController().setReference(stage3Rotations, CANSparkMax.ControlType.kPosition);
     }
 
     public Pose2d getCurrentPose() {
