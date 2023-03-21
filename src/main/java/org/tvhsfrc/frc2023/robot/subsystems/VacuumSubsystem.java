@@ -55,6 +55,9 @@ public class VacuumSubsystem extends SubsystemBase {
         tab.add(new VacuumDisableCommand(this, Constants.Vacuum.DUMP_TIME));
 
         tab.add(this);
+
+        suck(false);
+        dump(false);
     }
 
     @Override
@@ -82,9 +85,7 @@ public class VacuumSubsystem extends SubsystemBase {
         if (Robot.isReal()) {
             if (shouldSuck) {
                 vacuum1.getPIDController()
-                        .setReference(
-                                Constants.Vacuum.VELOCITY,
-                                CANSparkMax.ControlType.kVelocity);
+                        .setReference(Constants.Vacuum.VELOCITY, CANSparkMax.ControlType.kVelocity);
             } else {
                 vacuum1.stopMotor();
             }

@@ -7,16 +7,16 @@ package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.PowerDistribution;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.io.File;
-
+import java.util.Optional;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
+import org.tvhsfrc.frc2023.robot.commands.VacuumDisableCommand;
+import org.tvhsfrc.frc2023.robot.commands.VacuumEnableCommand;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteDrive;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteFieldDrive;
@@ -36,15 +36,16 @@ public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final PowerDistribution pdh = new PowerDistribution();
     private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem(pdh);
-    private final VisionSubsystem visionSubsystem = new VisionSubsystem();
+    // private final Optional<VisionSubsystem> visionSubsystem = Optional.of(new VisionSubsystem());
+    private final Optional<VisionSubsystem> visionSubsystem = Optional.empty();
     private final SwerveSubsystem swerveSubsystem =
             new SwerveSubsystem(
                     new File(Filesystem.getDeployDirectory(), "swerve"), visionSubsystem);
     private final ArmSubsystem arm = new ArmSubsystem();
 
     // Driver controller
-    private final XboxController driverController =
-            new XboxController(OperatorConstants.DRIVER_CONTROLLER_PORT);
+    private final CommandXboxController armController =
+            new CommandXboxController(OperatorConstants.DRIVER_CONTROLLER_PORT);
 
     // ROBORIO "User" button
     Trigger userButton = new Trigger(RobotController::getUserButton);
@@ -60,26 +61,26 @@ public class RobotContainer {
                         // Applies deadbands and inverts controls because joysticks
                         // are back-right positive while robot
                         // controls are front-left positive
-                        () -> deadband(driverController.getLeftY()),
-                        () -> deadband(driverController.getLeftX()),
-                        () -> -driverController.getRightX(),
-                        () -> -driverController.getRightY(),
+                        () -> deadband(armController.getLeftY()),
+                        () -> deadband(armController.getLeftX()),
+                        () -> -armController.getRightX(),
+                        () -> -armController.getRightY(),
                         false);
 
         AbsoluteFieldDrive closedFieldAbsoluteDrive =
                 new AbsoluteFieldDrive(
                         swerveSubsystem,
-                        () -> deadband(driverController.getLeftY()),
-                        () -> deadband(driverController.getLeftX()),
-                        () -> driverController.getRawAxis(2),
+                        () -> deadband(armController.getLeftY()),
+                        () -> deadband(armController.getLeftX()),
+                        () -> deadband(armController.getRightX()),
                         false);
 
         TeleopDrive simClosedFieldRel =
                 new TeleopDrive(
                         swerveSubsystem,
-                        () -> deadband(driverController.getLeftY()),
-                        () -> deadband(driverController.getLeftX()),
-                        () -> driverController.getRawAxis(2),
+                        () -> deadband(armController.getLeftY()),
+                        () -> deadband(armController.getLeftX()),
+                        () -> armController.getRawAxis(2),
                         () -> true,
                         false,
                         true);
@@ -87,15 +88,14 @@ public class RobotContainer {
         TeleopDrive closedFieldRel =
                 new TeleopDrive(
                         swerveSubsystem,
-                        () -> deadband(driverController.getLeftY()),
-                        () -> deadband(driverController.getLeftX()),
-                        () -> -driverController.getRawAxis(3),
+                        () -> deadband(armController.getLeftY()),
+                        () -> deadband(armController.getLeftX()),
+                        () -> -armController.getRawAxis(3),
                         () -> true,
                         false,
                         true);
 
-        swerveSubsystem.setDefaultCommand(
-                !RobotBase.isSimulation() ? closedAbsoluteDrive : closedFieldAbsoluteDrive);
+        // swerveSubsystem.setDefaultCommand(closedFieldAbsoluteDrive);
     }
 
     /**
@@ -110,6 +110,14 @@ public class RobotContainer {
     private void configureBindings() {
         // Resets the field heading
         userButton.onTrue(Commands.runOnce(swerveSubsystem::calibrateGyro, swerveSubsystem));
+
+        armController.a().onTrue(arm.cScoreBottom());
+        armController.b().onTrue(arm.cScoreMiddle());
+        armController.y().onTrue(arm.cScoreTop());
+        armController.x().onTrue(arm.cToggleMode());
+
+        armController.leftBumper().onTrue(new VacuumDisableCommand(vacuumSubsystem, 5));
+        armController.rightBumper().onTrue(new VacuumEnableCommand(vacuumSubsystem));
     }
 
     /**

@@ -4,6 +4,7 @@ import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -12,12 +13,13 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
+import org.tvhsfrc.frc2023.robot.Constants.Arm;
 import org.tvhsfrc.frc2023.robot.Constants.WayPoints;
-import org.tvhsfrc.frc2023.robot.commands.SetArmWaypointCommand;
+import org.tvhsfrc.frc2023.robot.commands.ArmWaypointCommand;
 import org.tvhsfrc.frc2023.robot.utils.Triple;
 
 public class ArmSubsystem extends SubsystemBase {
@@ -36,49 +38,47 @@ public class ArmSubsystem extends SubsystemBase {
 
     public ArmSubsystem() {
         // Stage 1
-        stage1.getPIDController().setP(0);
+        stage1.getPIDController().setP(0.0005);
         stage1.getPIDController().setI(0);
         stage1.getPIDController().setD(0);
         stage1.getPIDController().setFF(0);
-        stage1.getPIDController().setOutputRange(-0.25, 0.25);
+        stage1.getPIDController().setOutputRange(-0.4, 0.4);
+        stage1.getPIDController().setSmartMotionMaxVelocity(1200, 0);
+        stage1.getPIDController().setSmartMotionMaxAccel(2400, 0);
+
+        stage1.setInverted(false);
 
         stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
-        stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
-        stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
-        stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
-        stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_1_LIMIT);
-        stage1.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
-        stage1.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
+        stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, false);
+        stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, false);
+        // stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
+        // stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_1_LIMIT);
 
         // Stage 2
-        stage2.getPIDController().setP(0.018);
+        stage2.getPIDController().setP(0.15);
         stage2.getPIDController().setI(0);
-        stage2.getPIDController().setD(0.005);
-        stage2.getPIDController().setFF(0.001);
+        stage2.getPIDController().setD(0.0);
+        stage2.getPIDController().setFF(0.0);
         stage2.getPIDController().setOutputRange(-0.2, 0.2);
 
         stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
-        stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
-        stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
-        stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
-        stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_2_LIMIT);
-        stage2.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
-        stage2.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
+        stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, false);
+        stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, false);
+        // stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
+        // stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_2_LIMIT);
 
         // Stage 3
-        stage3.getPIDController().setP(0);
+        stage3.getPIDController().setP(0.05);
         stage3.getPIDController().setI(0);
         stage3.getPIDController().setD(0);
         stage3.getPIDController().setFF(0);
-        stage1.getPIDController().setOutputRange(-0.1, 0.1);
+        stage1.getPIDController().setOutputRange(-0.2, 0.2);
 
         stage3.setIdleMode(CANSparkMax.IdleMode.kBrake);
-        stage3.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
-        stage3.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
-        stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
-        stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_3_LIMIT);
-        stage3.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
-        stage3.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
+        stage3.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, false);
+        stage3.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, false);
+        // stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
+        // stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_3_LIMIT);
 
         ShuffleboardTab tab = Shuffleboard.getTab("Arm");
 
@@ -110,9 +110,14 @@ public class ArmSubsystem extends SubsystemBase {
 
         builder.addBooleanProperty("isCubeMode", () -> mode, (mode) -> this.mode = mode);
 
-        builder.addDoubleProperty("Stage 1", () -> stage1.getEncoder().getPosition() * 360, null);
-        builder.addDoubleProperty("Stage 2", () -> stage2.getEncoder().getPosition() * 360, null);
-        builder.addDoubleProperty("Stage 3", () -> stage3.getEncoder().getPosition() * 360, null);
+        builder.addDoubleProperty(
+                "Stage 1", () -> stage1.getEncoder().getPosition(), null);
+        builder.addDoubleProperty("Stage 2", () -> stage2.getEncoder().getPosition(), null);
+        builder.addDoubleProperty("Stage 3", () -> stage3.getEncoder().getPosition(), null);
+
+        builder.addDoubleProperty("Stage 1 output", () -> stage1.getAppliedOutput(), null);
+        builder.addDoubleProperty("Stage 2 output", () -> stage2.getAppliedOutput(), null);
+        builder.addDoubleProperty("Stage 3 output", () -> stage3.getAppliedOutput(), null);
     }
 
     /**
@@ -191,6 +196,8 @@ public class ArmSubsystem extends SubsystemBase {
         double y2 = STAGE_2_LENGTH * angle2.getSin();
 
         Rotation2d theta = r1.plus(r2).plus(r3);
+        theta = theta.plus(Rotation2d.fromDegrees(180));
+
         return new Pose2d(x1 + x2, y1 + y2, theta);
     }
 
@@ -202,18 +209,26 @@ public class ArmSubsystem extends SubsystemBase {
     public void setPose(Pose2d pose) {
         Triple<Rotation2d, Rotation2d, Rotation2d> angles = inverseKinematics(pose);
         stage1.getPIDController()
-                .setReference(angles.getA().getRotations(), CANSparkMax.ControlType.kPosition);
+                .setReference(angles.getA().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_1, CANSparkMax.ControlType.kSmartMotion);
+
+        SmartDashboard.putNumber("Stage 1 reference", angles.getA().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_1);
+
         stage2.getPIDController()
-                .setReference(angles.getB().getRotations(), CANSparkMax.ControlType.kPosition);
+                .setReference(angles.getB().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_2, CANSparkMax.ControlType.kPosition);
+
+        SmartDashboard.putNumber("Stage 2 reference", angles.getB().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_2);
+
         stage3.getPIDController()
-                .setReference(angles.getC().getRotations(), CANSparkMax.ControlType.kPosition);
+                .setReference(angles.getC().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_3, CANSparkMax.ControlType.kPosition);
+
+        SmartDashboard.putNumber("Stage 3 reference", angles.getC().getRotations() * Constants.Arm.GEARBOX_RATIO_STAGE_3);
     }
 
     public Pose2d getCurrentPose() {
         Rotation2d stage1Angle =
-                Rotation2d.fromRotations(stage1.getEncoder().getPosition() - (10d / 360d));
-        Rotation2d stage2Angle = Rotation2d.fromRotations(stage2.getEncoder().getPosition());
-        Rotation2d stage3Angle = Rotation2d.fromRotations(stage3.getEncoder().getPosition());
+                Rotation2d.fromRotations(stage1.getEncoder().getPosition() / Arm.GEARBOX_RATIO_STAGE_1 - (10d / 360d));
+        Rotation2d stage2Angle = Rotation2d.fromRotations(stage2.getEncoder().getPosition() / Arm.GEARBOX_RATIO_STAGE_2);
+        Rotation2d stage3Angle = Rotation2d.fromRotations(stage3.getEncoder().getPosition() / Arm.GEARBOX_RATIO_STAGE_3);
         return forwardKinematics(stage1Angle, stage2Angle, stage3Angle);
     }
 
@@ -222,6 +237,10 @@ public class ArmSubsystem extends SubsystemBase {
         double distance = targetPose.getTranslation().getDistance(currentPose.getTranslation());
         double angleDifference =
                 Math.abs(targetPose.getRotation().minus(currentPose.getRotation()).getDegrees());
+
+        SmartDashboard.putNumber("Distance", distance);
+        SmartDashboard.putNumber("Angle difference", angleDifference);
+        
         return (distance < DISTANCE_TOLERANCE && angleDifference < ANGLE_TOLERANCE);
     }
 
@@ -230,17 +249,19 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     public CommandBase buildPath(WayPoints end) {
-        if (lastWaypoint.equals(WayPoints.SAFE) || end.equals(WayPoints.SAFE)) {
-            return new SetArmWaypointCommand(this, end);
-        }
+        return new ArmWaypointCommand(this, end);
 
-        if (lastWaypoint.insideBot() && end.insideBot()) {
-            return new SetArmWaypointCommand(this, end);
-        } else {
-            return Commands.sequence(
-                    new SetArmWaypointCommand(this, WayPoints.SAFE),
-                    new SetArmWaypointCommand(this, end));
-        }
+        // if (lastWaypoint.equals(WayPoints.SAFE) || end.equals(WayPoints.SAFE)) {
+        //     return new SetArmWaypointCommand(this, end);
+        // }
+
+        // if (lastWaypoint.insideBot() && end.insideBot()) {
+        //     return new SetArmWaypointCommand(this, end);
+        // } else {
+        //     return Commands.sequence(
+        //             new SetArmWaypointCommand(this, WayPoints.SAFE),
+        //             new SetArmWaypointCommand(this, end));
+        // }
     }
 
     public CommandBase cToggleMode() {
@@ -288,7 +309,7 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     public CommandBase cSafety() {
-        return new SetArmWaypointCommand(this, WayPoints.SAFE);
+        return new ArmWaypointCommand(this, WayPoints.SAFE);
     }
 
     public CommandBase cHome() {

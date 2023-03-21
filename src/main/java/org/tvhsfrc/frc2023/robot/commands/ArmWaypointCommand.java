@@ -4,11 +4,11 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 
-public class SetArmWaypointCommand extends CommandBase {
+public class ArmWaypointCommand extends CommandBase {
     private final ArmSubsystem armSubsystem;
     private final Constants.WayPoints wayPoints;
 
-    public SetArmWaypointCommand(ArmSubsystem armSubsystem, Constants.WayPoints wayPoints) {
+    public ArmWaypointCommand(ArmSubsystem armSubsystem, Constants.WayPoints wayPoints) {
         this.armSubsystem = armSubsystem;
         this.wayPoints = wayPoints;
         addRequirements(armSubsystem);
@@ -16,6 +16,11 @@ public class SetArmWaypointCommand extends CommandBase {
 
     @Override
     public void initialize() {
+        armSubsystem.setPose(wayPoints.pose);
+    }
+
+    @Override
+    public void execute() {
         armSubsystem.setPose(wayPoints.pose);
     }
 
@@ -28,7 +33,4 @@ public class SetArmWaypointCommand extends CommandBase {
     public void end(boolean interrupted) {
         armSubsystem.setLastWaypoint(wayPoints);
     }
-
-    @Override
-    public void execute() {}
 }

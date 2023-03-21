@@ -6,10 +6,10 @@
 package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import swervelib.math.Matter;
 import swervelib.parser.PIDFConfig;
@@ -89,16 +89,16 @@ public final class Constants {
     }
 
     public enum WayPoints {
-        HOME(new Pose2d()),
-        SAFE(new Pose2d()),
-        CUBE_BOTTOM(new Pose2d()),
-        CUBE_MIDDLE(new Pose2d()),
-        CUBE_TOP(new Pose2d()),
-        CUBE_STORE(new Pose2d()),
-        CONE_BOTTOM(new Pose2d()),
-        CONE_MIDDLE(new Pose2d()),
-        CONE_TOP(new Pose2d()),
-        CONE_STORE(new Pose2d());
+        HOME(new Pose2d(-0.0048, 0.08, Rotation2d.fromDegrees(90))),
+        SAFE(new Pose2d(0.26, 0.17, Rotation2d.fromDegrees(116))),
+        CUBE_BOTTOM(new Pose2d(0.50, 0.2820, Rotation2d.fromDegrees(90))),
+        CUBE_MIDDLE(new Pose2d(0.87, 0.91, Rotation2d.fromDegrees(-24))),
+        CUBE_TOP(new Pose2d(1.14, 1.15, Rotation2d.fromDegrees(-6))),
+        CONE_BOTTOM(new Pose2d(0.483, 0.113, Rotation2d.fromDegrees(128))),
+        CONE_MIDDLE(new Pose2d(0.870, 0.995, Rotation2d.fromDegrees(-95.5))),
+        CONE_TOP(new Pose2d(1.098, 1.397, Rotation2d.fromDegrees(-30))),
+        CUBE_STORE(new Pose2d(0.366, 0.170, Rotation2d.fromDegrees(90))),
+        CONE_STORE(new Pose2d(0.366, 0.170, Rotation2d.fromDegrees(90)));
 
         public final Pose2d pose;
 
