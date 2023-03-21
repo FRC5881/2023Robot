@@ -34,6 +34,7 @@ public class VacuumSubsystem extends SubsystemBase {
         vacuum1.setIdleMode(CANSparkMax.IdleMode.kCoast);
         vacuum1.getPIDController().setOutputRange(0, Constants.VacuumConstants.maxOutput);
         vacuum1.setClosedLoopRampRate(0.5);
+        pdh.setSwitchableChannel(false);
     }
 
     /** Toggles the vacuum on and off. */
