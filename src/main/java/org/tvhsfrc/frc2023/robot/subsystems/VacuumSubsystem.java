@@ -26,9 +26,10 @@ public class VacuumSubsystem extends SubsystemBase {
                     Constants.CANConstants.VACUUM_THREE, CANSparkMaxLowLevel.MotorType.kBrushless);
 
     /**
-     * State of the subsystem: true if we're running the vacuum, false if we're not. 
-     * 
-     * Changing this value will not cause the vacuums to start or stop. This is only used for bookkeeping.
+     * State of the subsystem: true if we're running the vacuum, false if we're not.
+     *
+     * <p>Changing this value will not cause the vacuums to start or stop. This is only used for
+     * bookkeeping.
      */
     private boolean state = false;
 
