@@ -38,7 +38,7 @@ public class RobotContainer {
             new SwerveSubsystem(
                     new File(Filesystem.getDeployDirectory(), "swerve"), visionSubsystem);
     private final ArmSubsystem arm = new ArmSubsystem();
-    private final PowerDistribution pdh = new PowerDistribution();
+    private final PowerDistribution pdh = new PowerDistribution(1, PowerDistribution.ModuleType.kRev);
     private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem(pdh);
 
     // Driver controller
