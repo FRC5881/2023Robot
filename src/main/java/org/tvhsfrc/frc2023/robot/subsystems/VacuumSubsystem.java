@@ -6,17 +6,14 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
-import org.tvhsfrc.frc2023.robot.Robot;
 import org.tvhsfrc.frc2023.robot.commands.vacuum.VacuumDisableCommand;
 import org.tvhsfrc.frc2023.robot.commands.vacuum.VacuumEnableCommand;
 import org.tvhsfrc.frc2023.robot.commands.vacuum.VacuumToggleCommand;
 
 public class VacuumSubsystem extends SubsystemBase {
     private final PowerDistribution pdh;
-    private final SimDeviceSim pdhSim = new SimDeviceSim("Power Distribution Switch");
 
     private final CANSparkMax vacuum1 =
             new CANSparkMax(
@@ -28,9 +25,11 @@ public class VacuumSubsystem extends SubsystemBase {
             new CANSparkMax(
                     Constants.CANConstants.VACUUM_THREE, CANSparkMaxLowLevel.MotorType.kBrushless);
 
-    private final SimDeviceSim motorsSim = new SimDeviceSim("Vacuum Motors");
-
-    /** state of the subsystem: true if we're running the vacuum, false if we're not */
+    /**
+     * State of the subsystem: true if we're running the vacuum, false if we're not. 
+     * 
+     * Changing this value will not cause the vacuums to start or stop. This is only used for bookkeeping.
+     */
     private boolean state = false;
 
     public VacuumSubsystem(PowerDistribution pdh) {
@@ -62,17 +61,9 @@ public class VacuumSubsystem extends SubsystemBase {
     @Override
     public void initSendable(SendableBuilder builder) {
         builder.addBooleanProperty("Vacuum state", () -> state, null);
-
-        if (Robot.isReal()) {
-            builder.addBooleanProperty(
-                    "PDH switchable channel", () -> pdh.getSwitchableChannel(), null);
-            builder.addDoubleProperty("Applied Output", () -> vacuum1.getAppliedOutput(), null);
-        } else {
-            builder.addBooleanProperty(
-                    "PDH switchable channel", () -> pdhSim.getBoolean("Value").get(), null);
-            builder.addDoubleProperty(
-                    "Applied Output", () -> motorsSim.getDouble("Applied Output").get(), null);
-        }
+        builder.addBooleanProperty(
+                "PDH switchable channel", () -> pdh.getSwitchableChannel(), null);
+        builder.addDoubleProperty("Applied Output", () -> vacuum1.getAppliedOutput(), null);
     }
 
     /**
