@@ -68,7 +68,7 @@ public final class Constants {
         public static final double STAGE_1_LENGTH = Units.inchesToMeters(38.136);
 
         public static final double GEARBOX_RATIO_STAGE_1 = 5 * 5 * 5;
-        public static final double STAGE_1_LIMIT = 60 / 360d;
+        public static final double STAGE_1_LIMIT = 60 / 360d; // TODO: Check this
 
         /** Stage 1 PID Settings */
         public static final PIDFConfig STAGE_1_PID = new PIDFConfig(0.1, 0.0001, 0, 0);
@@ -83,7 +83,7 @@ public final class Constants {
         public static final double GEARBOX_RATIO_STAGE_2 = 3 * 5 * 5;
         public static final double STAGE_2_LIMIT = 180 / 360d;
 
-        /** Stage 2 PID Settings */
+        /** Stage 2 PID Settings - Use values from the SPARK Max Hardware Client */
         public static final PIDFConfig STAGE_2_PID = new PIDFConfig(0.15, 0, 0.05, 0);
         /** Stage 2 Maximum output (as percentage) for PID control */
         public static final double STAGE_2_MIN_OUTPUT = -0.15;

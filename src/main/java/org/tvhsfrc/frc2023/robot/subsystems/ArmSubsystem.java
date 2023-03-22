@@ -36,10 +36,10 @@ public class ArmSubsystem extends SubsystemBase {
 
     public ArmSubsystem() {
         // Stage 1
-        stage1.getPIDController().setP(STAGE_1_PID.p);
-        stage1.getPIDController().setI(STAGE_1_PID.i);
-        stage1.getPIDController().setD(STAGE_1_PID.d);
-        stage1.getPIDController().setFF(STAGE_1_PID.f);
+        setStage1P(STAGE_1_PID.p);
+        setStage1I(STAGE_1_PID.i);
+        setStage1D(STAGE_1_PID.d);
+        stage1.getPIDController().setFF(STAGE_1_PID.f); // TODO: Scale this
         stage1.getPIDController().setOutputRange(STAGE_1_MIN_OUTPUT, STAGE_1_MAX_OUTPUT);
 
         stage1.setInverted(false);
@@ -52,10 +52,10 @@ public class ArmSubsystem extends SubsystemBase {
         stage1.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
 
         // Stage 2
-        stage2.getPIDController().setP(STAGE_2_PID.p);
-        stage2.getPIDController().setI(STAGE_2_PID.i);
-        stage2.getPIDController().setD(STAGE_2_PID.d);
-        stage2.getPIDController().setFF(STAGE_2_PID.f);
+        setStage2P(STAGE_2_PID.p);
+        setStage2I(STAGE_2_PID.i);
+        setStage2D(STAGE_2_PID.d);
+        stage2.getPIDController().setFF(STAGE_2_PID.f); // TODO: Scale this
         stage2.getPIDController().setOutputRange(STAGE_2_MIN_OUTPUT, STAGE_2_MAX_OUTPUT);
 
         stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
@@ -67,10 +67,10 @@ public class ArmSubsystem extends SubsystemBase {
         stage2.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
 
         // Stage 3
-        stage3.getPIDController().setP(STAGE_3_PID.p);
-        stage3.getPIDController().setI(STAGE_3_PID.i);
-        stage3.getPIDController().setD(STAGE_3_PID.d);
-        stage3.getPIDController().setFF(STAGE_3_PID.f);
+        setStage3P(STAGE_3_PID.p);
+        setStage3I(STAGE_3_PID.i);
+        setStage3D(STAGE_3_PID.d);
+        stage3.getPIDController().setFF(STAGE_3_PID.f); // TODO: Scale this
         stage1.getPIDController().setOutputRange(STAGE_3_MIN_OUTPUT, STAGE_3_MAX_OUTPUT);
 
         stage3.setIdleMode(CANSparkMax.IdleMode.kBrake);
@@ -81,7 +81,7 @@ public class ArmSubsystem extends SubsystemBase {
         stage3.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
         stage3.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
 
-        ShuffleboardTab tab = Shuffleboard.getTab("Arm");
+        /*ShuffleboardTab tab = Shuffleboard.getTab("Arm");
 
         ShuffleboardLayout list = tab.getLayout("Commands", BuiltInLayouts.kList);
         list.add("cToggleMode", cToggleMode());
@@ -94,7 +94,7 @@ public class ArmSubsystem extends SubsystemBase {
         list.add("cSafety", cSafety());
         list.add("cHome", cHome());
 
-        tab.add(this);
+        tab.add(this);*/
     }
 
     @Override
@@ -111,16 +111,99 @@ public class ArmSubsystem extends SubsystemBase {
 
         builder.addBooleanProperty("isCubeMode", () -> mode, (mode) -> this.mode = mode);
 
-        builder.addDoubleProperty("Stage 1", () -> stage1.getEncoder().getPosition(), null);
-        builder.addDoubleProperty("Stage 2", () -> stage2.getEncoder().getPosition(), null);
-        builder.addDoubleProperty("Stage 3", () -> stage3.getEncoder().getPosition(), null);
+        builder.addDoubleProperty(
+                "Stage 1", () -> stage1.getEncoder().getPosition(), this::setStage1Rotations);
+        builder.addDoubleProperty(
+                "Stage 2", () -> stage2.getEncoder().getPosition(), this::setStage2Rotations);
+        builder.addDoubleProperty(
+                "Stage 3", () -> stage3.getEncoder().getPosition(), this::setStage3Rotations);
+
+        builder.addDoubleProperty("PID Stage 1 P", this::getStage1P, this::setStage1P);
+        builder.addDoubleProperty("PID Stage 1 I", this::getStage1I, this::setStage1I);
+        builder.addDoubleProperty("PID Stage 1 D", this::getStage1D, this::setStage1D);
+
+        builder.addDoubleProperty("PID Stage 2 P", this::getStage2P, this::setStage2P);
+        builder.addDoubleProperty("PID Stage 2 I", this::getStage2I, this::setStage2I);
+        builder.addDoubleProperty("PID Stage 2 D", this::getStage2D, this::setStage2D);
 
         builder.addDoubleProperty(
-                "GOTO Stage 1", () -> stage1.getEncoder().getPosition(), this::setStage1Rotations);
+                "PID Stage 3 P", () -> stage3.getPIDController().getP(), this::setStage3P);
         builder.addDoubleProperty(
-                "GOTO Stage 2", () -> stage2.getEncoder().getPosition(), this::setStage2Rotations);
+                "PID Stage 3 I", () -> stage3.getPIDController().getI(), this::setStage3I);
         builder.addDoubleProperty(
-                "GOTO Stage 3", () -> stage3.getEncoder().getPosition(), this::setStage3Rotations);
+                "PID Stage 3 D", () -> stage3.getPIDController().getD(), this::setStage3D);
+    }
+
+    public double getStage1P() {
+        return stage1.getPIDController().getP() / GEARBOX_RATIO_STAGE_1;
+    }
+
+    public void setStage1P(double p) {
+        stage1.getPIDController().setP(p * GEARBOX_RATIO_STAGE_1);
+    }
+
+    public double getStage1I() {
+        return stage1.getPIDController().getI() / GEARBOX_RATIO_STAGE_1;
+    }
+
+    public void setStage1I(double i) {
+        stage1.getPIDController().setI(i * GEARBOX_RATIO_STAGE_1);
+    }
+
+    public double getStage1D() {
+        return stage1.getPIDController().getD() / GEARBOX_RATIO_STAGE_1;
+    }
+
+    public void setStage1D(double d) {
+        stage1.getPIDController().setD(d * GEARBOX_RATIO_STAGE_1);
+    }
+
+    public double getStage2P() {
+        return stage2.getPIDController().getP() / GEARBOX_RATIO_STAGE_2;
+    }
+
+    public void setStage2P(double p) {
+        stage2.getPIDController().setP(p * GEARBOX_RATIO_STAGE_2);
+    }
+
+    public double getStage2I() {
+        return stage2.getPIDController().getI() / GEARBOX_RATIO_STAGE_2;
+    }
+
+    public void setStage2I(double i) {
+        stage2.getPIDController().setI(i * GEARBOX_RATIO_STAGE_2);
+    }
+
+    public double getStage2D() {
+        return stage2.getPIDController().getD() / GEARBOX_RATIO_STAGE_2;
+    }
+
+    public void setStage2D(double d) {
+        stage2.getPIDController().setD(d * GEARBOX_RATIO_STAGE_2);
+    }
+
+    public double getStage3P() {
+        return stage3.getPIDController().getP() / GEARBOX_RATIO_STAGE_3;
+    }
+
+    public void setStage3P(double p) {
+        stage3.getPIDController().setP(p * GEARBOX_RATIO_STAGE_3);
+    }
+
+    public double getStage3I() {
+        return stage3.getPIDController().getI() / GEARBOX_RATIO_STAGE_3;
+    }
+
+    public void setStage3I(double i) {
+        stage3.getPIDController().setI(i * GEARBOX_RATIO_STAGE_3);
+    }
+
+    public double getStage3D() {
+        return stage3.getPIDController().getD() / GEARBOX_RATIO_STAGE_3;
+    }
+
+    public void setStage3D(double d) {
+        stage3.getPIDController().setD(d * GEARBOX_RATIO_STAGE_3);
     }
 
     /**
