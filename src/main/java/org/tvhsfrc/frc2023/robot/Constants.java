@@ -75,15 +75,21 @@ public final class Constants {
         public static final String CAMERA_NAME = "photonvision";
     }
 
-    public static class VacuumConstants {
+    public static class Vacuum {
         /** This is the target velocity in RPM. */
-        public static final double VacuumVelocity = 6000;
+        public static final double VELOCITY = 6000;
 
         /**
          * Original motor was rated for 5500 RPM. Our motor is rated for ~11000 RPM. 0.6 current
          * limiting keeps it from exceeding the original rating by an excessive amount.
          */
-        public static final double maxOutput = 0.6;
+        public static final double MAX_OUTPUT = 0.6;
+
+        /**
+         * The amount of time to keep the vacuum purge solenoid on when disable the vacuum. In
+         * seconds.
+         */
+        public static final double PURGE_TIME = 5;
     }
 
     public static class Autonomous {

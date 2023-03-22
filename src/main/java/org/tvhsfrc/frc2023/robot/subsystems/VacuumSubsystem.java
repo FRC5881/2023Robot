@@ -2,12 +2,21 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
+import org.tvhsfrc.frc2023.robot.Robot;
+import org.tvhsfrc.frc2023.robot.commands.vacuum.VacuumDisableCommand;
+import org.tvhsfrc.frc2023.robot.commands.vacuum.VacuumEnableCommand;
+import org.tvhsfrc.frc2023.robot.commands.vacuum.VacuumToggleCommand;
 
 public class VacuumSubsystem extends SubsystemBase {
     private final PowerDistribution pdh;
+    private final SimDeviceSim pdhSim = new SimDeviceSim("Power Distribution Switch");
 
     private final CANSparkMax vacuum1 =
             new CANSparkMax(
@@ -19,45 +28,95 @@ public class VacuumSubsystem extends SubsystemBase {
             new CANSparkMax(
                     Constants.CANConstants.VACUUM_THREE, CANSparkMaxLowLevel.MotorType.kBrushless);
 
-    private boolean isEnabled;
+    private final SimDeviceSim motorsSim = new SimDeviceSim("Vacuum Motors");
+
+    /** state of the subsystem: true if we're running the vacuum, false if we're not */
+    private boolean state = false;
 
     public VacuumSubsystem(PowerDistribution pdh) {
         this.pdh = pdh;
-
-        vacuum2.follow(vacuum1);
-        vacuum3.follow(vacuum1);
 
         vacuum1.getPIDController().setP(0.00005);
         vacuum1.getPIDController().setI(0.0);
         vacuum1.getPIDController().setD(0.002);
         vacuum1.getPIDController().setFF(0.0001);
         vacuum1.setIdleMode(CANSparkMax.IdleMode.kCoast);
-        vacuum1.getPIDController().setOutputRange(0, Constants.VacuumConstants.maxOutput);
+        vacuum1.getPIDController().setOutputRange(0, Constants.Vacuum.MAX_OUTPUT);
         vacuum1.setClosedLoopRampRate(0.5);
-        pdh.setSwitchableChannel(false);
+
+        vacuum2.follow(vacuum1);
+        vacuum3.follow(vacuum1);
+
+        ShuffleboardTab tab = Shuffleboard.getTab("Vacuum");
+
+        tab.add(new VacuumToggleCommand(this));
+        tab.add(new VacuumEnableCommand(this));
+        tab.add(new VacuumDisableCommand(this, Constants.Vacuum.PURGE_TIME));
+
+        tab.add(this);
+
+        suction(false);
+        purge(false);
     }
 
-    /** Toggles the vacuum on and off. */
-    public void toggle() {
-        if (isEnabled) {
-            disable();
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.addBooleanProperty("Vacuum state", () -> state, null);
+
+        if (Robot.isReal()) {
+            builder.addBooleanProperty(
+                    "PDH switchable channel", () -> pdh.getSwitchableChannel(), null);
+            builder.addDoubleProperty("Applied Output", () -> vacuum1.getAppliedOutput(), null);
         } else {
-            enable();
+            builder.addBooleanProperty(
+                    "PDH switchable channel", () -> pdhSim.getBoolean("Value").get(), null);
+            builder.addDoubleProperty(
+                    "Applied Output", () -> motorsSim.getDouble("Applied Output").get(), null);
         }
     }
 
-    public void enable() {
-        vacuum1.getPIDController()
-                .setReference(
-                        Constants.VacuumConstants.VacuumVelocity,
-                        CANSparkMax.ControlType.kVelocity);
-        pdh.setSwitchableChannel(false);
-        isEnabled = true;
+    /**
+     * Run or stop the vacuum motors. Sending true will start the motors and create suction. Sending
+     * false will stop the motors.
+     *
+     * @param shouldSuck
+     */
+    public void suction(boolean shouldSuck) {
+        if (shouldSuck) {
+            vacuum1.getPIDController()
+                    .setReference(Constants.Vacuum.VELOCITY, CANSparkMax.ControlType.kVelocity);
+        } else {
+            vacuum1.stopMotor();
+        }
     }
 
-    public void disable() {
-        vacuum1.stopMotor();
-        pdh.setSwitchableChannel(true);
-        isEnabled = false;
+    /**
+     * Opens or closes the dump valve.
+     *
+     * @param shouldDump true to open the valve (release vacuum), false to close it (hold vacuum)
+     */
+    public void purge(boolean shouldDump) {
+        pdh.setSwitchableChannel(shouldDump);
+    }
+
+    /**
+     * Set the state of the vacuum subsystem.
+     *
+     * <p>This method is only used to record state changes. Calling this fuction will not cause the
+     * vacuum to start or stop.
+     *
+     * @param state true to enable, false to disable
+     */
+    public void setState(boolean state) {
+        this.state = state;
+    }
+
+    /**
+     * Get the state of the vacuum subsystem.
+     *
+     * @return true if the vacuum is enabled, false if it is disabled
+     */
+    public boolean getState() {
+        return state;
     }
 }
