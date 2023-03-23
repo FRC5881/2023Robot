@@ -2,8 +2,7 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 
 import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.*;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -31,6 +30,8 @@ public class ArmSubsystem extends SubsystemBase {
             new CANSparkMax(
                     Constants.CANConstants.ARM_STAGE_THREE,
                     CANSparkMaxLowLevel.MotorType.kBrushless);
+    private final RelativeEncoder stage1Encoder =
+            stage1.getAlternateEncoder(SparkMaxAlternateEncoder.Type.kQuadrature, 8192);
     private WayPoints lastWaypoint = WayPoints.HOME;
     private boolean mode = true;
 
@@ -48,6 +49,9 @@ public class ArmSubsystem extends SubsystemBase {
         stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
         stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
         stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_1_LIMIT);
+        stage1.getPIDController().setFeedbackDevice(stage1Encoder);
+
+        // TODO: These???
         stage1.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
         stage1.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
 
@@ -81,7 +85,7 @@ public class ArmSubsystem extends SubsystemBase {
         stage3.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
         stage3.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
 
-        /*ShuffleboardTab tab = Shuffleboard.getTab("Arm");
+        ShuffleboardTab tab = Shuffleboard.getTab("Arm");
 
         ShuffleboardLayout list = tab.getLayout("Commands", BuiltInLayouts.kList);
         list.add("cToggleMode", cToggleMode());
@@ -94,7 +98,7 @@ public class ArmSubsystem extends SubsystemBase {
         list.add("cSafety", cSafety());
         list.add("cHome", cHome());
 
-        tab.add(this);*/
+        tab.add(this);
     }
 
     @Override
@@ -117,6 +121,8 @@ public class ArmSubsystem extends SubsystemBase {
                 "Stage 2", () -> stage2.getEncoder().getPosition(), this::setStage2Rotations);
         builder.addDoubleProperty(
                 "Stage 3", () -> stage3.getEncoder().getPosition(), this::setStage3Rotations);
+
+        builder.addDoubleProperty("Stage 1 Alt Position", stage1Encoder::getPosition, null);
 
         builder.addDoubleProperty("PID Stage 1 P", this::getStage1P, this::setStage1P);
         builder.addDoubleProperty("PID Stage 1 I", this::getStage1I, this::setStage1I);

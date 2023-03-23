@@ -69,8 +69,7 @@ public class VacuumSubsystem extends SubsystemBase {
         builder.addStringProperty("Vacuum state", () -> state.toString(), null);
 
         if (Robot.isReal()) {
-            builder.addBooleanProperty(
-                    "PDH switchable channel", pdh::getSwitchableChannel, null);
+            builder.addBooleanProperty("PDH switchable channel", pdh::getSwitchableChannel, null);
             builder.addDoubleProperty("Applied Output", vacuum1::getAppliedOutput, null);
         } else {
             builder.addBooleanProperty(
