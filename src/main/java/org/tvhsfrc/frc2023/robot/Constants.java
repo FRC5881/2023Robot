@@ -8,6 +8,9 @@ package org.tvhsfrc.frc2023.robot;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
+import java.util.ArrayList;
+import java.util.HashMap;
+import org.tvhsfrc.frc2023.robot.utils.Triple;
 import swervelib.math.Matter;
 import swervelib.parser.PIDFConfig;
 
@@ -71,7 +74,7 @@ public final class Constants {
         public static final double STAGE_1_LIMIT = 60 / 360d; // TODO: Check this
 
         /** Stage 1 PID Settings */
-        public static final PIDFConfig STAGE_1_PID = new PIDFConfig(0.1, 0.0001, 0, 0);
+        public static final PIDFConfig STAGE_1_PID = new PIDFConfig(0.032, 0.000001, 0.01, 0);
         /** Stage 1 Maximum output (as percentage) for PID control */
         public static final double STAGE_1_MIN_OUTPUT = -0.2;
         /** Stage 1 Minimum output (as negative percentage) for PID control */
@@ -105,44 +108,76 @@ public final class Constants {
         public static final double STAGE_3_MAX_OUTPUT = 0.2;
 
         // TODO: choose tolerances
-        public static final double ANGLE_TOLERANCE = 2;
-        public static final double DISTANCE_TOLERANCE = Units.inchesToMeters(1);
+        public static final double STAGE_1_TOLERANCE = 0.01;
+        public static final double STAGE_2_TOLERANCE = 0.01;
+        public static final double STAGE_3_TOLERANCE = 0.01;
+
+        public static final HashMap<WayPoint, ArrayList<WayPoint>> HOME_PATHS =
+                new HashMap<WayPoint, ArrayList<WayPoint>>() {
+                    {
+                        put(
+                                WayPoint.CUBE_BOTTOM,
+                                new ArrayList<WayPoint>() {
+                                    {
+                                        add(WayPoint.SAFE);
+                                        add(WayPoint.CUBE_BOTTOM);
+                                    }
+                                });
+
+                        put(
+                                WayPoint.CUBE_MIDDLE,
+                                new ArrayList<WayPoint>() {
+                                    {
+                                        add(WayPoint.CUBE_MIDDLE_ONE);
+                                        add(WayPoint.CUBE_MIDDLE);
+                                    }
+                                });
+
+                        put(
+                                WayPoint.CUBE_TOP,
+                                new ArrayList<WayPoint>() {
+                                    {
+                                        add(WayPoint.CUBE_TOP_ONE);
+                                        add(WayPoint.CUBE_TOP);
+                                    }
+                                });
+                    }
+                };
     }
 
-    public enum WayPoints {
-        HOME(new Pose2d(-0.0048, 0.08, Rotation2d.fromDegrees(45))),
-        SAFE(new Pose2d(0.26, 0.17, Rotation2d.fromDegrees(45))),
-        CUBE_BOTTOM(new Pose2d(0.50, 0.2820, Rotation2d.fromDegrees(45))),
-        CUBE_MIDDLE(new Pose2d(0.87, 0.91, Rotation2d.fromDegrees(45))),
-        CUBE_TOP(new Pose2d(1.14, 1.15, Rotation2d.fromDegrees(45))),
-        CONE_BOTTOM(new Pose2d(0.483, 0.113, Rotation2d.fromDegrees(45))),
-        CONE_MIDDLE(new Pose2d(0.870, 0.995, Rotation2d.fromDegrees(-45))),
-        CONE_TOP(new Pose2d(1.098, 1.397, Rotation2d.fromDegrees(45))),
-        CUBE_STORE(new Pose2d(0.366, 0.170, Rotation2d.fromDegrees(45))),
-        CONE_STORE(new Pose2d(0.366, 0.170, Rotation2d.fromDegrees(45)));
+    public enum WayPoint {
+        // Waypoints we can reach via button presses
+        HOME(0.0, 0.0, 0.0),
+        CUBE_BOTTOM(0.0, 0.0568, 0.2),
+        CUBE_MIDDLE_ONE(0.0, 0.1596, 0.0),
+        CUBE_MIDDLE(0.039, 0.2057, 0.445), // score
+        CUBE_TOP_ONE(0.0, 0.3101, 0.0),
+        CUBE_TOP(0.0737, 0.3101, 0.3837), // score
+        CUBE_GRAB,
+        CONE_BOTTOM,
+        CONE_MIDDLE,
+        CONE_TOP,
+        CONE_GRAB,
 
-        public final Pose2d pose;
+        // Waypoints that are useful for trajectories
+        SAFE(0.0, 0.07, 0.0);
 
-        WayPoints(Pose2d pose) {
-            this.pose = pose;
+        public final Triple<Rotation2d, Rotation2d, Rotation2d> position;
+
+        WayPoint(Triple<Double, Double, Double> position) {
+            this.position =
+                    new Triple<>(
+                            Rotation2d.fromRotations(position.getA()),
+                            Rotation2d.fromRotations(position.getB()),
+                            Rotation2d.fromRotations(position.getC()));
         }
 
-        public boolean insideBot() {
-            switch (this) {
-                case HOME:
-                case CONE_STORE:
-                case CUBE_STORE:
-                case SAFE:
-                    return true;
-                case CUBE_BOTTOM:
-                case CONE_TOP:
-                case CONE_MIDDLE:
-                case CONE_BOTTOM:
-                case CUBE_TOP:
-                case CUBE_MIDDLE:
-                    return false;
-            }
-            return false;
+        WayPoint(double stage1, double stage2, double stage3) {
+            this(new Triple<>(stage1, stage2, stage3));
+        }
+
+        WayPoint() {
+            this(0, 0, 0);
         }
     }
 
