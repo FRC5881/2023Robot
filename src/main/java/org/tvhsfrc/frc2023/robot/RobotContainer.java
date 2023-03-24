@@ -7,6 +7,7 @@ package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -19,7 +20,6 @@ import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteDrive;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteFieldDrive;
-import org.tvhsfrc.frc2023.robot.commands.drive.Lock;
 import org.tvhsfrc.frc2023.robot.commands.drive.TeleopDrive;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
@@ -94,10 +94,9 @@ public class RobotContainer {
                         false,
                         true);
 
-        // swerveSubsystem.setDefaultCommand(
-        // !RobotBase.isSimulation() ? closedAbsoluteDrive : closedFieldAbsoluteDrive);
+        swerveSubsystem.setDefaultCommand(closedFieldRel);
 
-        swerveSubsystem.setDefaultCommand(new Lock(swerveSubsystem));
+        // swerveSubsystem.setDefaultCommand(new Lock(swerveSubsystem));
     }
 
     /**

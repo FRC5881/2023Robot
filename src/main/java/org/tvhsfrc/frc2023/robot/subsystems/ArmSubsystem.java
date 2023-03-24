@@ -88,6 +88,11 @@ public class ArmSubsystem extends SubsystemBase {
         ShuffleboardTab tab = Shuffleboard.getTab("Arm");
 
         tab.add(this);
+
+        // Start at home
+        setStage1Rotations(0);
+        setStage2Rotations(0);
+        setStage3Rotations(0);
     }
 
     @Override
@@ -237,7 +242,8 @@ public class ArmSubsystem extends SubsystemBase {
                         < Constants.Arm.STAGE_3_TOLERANCE;
     }
 
-    public CommandBase buildPath(WayPoint start, WayPoint end) {
+    public CommandBase buildPath(
+            WayPoint start, WayPoint end) {
         if (start == WayPoint.HOME) {
             return new ArmTrajectory(this, Constants.Arm.HOME_PATHS.get(end));
         }

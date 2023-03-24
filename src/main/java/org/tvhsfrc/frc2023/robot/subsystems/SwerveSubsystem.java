@@ -4,13 +4,11 @@
 
 package org.tvhsfrc.frc2023.robot.subsystems;
 
-import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.io.File;
 import java.util.Optional;
@@ -24,9 +22,6 @@ import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 public class SwerveSubsystem extends SubsystemBase {
-    /// NavX connected over MXP
-    private final AHRS navx = new AHRS(SPI.Port.kMXP);
-
     /** Swerve drive object. */
     private final SwerveDrive swerveDrive;
 
@@ -145,7 +140,6 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public void calibrateGyro() {
         swerveDrive.zeroGyro();
-        navx.calibrate();
     }
 
     /**
