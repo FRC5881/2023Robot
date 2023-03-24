@@ -37,6 +37,9 @@ public class ArmSubsystem extends SubsystemBase {
     private double stage2setpoint = 0;
     private double stage3setpoint = 0;
 
+    private GAME_PIECE_TYPE currentGamePieceTarget = GAME_PIECE_TYPE.CONE;
+    private ARM_TARGET currentArmTarget = ARM_TARGET.HOME;
+
     public ArmSubsystem() {
         // Stage 1
         setStage1P(STAGE_1_PID.p);
@@ -114,6 +117,9 @@ public class ArmSubsystem extends SubsystemBase {
                 "PID Stage 3 I", () -> stage3.getPIDController().getI(), this::setStage3I);
         builder.addDoubleProperty(
                 "PID Stage 3 D", () -> stage3.getPIDController().getD(), this::setStage3D);
+
+        builder.addStringProperty("Game Piece", currentGamePieceTarget::toString, null);
+        builder.addStringProperty("Arm Target", currentArmTarget::toString, null);
     }
 
     public double getStage1P() {
@@ -360,7 +366,7 @@ public class ArmSubsystem extends SubsystemBase {
 
             // reverse the list
             Collections.reverse(path);
-            
+
             // add HOME to the end
             path.add(WayPoint.HOME);
 
@@ -369,5 +375,46 @@ public class ArmSubsystem extends SubsystemBase {
 
         // Otherwise just go home and then to the target
         return buildPath(start, WayPoint.HOME).andThen(buildPath(WayPoint.HOME, end));
+    }
+
+
+    /**
+     * Toggles the game piece type between cube and cone.
+     */
+    public void toggleGamePiece() {
+        if (currentGamePieceTarget.equals(GAME_PIECE_TYPE.CUBE)) {
+            currentGamePieceTarget = GAME_PIECE_TYPE.CONE;
+        } else {
+            currentGamePieceTarget = GAME_PIECE_TYPE.CUBE;
+        }
+    }
+
+    /**
+     * Cycles though the available ARM_TARGET values.
+     */
+    public void cycleArmTarget() {
+        switch (currentArmTarget) {
+            case HOME:
+                currentArmTarget = ARM_TARGET.SAFE;
+                break;
+            case SAFE:
+                currentArmTarget = ARM_TARGET.FLOOR;
+                break;
+            case FLOOR:
+                currentArmTarget = ARM_TARGET.LOW;
+                break;
+            case LOW:
+                currentArmTarget = ARM_TARGET.MID;
+                break;
+            case MID:
+                currentArmTarget = ARM_TARGET.HIGH;
+                break;
+            case HIGH:
+                currentArmTarget = ARM_TARGET.DOUBLE_SUBSTATION;
+                break;
+            case DOUBLE_SUBSTATION:
+                currentArmTarget = ARM_TARGET.HOME;
+                break;
+        }
     }
 }

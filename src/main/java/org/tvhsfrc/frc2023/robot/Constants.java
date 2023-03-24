@@ -143,7 +143,23 @@ public final class Constants {
                                 });
                     }
                 };
-    }
+
+        public enum GAME_PIECE_TYPE {
+            CONE,
+            CUBE
+        }
+
+        public enum ARM_TARGET {
+            HOME,
+            SAFE,
+            FLOOR,
+            LOW,
+            MID,
+            HIGH,
+            DOUBLE_SUBSTATION;
+
+        }
+
 
     public enum WayPoint {
         // Waypoints we can reach via button presses
