@@ -26,13 +26,10 @@ public class ArmTrajectory extends SequentialCommandGroup {
                             false));
         }
 
-        Triple<Rotation2d, Rotation2d, Rotation2d> position = points.get(points.size() - 1).position;
+        Triple<Rotation2d, Rotation2d, Rotation2d> position =
+                points.get(points.size() - 1).position;
         addCommands(
                 new SetArmSetpoint(
-                        armSubsystem,
-                        position.getA(),
-                        position.getB(),
-                        position.getC(),
-                        true));
+                        armSubsystem, position.getA(), position.getB(), position.getC(), true));
     }
 }

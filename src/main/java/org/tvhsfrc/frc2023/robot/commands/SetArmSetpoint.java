@@ -29,7 +29,12 @@ public class SetArmSetpoint extends CommandBase {
         this.hold = hold;
     }
 
-    public SetArmSetpoint(ArmSubsystem armSubsystem, Rotation2d stage1Rotations, Rotation2d stage2Rotations, Rotation2d stage3Rotations, boolean hold) {
+    public SetArmSetpoint(
+            ArmSubsystem armSubsystem,
+            Rotation2d stage1Rotations,
+            Rotation2d stage2Rotations,
+            Rotation2d stage3Rotations,
+            boolean hold) {
         this.armSubsystem = armSubsystem;
 
         this.stage1Rotations = stage1Rotations;
@@ -39,7 +44,10 @@ public class SetArmSetpoint extends CommandBase {
         this.hold = hold;
     }
 
-    public SetArmSetpoint(ArmSubsystem armSubsystem, Triple<Rotation2d, Rotation2d, Rotation2d> angles, boolean hold) {
+    public SetArmSetpoint(
+            ArmSubsystem armSubsystem,
+            Triple<Rotation2d, Rotation2d, Rotation2d> angles,
+            boolean hold) {
         this(armSubsystem, angles.getA(), angles.getB(), angles.getC(), hold);
     }
 

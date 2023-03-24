@@ -157,9 +157,8 @@ public final class Constants {
             MID,
             HIGH,
             DOUBLE_SUBSTATION;
-
         }
-
+    }
 
     public enum WayPoint {
         // Waypoints we can reach via button presses

@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.ArrayList;
 import java.util.Collections;
-
 import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.Constants.WayPoint;
 import org.tvhsfrc.frc2023.robot.commands.ArmTrajectory;
@@ -194,101 +193,6 @@ public class ArmSubsystem extends SubsystemBase {
         stage3.getPIDController().setD(d * GEARBOX_RATIO_STAGE_3);
     }
 
-    /**
-     * This just takes the inputs for the Law of Cosines, and spits out the desired angle, gamma.
-     *
-     * <p>If the edges suggest the triangle is impossible this returns NaN.
-     *
-     * @param a a leg
-     * @param b a leg
-     * @param c side opposite the returned angle (gamma)
-     * @return Gives the value of gamma in radians
-     */
-    // private static double lawOfCosines(double a, double b, double c) {
-    //     return Math.acos((a * a + b * b - c * c) / (2 * a * b));
-    // }
-
-    /**
-     * Given a Pose2d (a position & an angle) of the end effector return the angles of the joints.
-     *
-     * <p>If the target is out of reach, stage 1 and 2 will be made into a straight line that points
-     * to the target.
-     *
-     * @param pose The position and angle of the end effector
-     * @return The angles of the joints
-     */
-    // public static Triple<Rotation2d, Rotation2d, Rotation2d> inverseKinematics(Pose2d pose) {
-    //     Translation2d translation = pose.getTranslation();
-    //     double c = translation.getNorm();
-
-    //     // Outside the outer circle of the donut
-    //     if (c > STAGE_1_LENGTH + STAGE_2_LENGTH
-    //             || Math.abs(c - (STAGE_1_LENGTH + STAGE_2_LENGTH)) < 10e-6) {
-    //         Rotation2d r1 = translation.getAngle();
-    //         Rotation2d r2 = Rotation2d.fromDegrees(180);
-    //         Rotation2d r3 = pose.getRotation().minus(r1).minus(r2);
-    //         return new Triple<>(Rotation2d.fromDegrees(90).minus(r1), r2, r3);
-    //     }
-
-    //     // Inside the inner circle of the donut
-    //     if (c < STAGE_1_LENGTH - STAGE_2_LENGTH
-    //             || Math.abs(c - (STAGE_1_LENGTH - STAGE_2_LENGTH)) < 10e-6) {
-    //         Rotation2d r1 = translation.getAngle();
-    //         Rotation2d r2 = Rotation2d.fromDegrees(0);
-    //         Rotation2d r3 = pose.getRotation().minus(r1).minus(r2);
-    //         return new Triple<>(Rotation2d.fromDegrees(90).minus(r1), r2, r3);
-    //     }
-
-    //     double r1 =
-    //             lawOfCosines(STAGE_1_LENGTH, c, STAGE_2_LENGTH)
-    //                     + translation.getAngle().getRadians();
-    //     double r2 = lawOfCosines(STAGE_1_LENGTH, STAGE_2_LENGTH, c);
-    //     double r3 = pose.getRotation().getRadians() - r1 - r2;
-
-    //     return new Triple<>(
-    //             Rotation2d.fromRadians(0.5 * Math.PI - r1),
-    //             Rotation2d.fromRadians(r2),
-    //             Rotation2d.fromRadians(r3));
-    // }
-
-    /**
-     * Given the angles of the joints, return the position and angle of the end effector.
-     *
-     * @param r1 The angle of the first joint
-     * @param r2 The angle of the second joint
-     * @param r3 The angle of the third joint
-     * @return The position and angle of the end effector
-     */
-    // public static Pose2d forwardKinematics(Rotation2d r1, Rotation2d r2, Rotation2d r3) {
-    //     r1 = Rotation2d.fromDegrees(90).minus(r1);
-
-    //     double x1 = STAGE_1_LENGTH * r1.getCos();
-    //     double y1 = STAGE_1_LENGTH * r1.getSin();
-
-    //     Rotation2d angle2 = r1.plus(r2).minus(Rotation2d.fromDegrees(180));
-    //     double x2 = STAGE_2_LENGTH * angle2.getCos();
-    //     double y2 = STAGE_2_LENGTH * angle2.getSin();
-
-    //     Rotation2d theta = r1.plus(r2).plus(r3);
-    //     return new Pose2d(x1 + x2, y1 + y2, theta);
-    // }
-
-    /**
-     * Makes arm go straight to a position. DOES NOT CHECK FOR SAFETY
-     *
-     * @param pose Input position the code will tell the arm to go.
-     */
-    // public void setPose(Pose2d pose) {
-    //     Triple<Rotation2d, Rotation2d, Rotation2d> angles = inverseKinematics(pose);
-    //     setPose(angles.getA(), angles.getB(), angles.getC());
-    // }
-
-    // private void setPose(Rotation2d stage1, Rotation2d stage2, Rotation2d stage3) {
-    //     setStage1Rotations(stage1.getRotations());
-    //     setStage2Rotations(stage2.getRotations());
-    //     setStage3Rotations(stage3.getRotations());
-    // }
-
     public void setStage1Rotations(double stage1Rotations) {
         stage1.getPIDController().setReference(stage1Rotations, CANSparkMax.ControlType.kPosition);
     }
@@ -333,33 +237,14 @@ public class ArmSubsystem extends SubsystemBase {
                         < Constants.Arm.STAGE_3_TOLERANCE;
     }
 
-    // public Pose2d getCurrentPose() {
-    //     Rotation2d stage1Angle =
-    //             Rotation2d.fromRotations(getStage1Rotations()).minus(Rotation2d.fromDegrees(10));
-    //     Rotation2d stage2Angle =
-    //             Rotation2d.fromRotations(getStage2Rotations());
-    //     Rotation2d stage3Angle =
-    //             Rotation2d.fromRotations(getStage3Rotations());
-
-    //     return forwardKinematics(stage1Angle, stage2Angle, stage3Angle);
-    // }
-
-    // public boolean isAtPose(Pose2d targetPose) {
-    //     Pose2d currentPose = getCurrentPose();
-    //     double distance = targetPose.getTranslation().getDistance(currentPose.getTranslation());
-    //     double angleDifference =
-    //             Math.abs(targetPose.getRotation().minus(currentPose.getRotation()).getDegrees());
-    //     return (distance < DISTANCE_TOLERANCE && angleDifference < ANGLE_TOLERANCE);
-    // }
-
-    public CommandBase buildPath(
-            WayPoint start, WayPoint end) {
+    public CommandBase buildPath(WayPoint start, WayPoint end) {
         if (start == WayPoint.HOME) {
             return new ArmTrajectory(this, Constants.Arm.HOME_PATHS.get(end));
         }
 
         if (end == WayPoint.HOME) {
-            ArrayList<WayPoint> path = (ArrayList<WayPoint>) Constants.Arm.HOME_PATHS.get(start).clone();
+            ArrayList<WayPoint> path =
+                    (ArrayList<WayPoint>) Constants.Arm.HOME_PATHS.get(start).clone();
 
             // remove the last element
             path.remove(path.size() - 1);
@@ -377,10 +262,7 @@ public class ArmSubsystem extends SubsystemBase {
         return buildPath(start, WayPoint.HOME).andThen(buildPath(WayPoint.HOME, end));
     }
 
-
-    /**
-     * Toggles the game piece type between cube and cone.
-     */
+    /** Toggles the game piece type between cube and cone. */
     public void toggleGamePiece() {
         if (currentGamePieceTarget.equals(GAME_PIECE_TYPE.CUBE)) {
             currentGamePieceTarget = GAME_PIECE_TYPE.CONE;
@@ -389,9 +271,7 @@ public class ArmSubsystem extends SubsystemBase {
         }
     }
 
-    /**
-     * Cycles though the available ARM_TARGET values.
-     */
+    /** Cycles though the available ARM_TARGET values. */
     public void cycleArmTarget() {
         switch (currentArmTarget) {
             case HOME:
