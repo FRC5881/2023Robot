@@ -32,6 +32,7 @@ public final class Constants {
 
     public static class OperatorConstants {
         public static final int DRIVER_CONTROLLER_PORT = 0;
+        public static final int ARM_CONTROLLER_PORT = 1;
     }
 
     /** Identifiers for all of the CAN devices on the robot. */
@@ -71,8 +72,8 @@ public final class Constants {
         public static final double STAGE_1_LENGTH = Units.inchesToMeters(38.136);
 
         public static final double GEARBOX_RATIO_STAGE_1 = 5 * 5 * 5;
-        public static final double STAGE_1_LIMIT = 60 / 360d; // TODO: Check this
-
+        public static final double STAGE_1_HOME = -5 / 360d;
+        public static final double STAGE_1_LIMIT = 60 / 360d;
         /** Stage 1 PID Settings */
         public static final PIDFConfig STAGE_1_PID = new PIDFConfig(0.032, 0.000001, 0.01, 0);
         /** Stage 1 Maximum output (as percentage) for PID control */
@@ -85,7 +86,6 @@ public final class Constants {
 
         public static final double GEARBOX_RATIO_STAGE_2 = 3 * 5 * 5;
         public static final double STAGE_2_LIMIT = 180 / 360d;
-
         /** Stage 2 PID Settings - Use values from the SPARK Max Hardware Client */
         public static final PIDFConfig STAGE_2_PID = new PIDFConfig(0.15, 0, 0.05, 0);
         /** Stage 2 Maximum output (as percentage) for PID control */
@@ -99,7 +99,6 @@ public final class Constants {
         public static final double GEARBOX_RATIO_STAGE_3 =
                 4 * 4 * (28 / 16d) * (28 / 16d) * (28 / 16d);
         public static final double STAGE_3_LIMIT = 270 / 360d;
-
         /** Stage 3 PID Settings */
         public static final PIDFConfig STAGE_3_PID = new PIDFConfig(0.15, 0, 0.3, 0);
         /** Stage 3 Maximum output (as percentage) for PID control */
@@ -112,33 +111,71 @@ public final class Constants {
         public static final double STAGE_2_TOLERANCE = 0.01;
         public static final double STAGE_3_TOLERANCE = 0.01;
 
-        public static final HashMap<WayPoint, ArrayList<WayPoint>> HOME_PATHS =
-                new HashMap<WayPoint, ArrayList<WayPoint>>() {
+        public static final HashMap<WAYPOINT, ArrayList<WAYPOINT>> HOME_PATHS =
+                new HashMap<WAYPOINT, ArrayList<WAYPOINT>>() {
                     {
                         put(
-                                WayPoint.CUBE_BOTTOM,
-                                new ArrayList<WayPoint>() {
+                                WAYPOINT.LOW_CUBE,
+                                new ArrayList<WAYPOINT>() {
                                     {
-                                        add(WayPoint.SAFE);
-                                        add(WayPoint.CUBE_BOTTOM);
+                                        add(WAYPOINT.SAFE);
+                                        add(WAYPOINT.LOW_CUBE);
                                     }
                                 });
-
                         put(
-                                WayPoint.CUBE_MIDDLE,
-                                new ArrayList<WayPoint>() {
+                                WAYPOINT.MID_CUBE,
+                                new ArrayList<WAYPOINT>() {
                                     {
-                                        add(WayPoint.CUBE_MIDDLE_ONE);
-                                        add(WayPoint.CUBE_MIDDLE);
+                                        add(WAYPOINT.MID_CUBE_MIDPOINT);
+                                        add(WAYPOINT.MID_CUBE);
                                     }
                                 });
-
                         put(
-                                WayPoint.CUBE_TOP,
-                                new ArrayList<WayPoint>() {
+                                WAYPOINT.HIGH_CUBE,
+                                new ArrayList<WAYPOINT>() {
                                     {
-                                        add(WayPoint.CUBE_TOP_ONE);
-                                        add(WayPoint.CUBE_TOP);
+                                        add(WAYPOINT.HIGH_CUBE_MIDPOINT);
+                                        add(WAYPOINT.HIGH_CUBE);
+                                    }
+                                });
+                        put(
+                                WAYPOINT.FLOOR_CUBE,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.SAFE);
+                                        add(WAYPOINT.FLOOR_CUBE);
+                                    }
+                                });
+                        put(
+                                WAYPOINT.LOW_CONE,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.SAFE);
+                                        add(WAYPOINT.LOW_CONE);
+                                    }
+                                });
+                        put(
+                                WAYPOINT.MID_CONE,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.MID_CONE_MIDPOINT);
+                                        add(WAYPOINT.MID_CONE);
+                                    }
+                                });
+                        put(
+                                WAYPOINT.HIGH_CONE,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.HIGH_CONE_MIDPOINT);
+                                        add(WAYPOINT.HIGH_CONE);
+                                    }
+                                });
+                        put(
+                                WAYPOINT.FLOOR_CONE,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.SAFE);
+                                        add(WAYPOINT.FLOOR_CONE);
                                     }
                                 });
                     }
@@ -160,39 +197,34 @@ public final class Constants {
         }
     }
 
-    public enum WayPoint {
-        // Waypoints we can reach via button presses
-        HOME(0.0, 0.0, 0.0),
-        CUBE_BOTTOM(0.0, 0.0568, 0.2),
-        CUBE_MIDDLE_ONE(0.0, 0.1596, 0.0),
-        CUBE_MIDDLE(0.039, 0.2057, 0.445), // score
-        CUBE_TOP_ONE(0.0, 0.3101, 0.0),
-        CUBE_TOP(0.0737, 0.3101, 0.3837), // score
-        CUBE_GRAB,
-        CONE_BOTTOM,
-        CONE_MIDDLE,
-        CONE_TOP,
-        CONE_GRAB,
+    public enum WAYPOINT {
+        HOME(Arm.STAGE_1_HOME, 0.0, 0.0),
+        SAFE(Arm.STAGE_1_HOME, 0.07, 0.0),
 
-        // Waypoints that are useful for trajectories
-        SAFE(0.0, 0.07, 0.0);
+        LOW_CUBE(Arm.STAGE_1_HOME, 0.0568, 0.2),
+        MID_CUBE_MIDPOINT(Arm.STAGE_1_HOME, 0.1596, 0.0),
+        MID_CUBE(0.039, 0.2057, 0.445), // score
+        HIGH_CUBE_MIDPOINT(Arm.STAGE_1_HOME, 0.3101, 0.0),
+        HIGH_CUBE(0.0737, 0.3101, 0.3837), // score
+        FLOOR_CUBE(0.0136, 0.0784, 0.3806),
+        DOUBLE_SUBSTATION_CUBE(Arm.STAGE_1_HOME, 0.2050, 0.2932),
 
-        public final Triple<Rotation2d, Rotation2d, Rotation2d> position;
+        LOW_CONE(0.0249, 0.0733, 0.1352),
+        MID_CONE_MIDPOINT(Arm.STAGE_1_HOME, 0.2171, 0.0),
+        MID_CONE(0.0190, 0.2161, 0.2823), // score
+        HIGH_CONE_MIDPOINT(Arm.STAGE_1_HOME, 0.2495, 0.0),
+        HIGH_CONE(0.0996, 0.3879, 0.3890), // score
+        FLOOR_CONE(0.0756, 0.0574, 0.1024),
+        DOUBLE_SUBSTATION_CONE(Arm.STAGE_1_HOME, 0.2050, 0.2932);
 
-        WayPoint(Triple<Double, Double, Double> position) {
-            this.position =
-                    new Triple<>(
-                            Rotation2d.fromRotations(position.getA()),
-                            Rotation2d.fromRotations(position.getB()),
-                            Rotation2d.fromRotations(position.getC()));
+        public final Triple<Double, Double, Double> position;
+
+        WAYPOINT(Triple<Double, Double, Double> position) {
+            this.position = new Triple<>(position.getA(), position.getB(), position.getC());
         }
 
-        WayPoint(double stage1, double stage2, double stage3) {
+        WAYPOINT(double stage1, double stage2, double stage3) {
             this(new Triple<>(stage1, stage2, stage3));
-        }
-
-        WayPoint() {
-            this(0, 0, 0);
         }
     }
 

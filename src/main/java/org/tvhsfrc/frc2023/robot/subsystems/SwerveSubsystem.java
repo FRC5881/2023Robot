@@ -26,14 +26,14 @@ public class SwerveSubsystem extends SubsystemBase {
     private final SwerveDrive swerveDrive;
 
     /** PhotonVision object */
-    private final VisionSubsystem vision;
+    private final Optional<VisionSubsystem> vision;
 
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
      *
      * @param directory Directory of swerve drive config files.
      */
-    public SwerveSubsystem(File directory, VisionSubsystem vision) {
+    public SwerveSubsystem(File directory, Optional<VisionSubsystem> vision) {
         // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects
         // being created.
         SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
@@ -72,7 +72,7 @@ public class SwerveSubsystem extends SubsystemBase {
     public void periodic() {
         swerveDrive.updateOdometry();
 
-        Optional<EstimatedRobotPose> visionPose = vision.getEstimatedPose();
+        Optional<EstimatedRobotPose> visionPose = vision.flatMap(VisionSubsystem::getEstimatedPose);
         if (visionPose.isPresent()) {
             Pose2d pose = visionPose.get().estimatedPose.toPose2d();
             double timestamp = visionPose.get().timestampSeconds;
@@ -135,10 +135,6 @@ public class SwerveSubsystem extends SubsystemBase {
      * Resets the gyro angle to zero and resets odometry to the same position, but facing toward 0.
      */
     public void zeroGyro() {
-        swerveDrive.zeroGyro();
-    }
-
-    public void calibrateGyro() {
         swerveDrive.zeroGyro();
     }
 

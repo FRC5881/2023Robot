@@ -9,18 +9,20 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.io.File;
+import java.util.Optional;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
+import org.tvhsfrc.frc2023.robot.commands.ArmDriveCommand;
+import org.tvhsfrc.frc2023.robot.commands.VacuumCommand;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteDrive;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteFieldDrive;
-import org.tvhsfrc.frc2023.robot.commands.drive.TeleopDrive;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
@@ -33,7 +35,9 @@ import org.tvhsfrc.frc2023.robot.subsystems.VisionSubsystem;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-    private final VisionSubsystem visionSubsystem = new VisionSubsystem();
+    private final Optional<VisionSubsystem> visionSubsystem = Optional.empty();
+    // private final Optional<VisionSubsystem> visionSubsystem = Optional.of(new VisionSubsystem());
+
     private final SwerveSubsystem swerveSubsystem =
             new SwerveSubsystem(
                     new File(Filesystem.getDeployDirectory(), "swerve"), visionSubsystem);
@@ -43,8 +47,10 @@ public class RobotContainer {
     private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem(pdh);
 
     // Driver controller
-    private final XboxController driverController =
-            new XboxController(OperatorConstants.DRIVER_CONTROLLER_PORT);
+    private final CommandXboxController driverController =
+            new CommandXboxController(OperatorConstants.DRIVER_CONTROLLER_PORT);
+    private final CommandPS4Controller armController =
+            new CommandPS4Controller(OperatorConstants.ARM_CONTROLLER_PORT);
 
     // ROBORIO "User" button
     Trigger userButton = new Trigger(RobotController::getUserButton);
@@ -53,50 +59,6 @@ public class RobotContainer {
     public RobotContainer() {
         // Configure the trigger bindings
         configureBindings();
-
-        AbsoluteDrive closedAbsoluteDrive =
-                new AbsoluteDrive(
-                        swerveSubsystem,
-                        // Applies deadbands and inverts controls because joysticks
-                        // are back-right positive while robot
-                        // controls are front-left positive
-                        () -> deadband(driverController.getLeftY()),
-                        () -> deadband(driverController.getLeftX()),
-                        () -> -driverController.getRightX(),
-                        () -> -driverController.getRightY(),
-                        false);
-
-        AbsoluteFieldDrive closedFieldAbsoluteDrive =
-                new AbsoluteFieldDrive(
-                        swerveSubsystem,
-                        () -> deadband(driverController.getLeftY()),
-                        () -> deadband(driverController.getLeftX()),
-                        () -> driverController.getRawAxis(2),
-                        false);
-
-        TeleopDrive simClosedFieldRel =
-                new TeleopDrive(
-                        swerveSubsystem,
-                        () -> deadband(driverController.getLeftY()),
-                        () -> deadband(driverController.getLeftX()),
-                        () -> driverController.getRawAxis(2),
-                        () -> true,
-                        false,
-                        true);
-
-        TeleopDrive closedFieldRel =
-                new TeleopDrive(
-                        swerveSubsystem,
-                        () -> deadband(driverController.getLeftY()),
-                        () -> deadband(driverController.getLeftX()),
-                        () -> -driverController.getRawAxis(3),
-                        () -> true,
-                        false,
-                        true);
-
-        swerveSubsystem.setDefaultCommand(closedFieldRel);
-
-        // swerveSubsystem.setDefaultCommand(new Lock(swerveSubsystem));
     }
 
     /**
@@ -109,10 +71,78 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
-        new JoystickButton(driverController, XboxController.Button.kStart.value)
-                .onTrue((new InstantCommand(swerveSubsystem::zeroGyro)));
+        driverController.start().onTrue(new InstantCommand(swerveSubsystem::zeroGyro));
 
-        userButton.onTrue(new InstantCommand(swerveSubsystem::calibrateGyro));
+        AbsoluteDrive closedAbsoluteDrive =
+                new AbsoluteDrive(
+                        swerveSubsystem,
+                        // Applies deadbands and inverts controls because joysticks
+                        // are back-right positive while robot
+                        // controls are front-left positive
+                        () -> deadband(driverController.getLeftY()),
+                        () -> deadband(driverController.getLeftX()),
+                        () -> driverController.getRightX(),
+                        () -> -driverController.getRightY(),
+                        false);
+
+        AbsoluteFieldDrive closedFieldAbsoluteDrive =
+                new AbsoluteFieldDrive(
+                        swerveSubsystem,
+                        () -> deadband(driverController.getLeftY()),
+                        () -> deadband(driverController.getLeftX()),
+                        () -> deadband(driverController.getRightX()),
+                        false);
+
+        swerveSubsystem.setDefaultCommand(closedAbsoluteDrive);
+
+        // POV Down cycle arm targets
+        armController
+                .povUp()
+                .onTrue(
+                        new InstantCommand(
+                                () -> {
+                                    arm.cycleArmTarget(false);
+                                }));
+        armController
+                .povDown()
+                .onTrue(
+                        new InstantCommand(
+                                () -> {
+                                    arm.cycleArmTarget(true);
+                                }));
+
+        // POV Left/Right cycle arm mode (cube vs cone)
+        armController.povLeft().onTrue(new InstantCommand(arm::toggleGamePiece));
+        armController.povRight().onTrue(new InstantCommand(arm::toggleGamePiece));
+
+        // X button brings the arm to the next target
+        armController.cross().onTrue(arm.nextPath());
+
+        // O button brings the arm Home
+        armController
+                .circle()
+                .onTrue(
+                        Commands.sequence(
+                                new InstantCommand(
+                                        () -> arm.setArmTarget(Constants.Arm.ARM_TARGET.HOME)),
+                                arm.nextPath()));
+
+        // Touchpad toggles vacuum
+        armController.touchpad().onTrue(new VacuumCommand(vacuumSubsystem));
+
+        // Manual arm control
+        arm.setDefaultCommand(
+            new ArmDriveCommand(arm, 
+                                () -> -deadband(armController.getRawAxis(1)),
+                                () -> -deadband(armController.getRawAxis(5)),
+                                () -> {
+                                    double left = (armController.getRawAxis(3) + 1) / 2.0;
+                                    double right = (armController.getRawAxis(4) + 1) / 2.0;
+
+                                    return right - left;
+                                }
+            )
+        );
 
         // new JoystickButton(driverController, XboxController.Button.kX.value).onTrue(arm.cHome());
     }
