@@ -72,7 +72,7 @@ public final class Constants {
         public static final double STAGE_1_LENGTH = Units.inchesToMeters(38.136);
 
         public static final double GEARBOX_RATIO_STAGE_1 = 5 * 5 * 5;
-        public static final double STAGE_1_HOME = -5 / 360d;
+        public static final double STAGE_1_HOME = 0 / 360d;
         public static final double STAGE_1_LIMIT = 60 / 360d;
         /** Stage 1 PID Settings */
         public static final PIDFConfig STAGE_1_PID = new PIDFConfig(0.032, 0.0001, 0.05, 0);
@@ -80,8 +80,6 @@ public final class Constants {
         public static final double STAGE_1_MIN_OUTPUT = -0.25;
         /** Stage 1 Minimum output (as negative percentage) for PID control */
         public static final double STAGE_1_MAX_OUTPUT = 0.25;
-
-        /** Stage 1 */
 
         /** Length of the second stage of the arm in meters */
         public static final double STAGE_2_LENGTH = Units.inchesToMeters(35);
@@ -117,11 +115,32 @@ public final class Constants {
                 new HashMap<WAYPOINT, ArrayList<WAYPOINT>>() {
                     {
                         put(
+                                WAYPOINT.HOME,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.HOME);
+                                    }
+                                });
+                        put(
+                                WAYPOINT.SAFE,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.SAFE);
+                                    }
+                                });
+                        put(
                                 WAYPOINT.LOW_CUBE,
                                 new ArrayList<WAYPOINT>() {
                                     {
                                         add(WAYPOINT.SAFE);
                                         add(WAYPOINT.LOW_CUBE);
+                                    }
+                                });
+                        put(
+                                WAYPOINT.MID_CUBE_MIDPOINT,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.MID_CUBE_MIDPOINT);
                                     }
                                 });
                         put(
@@ -133,11 +152,25 @@ public final class Constants {
                                     }
                                 });
                         put(
+                                WAYPOINT.HIGH_CUBE_MIDPOINT,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.HIGH_CUBE_MIDPOINT);
+                                    }
+                                });
+                        put(
                                 WAYPOINT.HIGH_CUBE,
                                 new ArrayList<WAYPOINT>() {
                                     {
                                         add(WAYPOINT.HIGH_CUBE_MIDPOINT);
                                         add(WAYPOINT.HIGH_CUBE);
+                                    }
+                                });
+                        put(
+                                WAYPOINT.DOUBLE_SUBSTATION_CUBE,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.DOUBLE_SUBSTATION_CUBE);
                                     }
                                 });
                         put(
@@ -157,6 +190,13 @@ public final class Constants {
                                     }
                                 });
                         put(
+                                WAYPOINT.MID_CONE_MIDPOINT,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.MID_CONE_MIDPOINT);
+                                    }
+                                });
+                        put(
                                 WAYPOINT.MID_CONE,
                                 new ArrayList<WAYPOINT>() {
                                     {
@@ -165,11 +205,26 @@ public final class Constants {
                                     }
                                 });
                         put(
+                                WAYPOINT.HIGH_CONE_MIDPOINT,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.HIGH_CONE_MIDPOINT);
+                                    }
+                                });
+
+                        put(
                                 WAYPOINT.HIGH_CONE,
                                 new ArrayList<WAYPOINT>() {
                                     {
                                         add(WAYPOINT.HIGH_CONE_MIDPOINT);
                                         add(WAYPOINT.HIGH_CONE);
+                                    }
+                                });
+                        put(
+                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
+                                new ArrayList<WAYPOINT>() {
+                                    {
+                                        add(WAYPOINT.DOUBLE_SUBSTATION_CONE);
                                     }
                                 });
                         put(

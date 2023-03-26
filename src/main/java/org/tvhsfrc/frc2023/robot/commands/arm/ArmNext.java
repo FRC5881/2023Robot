@@ -1,4 +1,4 @@
-package org.tvhsfrc.frc2023.robot.commands.arm;
+package org.tvhsfrc.frc2023.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;

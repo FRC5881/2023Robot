@@ -64,7 +64,11 @@ public class SwerveSubsystem extends SubsystemBase {
      *     closed-loop.
      */
     public void drive(
-            Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
+            Translation2d translation,
+            double rotation,
+            boolean fieldRelative,
+            boolean isOpenLoop,
+            boolean headingCorrection) {
         swerveDrive.drive(translation, rotation, fieldRelative, isOpenLoop);
     }
 

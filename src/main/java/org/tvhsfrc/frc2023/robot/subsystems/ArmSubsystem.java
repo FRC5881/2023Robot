@@ -51,6 +51,8 @@ public class ArmSubsystem extends SubsystemBase {
         stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) STAGE_1_HOME);
         stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_1_LIMIT);
         stage1.getPIDController().setFeedbackDevice(stage1Encoder);
+        stage1.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
+        stage1.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
 
         // Stage 2
         setStage2P(STAGE_2_PID.p);
@@ -98,6 +100,11 @@ public class ArmSubsystem extends SubsystemBase {
         builder.addDoubleProperty("Stage 2", this::getStage2Rotations, null);
         builder.addDoubleProperty("Stage 3", this::getStage3Rotations, null);
 
+        builder.addDoubleProperty("Stage 1 slop", this::slop, null);
+        builder.addDoubleProperty("inner", () -> stage1.getEncoder().getPosition(), null);
+        builder.addDoubleProperty("outer", () -> stage1Encoder.getPosition(), null);
+        builder.addDoubleProperty("calculate", () -> calculate(), null);
+
         builder.addDoubleProperty(
                 "Stage 1 Set Point", () -> stage1SetPoint, this::setStage1Rotations);
         builder.addDoubleProperty(
@@ -126,6 +133,10 @@ public class ArmSubsystem extends SubsystemBase {
         builder.addDoubleProperty("Stage 1 Temperature", stage1::getMotorTemperature, null);
         builder.addDoubleProperty("Stage 2 Temperature", stage2::getMotorTemperature, null);
         builder.addDoubleProperty("Stage 3 Temperature", stage3::getMotorTemperature, null);
+
+        builder.addDoubleProperty("Stage 1 Output", () -> 100 * stage1.getAppliedOutput(), null);
+        builder.addDoubleProperty("Stage 2 Output", () -> 100 * stage2.getAppliedOutput(), null);
+        builder.addDoubleProperty("Stage 3 Output", () -> 100 * stage3.getAppliedOutput(), null);
     }
 
     public double getStage1P() {
@@ -201,12 +212,17 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     public void setStage1Rotations(double stage1Rotations) {
+
         stage1.getPIDController().setReference(stage1Rotations, CANSparkMax.ControlType.kPosition);
         stage1SetPoint = stage1Rotations;
     }
 
     public double getStage1Rotations() {
         return stage1Encoder.getPosition();
+    }
+
+    public double getStage1Vel() {
+        return stage1Encoder.getVelocity();
     }
 
     public void setStage2Rotations(double stage2Rotations) {
@@ -241,6 +257,9 @@ public class ArmSubsystem extends SubsystemBase {
         }
 
         if (end == WAYPOINT.HOME) {
+            System.out.println(start);
+            System.out.println(end);
+
             ArrayList<WAYPOINT> path = new ArrayList<>(Constants.Arm.HOME_PATHS.get(start));
 
             // remove the last element
@@ -373,5 +392,19 @@ public class ArmSubsystem extends SubsystemBase {
 
     public WAYPOINT getPreviousArmWaypoint() {
         return previousArmWaypoint;
+    }
+
+    // Calculate slop
+    public double slop() {
+        double inner = stage1.getEncoder().getPosition();
+        double outer = stage1Encoder.getPosition();
+
+        return inner - outer;
+    }
+
+    public double calculate() {
+        double error = getStage1Rotations() - stage1SetPoint;
+
+        return getStage1P() * error;
     }
 }

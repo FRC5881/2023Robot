@@ -22,9 +22,7 @@ import org.tvhsfrc.frc2023.robot.commands.arm.ArmDriveCommand;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmNext;
 import org.tvhsfrc.frc2023.robot.commands.arm.VacuumCommand;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
-import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteDrive;
-import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteFieldDrive;
-import org.tvhsfrc.frc2023.robot.commands.drive.TeleopDrive;
+import org.tvhsfrc.frc2023.robot.commands.drive.RelativeRelativeDrive;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
@@ -75,37 +73,14 @@ public class RobotContainer {
     private void configureBindings() {
         driverController.start().onTrue(new InstantCommand(swerveSubsystem::zeroGyro));
 
-        AbsoluteDrive closedAbsoluteDrive =
-                new AbsoluteDrive(
+        RelativeRelativeDrive drive =
+                new RelativeRelativeDrive(
                         swerveSubsystem,
-                        // Applies deadbands and inverts controls because joysticks
-                        // are back-right positive while robot
-                        // controls are front-left positive
-                        () -> deadband(driverController.getLeftY()),
-                        () -> deadband(driverController.getLeftX()),
-                        () -> driverController.getRightX(),
-                        () -> -driverController.getRightY(),
-                        false);
+                        () -> deadband(driverController.getLeftY(), 0.15),
+                        () -> deadband(driverController.getLeftX(), 0.15),
+                        () -> deadband(driverController.getRawAxis(4), 0.15));
 
-        AbsoluteFieldDrive closedFieldAbsoluteDrive =
-                new AbsoluteFieldDrive(
-                        swerveSubsystem,
-                        () -> deadband(driverController.getLeftY()),
-                        () -> deadband(driverController.getLeftX()),
-                        () -> deadband(driverController.getRightX()),
-                        false);
-
-        TeleopDrive closedFieldRel =
-                new TeleopDrive(
-                        swerveSubsystem,
-                        () -> deadband(driverController.getLeftY()),
-                        () -> deadband(driverController.getLeftX()),
-                        () -> -driverController.getRawAxis(4),
-                        () -> true,
-                        false,
-                        true);
-
-        swerveSubsystem.setDefaultCommand(closedFieldRel);
+        swerveSubsystem.setDefaultCommand(drive);
 
         // POV Down cycle arm targets
         armController.povUp().onTrue(new InstantCommand(() -> arm.cycleArmTarget(false)));
@@ -125,7 +100,7 @@ public class RobotContainer {
                                 new ArmNext(arm)));
 
         // Touchpad toggles vacuum
-        armController.touchpad().onTrue(new VacuumCommand(vacuumSubsystem));
+        armController.touchpad().toggleOnTrue(new VacuumCommand(vacuumSubsystem));
 
         // Manual arm control
         arm.setDefaultCommand(
@@ -139,8 +114,6 @@ public class RobotContainer {
 
                             return right - left;
                         }));
-
-        // new JoystickButton(driverController, XboxController.Button.kX.value).onTrue(arm.cHome());
     }
 
     /**
