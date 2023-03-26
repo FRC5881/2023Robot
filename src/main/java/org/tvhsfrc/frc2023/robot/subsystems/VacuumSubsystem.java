@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.Robot;
-import org.tvhsfrc.frc2023.robot.commands.VacuumCommand;
+import org.tvhsfrc.frc2023.robot.commands.arm.VacuumCommand;
 
 public class VacuumSubsystem extends SubsystemBase {
     public enum State {

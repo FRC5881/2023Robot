@@ -3,7 +3,6 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
 import com.revrobotics.*;
-
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -13,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
-import org.tvhsfrc.frc2023.robot.commands.ArmTrajectory;
+import org.tvhsfrc.frc2023.robot.commands.arm.ArmTrajectory;
 
 public class ArmSubsystem extends SubsystemBase {
     private final CANSparkMax stage1 =

@@ -1,4 +1,4 @@
-package org.tvhsfrc.frc2023.robot.commands;
+package org.tvhsfrc.frc2023.robot.commands.arm;
 
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import java.util.ArrayList;

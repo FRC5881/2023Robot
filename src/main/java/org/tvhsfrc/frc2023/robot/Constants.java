@@ -81,9 +81,7 @@ public final class Constants {
         /** Stage 1 Minimum output (as negative percentage) for PID control */
         public static final double STAGE_1_MAX_OUTPUT = 0.25;
 
-        /**
-         * Stage 1 
-         */
+        /** Stage 1 */
 
         /** Length of the second stage of the arm in meters */
         public static final double STAGE_2_LENGTH = Units.inchesToMeters(35);

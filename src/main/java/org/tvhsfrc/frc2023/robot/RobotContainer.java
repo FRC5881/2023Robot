@@ -18,9 +18,9 @@ import java.io.File;
 import java.util.Optional;
 import org.tvhsfrc.frc2023.robot.Constants.Arm.ARM_TARGET;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
-import org.tvhsfrc.frc2023.robot.commands.ArmDriveCommand;
-import org.tvhsfrc.frc2023.robot.commands.ArmNext;
-import org.tvhsfrc.frc2023.robot.commands.VacuumCommand;
+import org.tvhsfrc.frc2023.robot.commands.arm.ArmDriveCommand;
+import org.tvhsfrc.frc2023.robot.commands.arm.ArmNext;
+import org.tvhsfrc.frc2023.robot.commands.arm.VacuumCommand;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteDrive;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteFieldDrive;
@@ -108,20 +108,8 @@ public class RobotContainer {
         swerveSubsystem.setDefaultCommand(closedFieldRel);
 
         // POV Down cycle arm targets
-        armController
-                .povUp()
-                .onTrue(
-                        new InstantCommand(
-                                () -> {
-                                    arm.cycleArmTarget(false);
-                                }));
-        armController
-                .povDown()
-                .onTrue(
-                        new InstantCommand(
-                                () -> {
-                                    arm.cycleArmTarget(true);
-                                }));
+        armController.povUp().onTrue(new InstantCommand(() -> arm.cycleArmTarget(false)));
+        armController.povDown().onTrue(new InstantCommand(() -> arm.cycleArmTarget(true)));
 
         // POV Left/Right cycle arm mode (cube vs cone)
         armController.povLeft().onTrue(new InstantCommand(arm::toggleGamePiece));
@@ -134,8 +122,7 @@ public class RobotContainer {
                 .onTrue(
                         Commands.sequence(
                                 new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.HOME)),
-                                new ArmNext(arm)
-                ));
+                                new ArmNext(arm)));
 
         // Touchpad toggles vacuum
         armController.touchpad().onTrue(new VacuumCommand(vacuumSubsystem));
