@@ -3,16 +3,14 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
 import com.revrobotics.*;
-import edu.wpi.first.math.Pair;
+
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 import org.tvhsfrc.frc2023.robot.commands.ArmTrajectory;
@@ -44,6 +42,7 @@ public class ArmSubsystem extends SubsystemBase {
         setStage1P(STAGE_1_PID.p);
         setStage1I(STAGE_1_PID.i);
         setStage1D(STAGE_1_PID.d);
+        stage1.getPIDController().setFF(STAGE_1_PID.f);
         stage1.getPIDController().setOutputRange(STAGE_1_MIN_OUTPUT, STAGE_1_MAX_OUTPUT);
 
         stage1.setInverted(false);
@@ -58,6 +57,7 @@ public class ArmSubsystem extends SubsystemBase {
         setStage2P(STAGE_2_PID.p);
         setStage2I(STAGE_2_PID.i);
         setStage2D(STAGE_2_PID.d);
+        stage2.getPIDController().setFF(STAGE_2_PID.f);
         stage2.getPIDController().setOutputRange(STAGE_2_MIN_OUTPUT, STAGE_2_MAX_OUTPUT);
 
         stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
@@ -72,7 +72,8 @@ public class ArmSubsystem extends SubsystemBase {
         setStage3P(STAGE_3_PID.p);
         setStage3I(STAGE_3_PID.i);
         setStage3D(STAGE_3_PID.d);
-        stage1.getPIDController().setOutputRange(STAGE_3_MIN_OUTPUT, STAGE_3_MAX_OUTPUT);
+        stage3.getPIDController().setFF(STAGE_3_PID.f);
+        stage3.getPIDController().setOutputRange(STAGE_3_MIN_OUTPUT, STAGE_3_MAX_OUTPUT);
 
         stage3.setIdleMode(CANSparkMax.IdleMode.kBrake);
         stage3.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
@@ -117,10 +118,11 @@ public class ArmSubsystem extends SubsystemBase {
         builder.addDoubleProperty("PID Stage 3 I", this::getStage3I, this::setStage3I);
         builder.addDoubleProperty("PID Stage 3 D", this::getStage3D, this::setStage3D);
 
-        builder.addStringProperty("Game Piece", currentGamePieceTarget::toString, null);
-        builder.addStringProperty("Arm Target", currentArmTarget::toString, null);
-        builder.addStringProperty("Previous Arm Waypoint", previousArmWaypoint::toString, null);
-        builder.addBooleanProperty("isAtSetPoint", this::isAtSetPoint, null);
+        builder.addStringProperty("Game Piece", () -> currentGamePieceTarget.toString(), null);
+        builder.addStringProperty("Arm Target", () -> currentArmTarget.toString(), null);
+        builder.addStringProperty(
+                "Previous Arm Waypoint", () -> previousArmWaypoint.toString(), null);
+        builder.addBooleanProperty("isAtSetPoint", () -> this.isAtSetPoint(), null);
 
         builder.addDoubleProperty("Stage 1 Temperature", stage1::getMotorTemperature, null);
         builder.addDoubleProperty("Stage 2 Temperature", stage2::getMotorTemperature, null);
@@ -201,6 +203,7 @@ public class ArmSubsystem extends SubsystemBase {
 
     public void setStage1Rotations(double stage1Rotations) {
         stage1.getPIDController().setReference(stage1Rotations, CANSparkMax.ControlType.kPosition);
+        stage1SetPoint = stage1Rotations;
     }
 
     public double getStage1Rotations() {
@@ -209,6 +212,7 @@ public class ArmSubsystem extends SubsystemBase {
 
     public void setStage2Rotations(double stage2Rotations) {
         stage2.getPIDController().setReference(stage2Rotations, CANSparkMax.ControlType.kPosition);
+        stage2SetPoint = stage2Rotations;
     }
 
     public double getStage2Rotations() {
@@ -217,6 +221,7 @@ public class ArmSubsystem extends SubsystemBase {
 
     public void setStage3Rotations(double stage3Rotations) {
         stage3.getPIDController().setReference(stage3Rotations, CANSparkMax.ControlType.kPosition);
+        stage3SetPoint = stage3Rotations;
     }
 
     public double getStage3Rotations() {
@@ -231,7 +236,7 @@ public class ArmSubsystem extends SubsystemBase {
                         < Constants.Arm.STAGE_3_TOLERANCE;
     }
 
-    private CommandBase buildPath(WAYPOINT start, WAYPOINT end) {
+    public CommandBase buildPath(WAYPOINT start, WAYPOINT end) {
         if (start == WAYPOINT.HOME) {
             return new ArmTrajectory(this, Constants.Arm.HOME_PATHS.get(end));
         }
@@ -255,57 +260,46 @@ public class ArmSubsystem extends SubsystemBase {
         return buildPath(start, WAYPOINT.HOME).andThen(buildPath(WAYPOINT.HOME, end));
     }
 
-    /**
-     * Builds a path from the current position to the next target
-     *
-     * @return a sequential command
-     */
-    public SelectCommand nextPath() {
-        return new SelectCommand(
-                Map.ofEntries(
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.DOUBLE_SUBSTATION, GAME_PIECE_TYPE.CUBE),
-                                buildPath(previousArmWaypoint, WAYPOINT.DOUBLE_SUBSTATION_CUBE)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.DOUBLE_SUBSTATION, GAME_PIECE_TYPE.CONE),
-                                buildPath(previousArmWaypoint, WAYPOINT.DOUBLE_SUBSTATION_CONE)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.FLOOR, GAME_PIECE_TYPE.CUBE),
-                                buildPath(previousArmWaypoint, WAYPOINT.FLOOR_CUBE)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.FLOOR, GAME_PIECE_TYPE.CONE),
-                                buildPath(previousArmWaypoint, WAYPOINT.FLOOR_CONE)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.HIGH, GAME_PIECE_TYPE.CUBE),
-                                buildPath(previousArmWaypoint, WAYPOINT.HIGH_CUBE)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.HIGH, GAME_PIECE_TYPE.CONE),
-                                buildPath(previousArmWaypoint, WAYPOINT.HIGH_CONE)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.HOME, GAME_PIECE_TYPE.CUBE),
-                                buildPath(previousArmWaypoint, WAYPOINT.HOME)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.HOME, GAME_PIECE_TYPE.CONE),
-                                buildPath(previousArmWaypoint, WAYPOINT.HOME)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.LOW, GAME_PIECE_TYPE.CUBE),
-                                buildPath(previousArmWaypoint, WAYPOINT.LOW_CUBE)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.LOW, GAME_PIECE_TYPE.CONE),
-                                buildPath(previousArmWaypoint, WAYPOINT.LOW_CONE)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.MID, GAME_PIECE_TYPE.CUBE),
-                                buildPath(previousArmWaypoint, WAYPOINT.MID_CUBE)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.MID, GAME_PIECE_TYPE.CONE),
-                                buildPath(previousArmWaypoint, WAYPOINT.MID_CONE)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.SAFE, GAME_PIECE_TYPE.CUBE),
-                                buildPath(previousArmWaypoint, WAYPOINT.SAFE)),
-                        Map.entry(
-                                new Pair<>(ARM_TARGET.SAFE, GAME_PIECE_TYPE.CONE),
-                                buildPath(previousArmWaypoint, WAYPOINT.SAFE))),
-                () -> new Pair<>(currentArmTarget, currentGamePieceTarget));
+    public WAYPOINT waypointTarget() {
+        if (currentGamePieceTarget.equals(GAME_PIECE_TYPE.CUBE)) {
+            switch (currentArmTarget) {
+                case HOME:
+                    return WAYPOINT.HOME;
+                case SAFE:
+                    return WAYPOINT.SAFE;
+                case FLOOR:
+                    return WAYPOINT.FLOOR_CUBE;
+                case LOW:
+                    return WAYPOINT.LOW_CUBE;
+                case MID:
+                    return WAYPOINT.MID_CUBE;
+                case HIGH:
+                    return WAYPOINT.HIGH_CUBE;
+                case DOUBLE_SUBSTATION:
+                    return WAYPOINT.DOUBLE_SUBSTATION_CUBE;
+                default:
+                    return WAYPOINT.HOME;
+            }
+        } else {
+            switch (currentArmTarget) {
+                case HOME:
+                    return WAYPOINT.HOME;
+                case SAFE:
+                    return WAYPOINT.SAFE;
+                case FLOOR:
+                    return WAYPOINT.FLOOR_CONE;
+                case LOW:
+                    return WAYPOINT.LOW_CONE;
+                case MID:
+                    return WAYPOINT.MID_CONE;
+                case HIGH:
+                    return WAYPOINT.HIGH_CONE;
+                case DOUBLE_SUBSTATION:
+                    return WAYPOINT.DOUBLE_SUBSTATION_CONE;
+                default:
+                    return WAYPOINT.HOME;
+            }
+        }
     }
 
     /** Toggles the game piece type between cube and cone. */
@@ -319,8 +313,6 @@ public class ArmSubsystem extends SubsystemBase {
 
     /** Cycles though the available ARM_TARGET values. */
     public void cycleArmTarget(boolean reverse) {
-        System.out.println(currentArmTarget);
-
         if (reverse) {
             switch (currentArmTarget) {
                 case HOME:
@@ -378,5 +370,9 @@ public class ArmSubsystem extends SubsystemBase {
 
     public void setPreviousArmWaypoint(WAYPOINT waypoint) {
         previousArmWaypoint = waypoint;
+    }
+
+    public WAYPOINT getPreviousArmWaypoint() {
+        return previousArmWaypoint;
     }
 }

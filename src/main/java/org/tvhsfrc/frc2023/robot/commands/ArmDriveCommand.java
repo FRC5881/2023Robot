@@ -1,10 +1,8 @@
 package org.tvhsfrc.frc2023.robot.commands;
 
-import java.util.function.DoubleSupplier;
-
-import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
-
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import java.util.function.DoubleSupplier;
+import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 
 public class ArmDriveCommand extends CommandBase {
     private final ArmSubsystem armSubsystem;
@@ -22,13 +20,16 @@ public class ArmDriveCommand extends CommandBase {
     private final double STAGE_2_RATE = (1.0 / 360) * 0.05;
     private final double STAGE_3_RATE = (2.5 / 360) * 0.05;
 
-    public ArmDriveCommand(ArmSubsystem armSubsystem, DoubleSupplier stage1, DoubleSupplier stage2,
+    public ArmDriveCommand(
+            ArmSubsystem armSubsystem,
+            DoubleSupplier stage1,
+            DoubleSupplier stage2,
             DoubleSupplier stage3) {
         this.armSubsystem = armSubsystem;
         this.stage1 = stage1;
         this.stage2 = stage2;
         this.stage3 = stage3;
-        
+
         addRequirements(armSubsystem);
     }
 

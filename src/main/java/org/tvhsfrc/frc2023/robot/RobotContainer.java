@@ -7,7 +7,6 @@ package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.PowerDistribution;
-import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -17,12 +16,15 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.io.File;
 import java.util.Optional;
+import org.tvhsfrc.frc2023.robot.Constants.Arm.ARM_TARGET;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
 import org.tvhsfrc.frc2023.robot.commands.ArmDriveCommand;
+import org.tvhsfrc.frc2023.robot.commands.ArmNext;
 import org.tvhsfrc.frc2023.robot.commands.VacuumCommand;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteDrive;
 import org.tvhsfrc.frc2023.robot.commands.drive.AbsoluteFieldDrive;
+import org.tvhsfrc.frc2023.robot.commands.drive.TeleopDrive;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
@@ -93,7 +95,17 @@ public class RobotContainer {
                         () -> deadband(driverController.getRightX()),
                         false);
 
-        swerveSubsystem.setDefaultCommand(closedAbsoluteDrive);
+        TeleopDrive closedFieldRel =
+                new TeleopDrive(
+                        swerveSubsystem,
+                        () -> deadband(driverController.getLeftY()),
+                        () -> deadband(driverController.getLeftX()),
+                        () -> -driverController.getRawAxis(4),
+                        () -> true,
+                        false,
+                        true);
+
+        swerveSubsystem.setDefaultCommand(closedFieldRel);
 
         // POV Down cycle arm targets
         armController
@@ -116,33 +128,30 @@ public class RobotContainer {
         armController.povRight().onTrue(new InstantCommand(arm::toggleGamePiece));
 
         // X button brings the arm to the next target
-        armController.cross().onTrue(arm.nextPath());
-
-        // O button brings the arm Home
+        armController.cross().onTrue(new ArmNext(arm));
         armController
                 .circle()
                 .onTrue(
                         Commands.sequence(
-                                new InstantCommand(
-                                        () -> arm.setArmTarget(Constants.Arm.ARM_TARGET.HOME)),
-                                arm.nextPath()));
+                                new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.HOME)),
+                                new ArmNext(arm)
+                ));
 
         // Touchpad toggles vacuum
         armController.touchpad().onTrue(new VacuumCommand(vacuumSubsystem));
 
         // Manual arm control
         arm.setDefaultCommand(
-            new ArmDriveCommand(arm, 
-                                () -> -deadband(armController.getRawAxis(1)),
-                                () -> -deadband(armController.getRawAxis(5)),
-                                () -> {
-                                    double left = (armController.getRawAxis(3) + 1) / 2.0;
-                                    double right = (armController.getRawAxis(4) + 1) / 2.0;
+                new ArmDriveCommand(
+                        arm,
+                        () -> -deadband(armController.getRawAxis(1)),
+                        () -> -deadband(armController.getRawAxis(5)),
+                        () -> {
+                            double left = (armController.getRawAxis(3) + 1) / 2.0;
+                            double right = (armController.getRawAxis(4) + 1) / 2.0;
 
-                                    return right - left;
-                                }
-            )
-        );
+                            return right - left;
+                        }));
 
         // new JoystickButton(driverController, XboxController.Button.kX.value).onTrue(arm.cHome());
     }

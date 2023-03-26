@@ -51,11 +51,10 @@ public class VacuumSubsystem extends SubsystemBase {
         vacuum1.setClosedLoopRampRate(0.5);*/
 
         vacuum1.setIdleMode(CANSparkMax.IdleMode.kCoast);
+        vacuum2.setIdleMode(CANSparkMax.IdleMode.kCoast);
+        vacuum3.setIdleMode(CANSparkMax.IdleMode.kCoast);
 
         pdh.setSwitchableChannel(false);
-
-        vacuum2.follow(vacuum1);
-        vacuum3.follow(vacuum1);
 
         ShuffleboardTab tab = Shuffleboard.getTab("Vacuum");
 
@@ -70,7 +69,9 @@ public class VacuumSubsystem extends SubsystemBase {
 
         if (Robot.isReal()) {
             builder.addBooleanProperty("PDH switchable channel", pdh::getSwitchableChannel, null);
-            builder.addDoubleProperty("Applied Output", vacuum1::getAppliedOutput, null);
+            builder.addDoubleProperty("Vacuum 1 Applied Output", vacuum1::getAppliedOutput, null);
+            builder.addDoubleProperty("Vacuum 2 Applied Output", vacuum2::getAppliedOutput, null);
+            builder.addDoubleProperty("Vacuum 3 Applied Output", vacuum3::getAppliedOutput, null);
         } else {
             builder.addBooleanProperty(
                     "PDH switchable channel", () -> pdhSim.getBoolean("Value").get(), null);
@@ -103,6 +104,8 @@ public class VacuumSubsystem extends SubsystemBase {
         if (Robot.isReal()) {
             pdh.setSwitchableChannel(false);
             vacuum1.set(Constants.Vacuum.MAX_OUTPUT);
+            vacuum2.set(Constants.Vacuum.MAX_OUTPUT);
+            vacuum3.set(Constants.Vacuum.MAX_OUTPUT);
         } else {
             pdhSim.getBoolean("Value").set(false);
             motorsSim.getDouble("Applied Output").set(1);
@@ -114,6 +117,8 @@ public class VacuumSubsystem extends SubsystemBase {
         setState(State.DUMP);
         if (Robot.isReal()) {
             vacuum1.stopMotor();
+            vacuum2.stopMotor();
+            vacuum3.stopMotor();
             pdh.setSwitchableChannel(true);
             dumpTimer.restart();
         } else {

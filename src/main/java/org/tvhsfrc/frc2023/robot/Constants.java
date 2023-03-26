@@ -75,11 +75,15 @@ public final class Constants {
         public static final double STAGE_1_HOME = -5 / 360d;
         public static final double STAGE_1_LIMIT = 60 / 360d;
         /** Stage 1 PID Settings */
-        public static final PIDFConfig STAGE_1_PID = new PIDFConfig(0.032, 0.000001, 0.01, 0);
+        public static final PIDFConfig STAGE_1_PID = new PIDFConfig(0.032, 0.0001, 0.05, 0);
         /** Stage 1 Maximum output (as percentage) for PID control */
-        public static final double STAGE_1_MIN_OUTPUT = -0.2;
+        public static final double STAGE_1_MIN_OUTPUT = -0.25;
         /** Stage 1 Minimum output (as negative percentage) for PID control */
-        public static final double STAGE_1_MAX_OUTPUT = 0.2;
+        public static final double STAGE_1_MAX_OUTPUT = 0.25;
+
+        /**
+         * Stage 1 
+         */
 
         /** Length of the second stage of the arm in meters */
         public static final double STAGE_2_LENGTH = Units.inchesToMeters(35);

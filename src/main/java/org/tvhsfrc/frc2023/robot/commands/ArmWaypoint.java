@@ -14,6 +14,8 @@ public class ArmWaypoint extends CommandBase {
         this.armSubsystem = armSubsystem;
         this.waypoint = waypoint;
         this.hold = hold;
+
+        addRequirements(armSubsystem);
     }
 
     @Override
