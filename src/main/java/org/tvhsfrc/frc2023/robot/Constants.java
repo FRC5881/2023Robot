@@ -173,7 +173,7 @@ public final class Constants {
                                                 // other "mid points"
                                                 WAYPOINT.HOME,
                                                 WAYPOINT.SAFE,
-                                                WAYPOINT.MID_CUBE_MIDPOINT,
+                                                WAYPOINT.MID_CONE_MIDPOINT,
                                                 WAYPOINT.HIGH_CONE_MIDPOINT,
                                                 WAYPOINT.HIGH_CUBE_MIDPOINT,
                                                 WAYPOINT.DOUBLE_SUBSTATION_CONE,
@@ -219,9 +219,8 @@ public final class Constants {
                                                 WAYPOINT.MID_CONE_MIDPOINT,
                                                 WAYPOINT.HIGH_CUBE_MIDPOINT,
                                                 WAYPOINT.HIGH_CONE_MIDPOINT,
-                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE,
-                                                // end points
-                                                WAYPOINT.DOUBLE_SUBSTATION_CONE)));
+                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE)));
+                        // end points
                         put(
                                 WAYPOINT.DOUBLE_SUBSTATION_CUBE,
                                 new ArrayList<>(
@@ -233,9 +232,8 @@ public final class Constants {
                                                 WAYPOINT.MID_CONE_MIDPOINT,
                                                 WAYPOINT.HIGH_CUBE_MIDPOINT,
                                                 WAYPOINT.HIGH_CONE_MIDPOINT,
-                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                                                // end points
-                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE)));
+                                                WAYPOINT.DOUBLE_SUBSTATION_CONE)));
+                        // end points
                         put(
                                 WAYPOINT.LOW_CUBE,
                                 new ArrayList<>(

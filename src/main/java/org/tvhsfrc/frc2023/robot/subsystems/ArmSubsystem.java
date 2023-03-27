@@ -3,11 +3,11 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
 import com.revrobotics.*;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -90,9 +90,7 @@ public class ArmSubsystem extends SubsystemBase {
         stage3.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
         stage3.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
 
-        ShuffleboardTab tab = Shuffleboard.getTab("Arm");
-
-        tab.add(this);
+        SmartDashboard.putData("Arm", this);
 
         // Start at home
         setStage1Rotations(STAGE_1_HOME);
@@ -279,7 +277,7 @@ public class ArmSubsystem extends SubsystemBase {
 
     /**
      * The distance metric used for the pathfinding algorithm. Currently this uses kinematics to
-     * calculate the distance between two waypoints end effector positions.
+     * calculate the distance between two waypoints.
      *
      * @param a first waypoint
      * @param b second waypoint
@@ -311,14 +309,8 @@ public class ArmSubsystem extends SubsystemBase {
      */
     public static ArrayList<WAYPOINT> dijkstra(WAYPOINT start, WAYPOINT end) {
         // Priority queue for the waypoints
-        PriorityQueue<WAYPOINT> queue =
-                new PriorityQueue<>(
-                        new Comparator<WAYPOINT>() {
-                            @Override
-                            public int compare(WAYPOINT o1, WAYPOINT o2) {
-                                return Double.compare(distance(o1, end), distance(o2, end));
-                            }
-                        });
+        PriorityQueue<Pair<Double, WAYPOINT>> queue =
+                new PriorityQueue<>(Comparator.comparing(Pair::getFirst));
 
         HashMap<WAYPOINT, WAYPOINT> previous = new HashMap<WAYPOINT, WAYPOINT>();
         HashMap<WAYPOINT, Double> distance = new HashMap<WAYPOINT, Double>();
@@ -329,18 +321,24 @@ public class ArmSubsystem extends SubsystemBase {
             previous.put(waypoint, null);
         }
 
-        queue.add(start);
+        // Add the start waypoint to the queue
+        queue.add(new Pair<Double, WAYPOINT>(0.0, start));
         distance.put(start, 0.0);
 
         while (!queue.isEmpty()) {
-            WAYPOINT u = queue.poll();
+            // Get the waypoint with the smallest distance
+            WAYPOINT u = queue.poll().getSecond();
 
-            for (WAYPOINT v : Constants.Arm.ADJACENCY_LIST.get(u)) {
+            // Loop through all the neighbors
+            for (WAYPOINT v : ADJACENCY_LIST.get(u)) {
+                // Calculate the distance to the neighbor
                 double alt = distance.get(u) + distance(u, v);
+
+                // If the distance is less than the current distance, update the distance
                 if (alt < distance.get(v)) {
                     distance.put(v, alt);
                     previous.put(v, u);
-                    queue.add(v);
+                    queue.add(new Pair<Double, WAYPOINT>(alt, v));
                 }
             }
         }
@@ -368,7 +366,7 @@ public class ArmSubsystem extends SubsystemBase {
         // Build the command group
         SequentialCommandGroup commandGroup = new SequentialCommandGroup();
         for (WAYPOINT waypoint : path) {
-            commandGroup.addCommands(new ArmWaypoint(this, waypoint));
+            commandGroup.addCommands(new ArmWaypoint(this, waypoint).withTimeout(5));
         }
 
         return commandGroup;

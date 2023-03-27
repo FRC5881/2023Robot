@@ -1,5 +1,6 @@
 package org.tvhsfrc.frc2023.robot.commands.arm;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
@@ -12,6 +13,8 @@ public class ArmWaypoint extends CommandBase {
     public ArmWaypoint(ArmSubsystem armSubsystem, WAYPOINT waypoint) {
         this.armSubsystem = armSubsystem;
         this.waypoint = waypoint;
+
+        SmartDashboard.putString("Arm Waypoint", waypoint.toString());
 
         addRequirements(armSubsystem);
     }
