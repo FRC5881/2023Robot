@@ -8,8 +8,6 @@ import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
 /**
  * A drive command that provides field relative translation with 1 joystick and relative rotation
  * with another axis.
- *
- * <p>TODO: RelativeAbsoluteDrive for field relative translation and absolute rotation
  */
 public class RelativeRelativeDrive extends CommandBase {
     private final SwerveSubsystem swerve;
@@ -26,9 +24,11 @@ public class RelativeRelativeDrive extends CommandBase {
 
     @Override
     public void execute() {
+        // TODO: Try cubic scaling
         Translation2d translation =
                 new Translation2d(vx.getAsDouble(), vy.getAsDouble())
                         .times(swerve.getSwerveDriveConfiguration().maxSpeed);
+
         swerve.drive(translation, omega.getAsDouble() * 2 * Math.PI, true, false, true);
     }
 

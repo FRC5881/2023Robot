@@ -78,7 +78,7 @@ class TestArmPathFinding {
         }
     }
 
-    // Every node is at most 5 nodes away from every other node
+    // Every node is at most 4 nodes away from every other node
     @Test
     void allDistancesShort() {
         for (var start : WAYPOINT.values()) {
