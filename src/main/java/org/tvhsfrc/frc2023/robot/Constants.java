@@ -36,7 +36,7 @@ public final class Constants {
         public static final int ARM_CONTROLLER_PORT = 1;
     }
 
-    /** Identifiers for all of the CAN devices on the robot. */
+    /** Identifiers for all the CAN devices on the robot. */
     public static class CANConstants {
         /* Removed as defined in the swerve lib json
 

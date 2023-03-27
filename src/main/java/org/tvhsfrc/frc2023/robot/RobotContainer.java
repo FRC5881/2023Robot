@@ -6,6 +6,7 @@
 package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -47,8 +48,9 @@ public class RobotContainer {
     private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem(pdh);
 
     // Driver controller
-    private final CommandXboxController driverController =
-            new CommandXboxController(OperatorConstants.DRIVER_CONTROLLER_PORT);
+    private final CommandPS4Controller driverController =
+            new CommandPS4Controller(OperatorConstants.DRIVER_CONTROLLER_PORT);
+
     private final CommandPS4Controller armController =
             new CommandPS4Controller(OperatorConstants.ARM_CONTROLLER_PORT);
 
@@ -71,7 +73,8 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
-        driverController.start().onTrue(new InstantCommand(swerveSubsystem::zeroGyro));
+        // ------ Driver Controller ------ //
+        driverController.touchpad().onTrue(new InstantCommand(swerveSubsystem::zeroGyro));
 
         RelativeRelativeDrive drive =
                 new RelativeRelativeDrive(
@@ -82,25 +85,41 @@ public class RobotContainer {
 
         swerveSubsystem.setDefaultCommand(drive);
 
-        // POV Down cycle arm targets
-        armController.povUp().onTrue(new InstantCommand(() -> arm.cycleArmTarget(false)));
-        armController.povDown().onTrue(new InstantCommand(() -> arm.cycleArmTarget(true)));
+        // ------ Arm Controller ------ //
 
-        // POV Left/Right cycle arm mode (cube vs cone)
-        armController.povLeft().onTrue(new InstantCommand(arm::toggleGamePiece));
-        armController.povRight().onTrue(new InstantCommand(arm::toggleGamePiece));
+        // POV Left goes to Floor pickup
+        armController.povLeft().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.FLOOR)));
 
-        // X button brings the arm to the next target
+        // POV Down goes to score Low
+        armController.povDown().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.LOW)));
+
+        // POV Right goes to score Mid
+        armController.povRight().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.MID)));
+
+        // POV Up goes to score High
+        armController.povUp().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.HIGH)));
+
+        // Touchpad moves the arm to take a cone or cube of the slide part of teh double substation.
+        // armController.share().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.DOUBLE_SUBSTATION)));
+        armController.touchpad().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.DOUBLE_SUBSTATION)));
+
+        // Square button sets mode to Cube
+        armController.square().onTrue(new InstantCommand(arm::gamePieceCube));
+
+        // Triangle button sets mode to Cone
+        armController.triangle().onTrue(new InstantCommand(arm::gamePieceCone));
+
+        // Cross button tells the arm to move to the Waypoint
         armController.cross().onTrue(new ArmNext(arm));
-        armController
-                .circle()
-                .onTrue(
-                        Commands.sequence(
-                                new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.HOME)),
-                                new ArmNext(arm)));
 
-        // Touchpad toggles vacuum
-        armController.touchpad().toggleOnTrue(new VacuumCommand(vacuumSubsystem));
+        // Circle button sends the arm to the HOME Waypoint
+        armController.circle().onTrue(arm.cGoToWaypoint(ARM_TARGET.HOME));
+
+        // Left bumper turns vacuum on
+        armController.L1().onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::vacuum)));
+
+        // Right bumper turns vacuum off
+        armController.R1().onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::dump)));
 
         // Manual arm control
         arm.setDefaultCommand(

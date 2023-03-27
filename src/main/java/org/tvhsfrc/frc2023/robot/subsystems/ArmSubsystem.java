@@ -8,9 +8,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.*;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,6 +17,7 @@ import java.util.HashMap;
 import java.util.PriorityQueue;
 import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
+import org.tvhsfrc.frc2023.robot.commands.arm.ArmNext;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmWaypoint;
 
 public class ArmSubsystem extends SubsystemBase {
@@ -414,13 +414,13 @@ public class ArmSubsystem extends SubsystemBase {
         }
     }
 
-    /** Toggles the game piece type between cube and cone. */
-    public void toggleGamePiece() {
-        if (currentGamePieceTarget.equals(GAME_PIECE_TYPE.CUBE)) {
-            currentGamePieceTarget = GAME_PIECE_TYPE.CONE;
-        } else {
-            currentGamePieceTarget = GAME_PIECE_TYPE.CUBE;
-        }
+    /** Sets game piece to cube when gamePieceCube is called and set to cone when gamePieceCone is called. */
+    public void gamePieceCube() {
+        currentGamePieceTarget = GAME_PIECE_TYPE.CUBE;
+    }
+
+    public void gamePieceCone() {
+        currentGamePieceTarget = GAME_PIECE_TYPE.CONE;
     }
 
     /** Cycles though the available ARM_TARGET values. */
@@ -474,6 +474,12 @@ public class ArmSubsystem extends SubsystemBase {
                     break;
             }
         }
+    }
+
+    public CommandBase cGoToWaypoint(ARM_TARGET target){
+        return Commands.sequence(
+                new InstantCommand(() -> setArmTarget(target)),
+                new ArmNext(this));
     }
 
     public void setArmTarget(ARM_TARGET target) {
