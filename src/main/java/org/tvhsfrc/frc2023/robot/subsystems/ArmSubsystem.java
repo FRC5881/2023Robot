@@ -3,7 +3,6 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
 import com.revrobotics.*;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -17,7 +16,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.PriorityQueue;
-
 import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmWaypoint;
@@ -282,17 +280,21 @@ public class ArmSubsystem extends SubsystemBase {
     /**
      * The distance metric used for the pathfinding algorithm. Currently this uses kinematics to
      * calculate the distance between two waypoints end effector positions.
-     *  
+     *
      * @param a first waypoint
      * @param b second waypoint
      * @return the distance between the two waypoints
      */
     public static double distance(WAYPOINT a, WAYPOINT b) {
         // run the forward kinematics on the two waypoints
-        Translation2d aPos = forwardKinematics(Rotation2d.fromRotations(a.position.getA()),
-                Rotation2d.fromRotations(a.position.getB()));
-        Translation2d bPos = forwardKinematics(Rotation2d.fromRotations(b.position.getA()),
-                Rotation2d.fromRotations(b.position.getB()));
+        Translation2d aPos =
+                forwardKinematics(
+                        Rotation2d.fromRotations(a.position.getA()),
+                        Rotation2d.fromRotations(a.position.getB()));
+        Translation2d bPos =
+                forwardKinematics(
+                        Rotation2d.fromRotations(b.position.getA()),
+                        Rotation2d.fromRotations(b.position.getB()));
 
         // return the distance between the two points
         return aPos.getDistance(bPos);
@@ -300,21 +302,23 @@ public class ArmSubsystem extends SubsystemBase {
 
     /**
      * Uses dijkstra's algorithm to find the shortest path between the two waypoints.
-     * 
-     * https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
-     * 
+     *
+     * <p>https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+     *
      * @param start waypoint
      * @param end waypoint
      * @return A SequentialCommandGroup
      */
     public static ArrayList<WAYPOINT> dijkstra(WAYPOINT start, WAYPOINT end) {
         // Priority queue for the waypoints
-        PriorityQueue<WAYPOINT> queue = new PriorityQueue<>(new Comparator<WAYPOINT>() {
-            @Override
-            public int compare(WAYPOINT o1, WAYPOINT o2) {
-                return Double.compare(distance(o1, end), distance(o2, end));
-            }
-        });
+        PriorityQueue<WAYPOINT> queue =
+                new PriorityQueue<>(
+                        new Comparator<WAYPOINT>() {
+                            @Override
+                            public int compare(WAYPOINT o1, WAYPOINT o2) {
+                                return Double.compare(distance(o1, end), distance(o2, end));
+                            }
+                        });
 
         HashMap<WAYPOINT, WAYPOINT> previous = new HashMap<WAYPOINT, WAYPOINT>();
         HashMap<WAYPOINT, Double> distance = new HashMap<WAYPOINT, Double>();

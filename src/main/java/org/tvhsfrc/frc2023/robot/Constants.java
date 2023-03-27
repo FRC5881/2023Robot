@@ -113,209 +113,203 @@ public final class Constants {
         public static final double STAGE_3_TOLERANCE = 0.01;
 
         /**
-         * ADJACENCY_LIST is a HashMap that maps a waypoint to a list of waypoints that can be reached
-         * 
-         * Every waypoint should have an entry in the map.
-         * 
-         * TODO: Add more edges to the graph to generate more efficient paths
+         * ADJACENCY_LIST is a HashMap that maps a waypoint to a list of waypoints that can be
+         * reached
+         *
+         * <p>Every waypoint should have an entry in the map.
+         *
+         * <p>TODO: Add more edges to the graph to generate more efficient paths
          */
-        public static final HashMap<WAYPOINT, ArrayList<WAYPOINT>> ADJACENCY_LIST = new HashMap<>() {
-            {
-                put(
-                    WAYPOINT.HOME,
-                    new ArrayList<>(Arrays.asList(
-                        // home can only reach mid points
-                        WAYPOINT.SAFE, 
-                        WAYPOINT.MID_CONE_MIDPOINT, 
-                        WAYPOINT.MID_CUBE_MIDPOINT,
-                        WAYPOINT.HIGH_CONE_MIDPOINT,
-                        WAYPOINT.HIGH_CUBE_MIDPOINT,
-                        WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                        WAYPOINT.DOUBLE_SUBSTATION_CUBE
-                    ))
-                );
-                put(
-                    WAYPOINT.SAFE,
-                    new ArrayList<>(Arrays.asList(
-                        // other "mid points"
-                        WAYPOINT.HOME,
-                        WAYPOINT.MID_CONE_MIDPOINT, 
-                        WAYPOINT.MID_CUBE_MIDPOINT,
-                        WAYPOINT.HIGH_CONE_MIDPOINT,
-                        WAYPOINT.HIGH_CUBE_MIDPOINT,
-                        WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                        WAYPOINT.DOUBLE_SUBSTATION_CUBE,
-                        // end points
-                        WAYPOINT.LOW_CUBE,
-                        WAYPOINT.LOW_CONE,
-                        WAYPOINT.FLOOR_CONE,
-                        WAYPOINT.FLOOR_CUBE
-                    ))
-                );
-                put(
-                    WAYPOINT.MID_CONE_MIDPOINT,
-                    new ArrayList<>(Arrays.asList(
-                        // other "mid points"
-                        WAYPOINT.HOME,
-                        WAYPOINT.SAFE, 
-                        WAYPOINT.MID_CUBE_MIDPOINT,
-                        WAYPOINT.HIGH_CONE_MIDPOINT,
-                        WAYPOINT.HIGH_CUBE_MIDPOINT, 
-                        WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                        WAYPOINT.DOUBLE_SUBSTATION_CUBE,
-                        // end points
-                        WAYPOINT.MID_CONE
-                    ))
-                );
-                put(
-                    WAYPOINT.MID_CUBE_MIDPOINT,
-                    new ArrayList<>(Arrays.asList(
-                        // other "mid points"
-                        WAYPOINT.HOME,
-                        WAYPOINT.SAFE, 
-                        WAYPOINT.MID_CUBE_MIDPOINT,
-                        WAYPOINT.HIGH_CONE_MIDPOINT,
-                        WAYPOINT.HIGH_CUBE_MIDPOINT,
-                        WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                        WAYPOINT.DOUBLE_SUBSTATION_CUBE, 
-                        // end points
-                        WAYPOINT.MID_CUBE
-                    ))
-                );
-                put(
-                    WAYPOINT.HIGH_CONE_MIDPOINT,
-                    new ArrayList<>(Arrays.asList(
-                        // other "mid points"
-                        WAYPOINT.HOME,
-                        WAYPOINT.SAFE, 
-                        WAYPOINT.MID_CUBE_MIDPOINT,
-                        WAYPOINT.MID_CONE_MIDPOINT,
-                        WAYPOINT.HIGH_CUBE_MIDPOINT, 
-                        WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                        WAYPOINT.DOUBLE_SUBSTATION_CUBE,
-                        // end points
-                        WAYPOINT.HIGH_CONE
-                    ))
-                );
-                put(
-                    WAYPOINT.HIGH_CUBE_MIDPOINT,
-                    new ArrayList<>(Arrays.asList(
-                        // other "mid points"
-                        WAYPOINT.HOME,
-                        WAYPOINT.SAFE, 
-                        WAYPOINT.MID_CUBE_MIDPOINT,
-                        WAYPOINT.MID_CONE_MIDPOINT,
-                        WAYPOINT.HIGH_CONE_MIDPOINT, 
-                        WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                        WAYPOINT.DOUBLE_SUBSTATION_CUBE,
-                        // end points
-                        WAYPOINT.HIGH_CUBE
-                    ))
-                );
-                put(
-                    WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                    new ArrayList<>(Arrays.asList(
-                        // other "mid points"
-                        WAYPOINT.HOME,
-                        WAYPOINT.SAFE, 
-                        WAYPOINT.MID_CUBE_MIDPOINT,
-                        WAYPOINT.MID_CONE_MIDPOINT,
-                        WAYPOINT.HIGH_CUBE_MIDPOINT, 
-                        WAYPOINT.HIGH_CONE_MIDPOINT,
-                        WAYPOINT.DOUBLE_SUBSTATION_CUBE,
-                        // end points
-                        WAYPOINT.DOUBLE_SUBSTATION_CONE
-                    ))
-                );
-                put(
-                    WAYPOINT.DOUBLE_SUBSTATION_CUBE,
-                    new ArrayList<>(Arrays.asList(
-                        // other "mid points"
-                        WAYPOINT.HOME,
-                        WAYPOINT.SAFE, 
-                        WAYPOINT.MID_CUBE_MIDPOINT,
-                        WAYPOINT.MID_CONE_MIDPOINT,
-                        WAYPOINT.HIGH_CUBE_MIDPOINT, 
-                        WAYPOINT.HIGH_CONE_MIDPOINT,
-                        WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                        // end points
-                        WAYPOINT.DOUBLE_SUBSTATION_CUBE
-                    ))
-                );
-                put(
-                    WAYPOINT.LOW_CUBE,
-                    new ArrayList<>(Arrays.asList(
-                        // mid points
-                        WAYPOINT.SAFE,
-                        // end points
-                        WAYPOINT.FLOOR_CONE,
-                        WAYPOINT.FLOOR_CUBE,
-                        WAYPOINT.LOW_CONE
-                    ))
-                );
-                put(
-                    WAYPOINT.LOW_CONE,
-                    new ArrayList<>(Arrays.asList(
-                        // mid points
-                        WAYPOINT.SAFE,
-                        // end points
-                        WAYPOINT.FLOOR_CONE,
-                        WAYPOINT.FLOOR_CUBE,
-                        WAYPOINT.LOW_CUBE
-                    ))
-                );
-                put(
-                    WAYPOINT.FLOOR_CONE,
-                    new ArrayList<>(Arrays.asList(
-                        // mid points
-                        WAYPOINT.SAFE,
-                        // end points
-                        WAYPOINT.LOW_CONE,
-                        WAYPOINT.LOW_CUBE,
-                        WAYPOINT.FLOOR_CUBE
-                    ))
-                );
-                put(
-                    WAYPOINT.FLOOR_CUBE,
-                    new ArrayList<>(Arrays.asList(
-                        // mid points
-                        WAYPOINT.SAFE,
-                        // end points
-                        WAYPOINT.LOW_CONE,
-                        WAYPOINT.LOW_CUBE,
-                        WAYPOINT.FLOOR_CONE
-                    ))
-                );
-                put(
-                    WAYPOINT.MID_CONE,
-                    new ArrayList<>(Arrays.asList(
-                        // mid points
-                        WAYPOINT.MID_CONE_MIDPOINT // TODO: can we reach other positions?
-                    ))
-                );
-                put(
-                    WAYPOINT.MID_CUBE,
-                    new ArrayList<>(Arrays.asList(
-                        // mid points
-                        WAYPOINT.MID_CUBE_MIDPOINT // TODO: can we reach other positions?
-                    ))
-                );
-                put(
-                    WAYPOINT.HIGH_CONE,
-                    new ArrayList<>(Arrays.asList(
-                        // mid points
-                        WAYPOINT.HIGH_CONE_MIDPOINT // TODO: can we reach other positions?
-                    ))
-                );
-                put(
-                    WAYPOINT.HIGH_CUBE,
-                    new ArrayList<>(Arrays.asList(
-                        // mid points
-                        WAYPOINT.HIGH_CUBE_MIDPOINT // TODO: can we reach other positions?
-                    ))
-                );
-            }
-        };
+        public static final HashMap<WAYPOINT, ArrayList<WAYPOINT>> ADJACENCY_LIST =
+                new HashMap<>() {
+                    {
+                        put(
+                                WAYPOINT.HOME,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // home can only reach mid points
+                                                WAYPOINT.SAFE,
+                                                WAYPOINT.MID_CONE_MIDPOINT,
+                                                WAYPOINT.MID_CUBE_MIDPOINT,
+                                                WAYPOINT.HIGH_CONE_MIDPOINT,
+                                                WAYPOINT.HIGH_CUBE_MIDPOINT,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE)));
+                        put(
+                                WAYPOINT.SAFE,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // other "mid points"
+                                                WAYPOINT.HOME,
+                                                WAYPOINT.MID_CONE_MIDPOINT,
+                                                WAYPOINT.MID_CUBE_MIDPOINT,
+                                                WAYPOINT.HIGH_CONE_MIDPOINT,
+                                                WAYPOINT.HIGH_CUBE_MIDPOINT,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE,
+                                                // end points
+                                                WAYPOINT.LOW_CUBE,
+                                                WAYPOINT.LOW_CONE,
+                                                WAYPOINT.FLOOR_CONE,
+                                                WAYPOINT.FLOOR_CUBE)));
+                        put(
+                                WAYPOINT.MID_CONE_MIDPOINT,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // other "mid points"
+                                                WAYPOINT.HOME,
+                                                WAYPOINT.SAFE,
+                                                WAYPOINT.MID_CUBE_MIDPOINT,
+                                                WAYPOINT.HIGH_CONE_MIDPOINT,
+                                                WAYPOINT.HIGH_CUBE_MIDPOINT,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE,
+                                                // end points
+                                                WAYPOINT.MID_CONE)));
+                        put(
+                                WAYPOINT.MID_CUBE_MIDPOINT,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // other "mid points"
+                                                WAYPOINT.HOME,
+                                                WAYPOINT.SAFE,
+                                                WAYPOINT.MID_CUBE_MIDPOINT,
+                                                WAYPOINT.HIGH_CONE_MIDPOINT,
+                                                WAYPOINT.HIGH_CUBE_MIDPOINT,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE,
+                                                // end points
+                                                WAYPOINT.MID_CUBE)));
+                        put(
+                                WAYPOINT.HIGH_CONE_MIDPOINT,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // other "mid points"
+                                                WAYPOINT.HOME,
+                                                WAYPOINT.SAFE,
+                                                WAYPOINT.MID_CUBE_MIDPOINT,
+                                                WAYPOINT.MID_CONE_MIDPOINT,
+                                                WAYPOINT.HIGH_CUBE_MIDPOINT,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE,
+                                                // end points
+                                                WAYPOINT.HIGH_CONE)));
+                        put(
+                                WAYPOINT.HIGH_CUBE_MIDPOINT,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // other "mid points"
+                                                WAYPOINT.HOME,
+                                                WAYPOINT.SAFE,
+                                                WAYPOINT.MID_CUBE_MIDPOINT,
+                                                WAYPOINT.MID_CONE_MIDPOINT,
+                                                WAYPOINT.HIGH_CONE_MIDPOINT,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE,
+                                                // end points
+                                                WAYPOINT.HIGH_CUBE)));
+                        put(
+                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // other "mid points"
+                                                WAYPOINT.HOME,
+                                                WAYPOINT.SAFE,
+                                                WAYPOINT.MID_CUBE_MIDPOINT,
+                                                WAYPOINT.MID_CONE_MIDPOINT,
+                                                WAYPOINT.HIGH_CUBE_MIDPOINT,
+                                                WAYPOINT.HIGH_CONE_MIDPOINT,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE,
+                                                // end points
+                                                WAYPOINT.DOUBLE_SUBSTATION_CONE)));
+                        put(
+                                WAYPOINT.DOUBLE_SUBSTATION_CUBE,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // other "mid points"
+                                                WAYPOINT.HOME,
+                                                WAYPOINT.SAFE,
+                                                WAYPOINT.MID_CUBE_MIDPOINT,
+                                                WAYPOINT.MID_CONE_MIDPOINT,
+                                                WAYPOINT.HIGH_CUBE_MIDPOINT,
+                                                WAYPOINT.HIGH_CONE_MIDPOINT,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
+                                                // end points
+                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE)));
+                        put(
+                                WAYPOINT.LOW_CUBE,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // mid points
+                                                WAYPOINT.SAFE,
+                                                // end points
+                                                WAYPOINT.FLOOR_CONE,
+                                                WAYPOINT.FLOOR_CUBE,
+                                                WAYPOINT.LOW_CONE)));
+                        put(
+                                WAYPOINT.LOW_CONE,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // mid points
+                                                WAYPOINT.SAFE,
+                                                // end points
+                                                WAYPOINT.FLOOR_CONE,
+                                                WAYPOINT.FLOOR_CUBE,
+                                                WAYPOINT.LOW_CUBE)));
+                        put(
+                                WAYPOINT.FLOOR_CONE,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // mid points
+                                                WAYPOINT.SAFE,
+                                                // end points
+                                                WAYPOINT.LOW_CONE,
+                                                WAYPOINT.LOW_CUBE,
+                                                WAYPOINT.FLOOR_CUBE)));
+                        put(
+                                WAYPOINT.FLOOR_CUBE,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // mid points
+                                                WAYPOINT.SAFE,
+                                                // end points
+                                                WAYPOINT.LOW_CONE,
+                                                WAYPOINT.LOW_CUBE,
+                                                WAYPOINT.FLOOR_CONE)));
+                        put(
+                                WAYPOINT.MID_CONE,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // mid points
+                                                WAYPOINT.MID_CONE_MIDPOINT // TODO: can we reach
+                                                // other positions?
+                                                )));
+                        put(
+                                WAYPOINT.MID_CUBE,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // mid points
+                                                WAYPOINT.MID_CUBE_MIDPOINT // TODO: can we reach
+                                                // other positions?
+                                                )));
+                        put(
+                                WAYPOINT.HIGH_CONE,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // mid points
+                                                WAYPOINT.HIGH_CONE_MIDPOINT // TODO: can we reach
+                                                // other positions?
+                                                )));
+                        put(
+                                WAYPOINT.HIGH_CUBE,
+                                new ArrayList<>(
+                                        Arrays.asList(
+                                                // mid points
+                                                WAYPOINT.HIGH_CUBE_MIDPOINT // TODO: can we reach
+                                                // other positions?
+                                                )));
+                    }
+                };
 
         public enum GAME_PIECE_TYPE {
             CONE,
