@@ -8,11 +8,9 @@ import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 public class ArmTrajectory extends SequentialCommandGroup {
     public ArmTrajectory(ArmSubsystem armSubsystem, ArrayList<WAYPOINT> points) {
         if (points != null) {
-            for (int i = 0; i < points.size() - 1; i++) {
-                addCommands(new ArmWaypoint(armSubsystem, points.get(i), false));
+            for (int i = 0; i < points.size(); i++) {
+                addCommands(new ArmWaypoint(armSubsystem, points.get(i)));
             }
-
-            addCommands(new ArmWaypoint(armSubsystem, points.get(points.size() - 1), true));
         } else {
             System.out.println("Null points");
         }

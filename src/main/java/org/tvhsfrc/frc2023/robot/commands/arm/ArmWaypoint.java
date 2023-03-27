@@ -8,12 +8,10 @@ import org.tvhsfrc.frc2023.robot.utils.Triple;
 public class ArmWaypoint extends CommandBase {
     private final ArmSubsystem armSubsystem;
     private final WAYPOINT waypoint;
-    private final boolean hold;
 
-    public ArmWaypoint(ArmSubsystem armSubsystem, WAYPOINT waypoint, boolean hold) {
+    public ArmWaypoint(ArmSubsystem armSubsystem, WAYPOINT waypoint) {
         this.armSubsystem = armSubsystem;
         this.waypoint = waypoint;
-        this.hold = hold;
 
         addRequirements(armSubsystem);
     }
@@ -29,11 +27,7 @@ public class ArmWaypoint extends CommandBase {
 
     @Override
     public boolean isFinished() {
-        if (hold) {
-            return false;
-        } else {
-            return armSubsystem.isAtSetPoint();
-        }
+        return armSubsystem.isAtSetPoint();
     }
 
     @Override

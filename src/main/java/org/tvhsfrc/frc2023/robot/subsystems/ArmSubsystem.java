@@ -3,16 +3,24 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
 import com.revrobotics.*;
+
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.PriorityQueue;
+
 import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
-import org.tvhsfrc.frc2023.robot.commands.arm.ArmTrajectory;
+import org.tvhsfrc.frc2023.robot.commands.arm.ArmWaypoint;
 
 public class ArmSubsystem extends SubsystemBase {
     private final CANSparkMax stage1 =
@@ -251,31 +259,115 @@ public class ArmSubsystem extends SubsystemBase {
                         < Constants.Arm.STAGE_3_TOLERANCE;
     }
 
+    /**
+     * Given the angles of the joints, return the position of the end effector.
+     *
+     * @param r1 The angle of the first joint
+     * @param r2 The angle of the second joint
+     * @return The position of the end effector
+     */
+    public static Translation2d forwardKinematics(Rotation2d r1, Rotation2d r2) {
+        r1 = Rotation2d.fromDegrees(90).minus(r1);
+
+        double x1 = STAGE_1_LENGTH * r1.getCos();
+        double y1 = STAGE_1_LENGTH * r1.getSin();
+
+        Rotation2d angle2 = r1.plus(r2).minus(Rotation2d.fromDegrees(180));
+        double x2 = STAGE_2_LENGTH * angle2.getCos();
+        double y2 = STAGE_2_LENGTH * angle2.getSin();
+
+        return new Translation2d(x1 + x2, y1 + y2);
+    }
+
+    /**
+     * The distance metric used for the pathfinding algorithm. Currently this uses kinematics to
+     * calculate the distance between two waypoints end effector positions.
+     *  
+     * @param a first waypoint
+     * @param b second waypoint
+     * @return the distance between the two waypoints
+     */
+    public static double distance(WAYPOINT a, WAYPOINT b) {
+        // run the forward kinematics on the two waypoints
+        Translation2d aPos = forwardKinematics(Rotation2d.fromRotations(a.position.getA()),
+                Rotation2d.fromRotations(a.position.getB()));
+        Translation2d bPos = forwardKinematics(Rotation2d.fromRotations(b.position.getA()),
+                Rotation2d.fromRotations(b.position.getB()));
+
+        // return the distance between the two points
+        return aPos.getDistance(bPos);
+    }
+
+    /**
+     * Uses dijkstra's algorithm to find the shortest path between the two waypoints.
+     * 
+     * https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+     * 
+     * @param start waypoint
+     * @param end waypoint
+     * @return A SequentialCommandGroup
+     */
+    public static ArrayList<WAYPOINT> dijkstra(WAYPOINT start, WAYPOINT end) {
+        // Priority queue for the waypoints
+        PriorityQueue<WAYPOINT> queue = new PriorityQueue<>(new Comparator<WAYPOINT>() {
+            @Override
+            public int compare(WAYPOINT o1, WAYPOINT o2) {
+                return Double.compare(distance(o1, end), distance(o2, end));
+            }
+        });
+
+        HashMap<WAYPOINT, WAYPOINT> previous = new HashMap<WAYPOINT, WAYPOINT>();
+        HashMap<WAYPOINT, Double> distance = new HashMap<WAYPOINT, Double>();
+
+        // Initialize the queue
+        for (WAYPOINT waypoint : WAYPOINT.values()) {
+            distance.put(waypoint, Double.POSITIVE_INFINITY);
+            previous.put(waypoint, null);
+        }
+
+        queue.add(start);
+        distance.put(start, 0.0);
+
+        while (!queue.isEmpty()) {
+            WAYPOINT u = queue.poll();
+
+            for (WAYPOINT v : Constants.Arm.ADJACENCY_LIST.get(u)) {
+                double alt = distance.get(u) + distance(u, v);
+                if (alt < distance.get(v)) {
+                    distance.put(v, alt);
+                    previous.put(v, u);
+                    queue.add(v);
+                }
+            }
+        }
+
+        // Build the path
+        ArrayList<WAYPOINT> path = new ArrayList<WAYPOINT>();
+
+        // Start at the end and work backwards
+        WAYPOINT current = end;
+        while (current != start) {
+            path.add(current);
+            current = previous.get(current);
+        }
+        path.add(start); // include the starting waypoint as part of the path
+
+        // Reverse the path
+        Collections.reverse(path);
+
+        return path;
+    }
+
     public CommandBase buildPath(WAYPOINT start, WAYPOINT end) {
-        if (start == WAYPOINT.HOME) {
-            return new ArmTrajectory(this, Constants.Arm.HOME_PATHS.get(end));
+        ArrayList<WAYPOINT> path = dijkstra(start, end);
+
+        // Build the command group
+        SequentialCommandGroup commandGroup = new SequentialCommandGroup();
+        for (WAYPOINT waypoint : path) {
+            commandGroup.addCommands(new ArmWaypoint(this, waypoint));
         }
 
-        if (end == WAYPOINT.HOME) {
-            System.out.println(start);
-            System.out.println(end);
-
-            ArrayList<WAYPOINT> path = new ArrayList<>(Constants.Arm.HOME_PATHS.get(start));
-
-            // remove the last element
-            path.remove(path.size() - 1);
-
-            // reverse the list
-            Collections.reverse(path);
-
-            // add HOME to the end
-            path.add(WAYPOINT.HOME);
-
-            return new ArmTrajectory(this, path);
-        }
-
-        // Otherwise just go home and then to the target
-        return buildPath(start, WAYPOINT.HOME).andThen(buildPath(WAYPOINT.HOME, end));
+        return commandGroup;
     }
 
     public WAYPOINT waypointTarget() {
