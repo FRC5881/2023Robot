@@ -6,7 +6,6 @@
 package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -21,8 +20,8 @@ import org.tvhsfrc.frc2023.robot.Constants.Arm.ARM_TARGET;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmDriveCommand;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmNext;
-import org.tvhsfrc.frc2023.robot.commands.arm.VacuumCommand;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
+import org.tvhsfrc.frc2023.robot.commands.auto.Tests;
 import org.tvhsfrc.frc2023.robot.commands.drive.RelativeRelativeDrive;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
@@ -53,6 +52,9 @@ public class RobotContainer {
 
     private final CommandPS4Controller armController =
             new CommandPS4Controller(OperatorConstants.ARM_CONTROLLER_PORT);
+
+//     private final CommandXboxController armController =
+        //     new CommandXboxController(OperatorConstants.ARM_CONTROLLER_PORT);
 
     // ROBORIO "User" button
     Trigger userButton = new Trigger(RobotController::getUserButton);
@@ -85,41 +87,100 @@ public class RobotContainer {
 
         swerveSubsystem.setDefaultCommand(drive);
 
-        // ------ Arm Controller ------ //
+        setupArmController(armController);
+    }
 
+    public void setupArmController(CommandXboxController controller) {
         // POV Left goes to Floor pickup
-        armController.povLeft().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.FLOOR)));
+        controller.povLeft().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.FLOOR)));
 
         // POV Down goes to score Low
-        armController.povDown().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.LOW)));
+        controller.povDown().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.LOW)));
 
         // POV Right goes to score Mid
-        armController.povRight().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.MID)));
+        controller.povRight().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.MID)));
 
         // POV Up goes to score High
-        armController.povUp().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.HIGH)));
+        controller.povUp().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.HIGH)));
 
-        // Touchpad moves the arm to take a cone or cube of the slide part of teh double substation.
-        // armController.share().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.DOUBLE_SUBSTATION)));
-        armController.touchpad().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.DOUBLE_SUBSTATION)));
+        // Back moves the arm to take a cone or cube of the slide part of teh double substation.
+        controller
+                .back()
+                .onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.DOUBLE_SUBSTATION)));
 
         // Square button sets mode to Cube
-        armController.square().onTrue(new InstantCommand(arm::gamePieceCube));
+        controller.x().onTrue(new InstantCommand(arm::gamePieceCube));
 
         // Triangle button sets mode to Cone
-        armController.triangle().onTrue(new InstantCommand(arm::gamePieceCone));
+        controller.y().onTrue(new InstantCommand(arm::gamePieceCone));
 
         // Cross button tells the arm to move to the Waypoint
-        armController.cross().onTrue(new ArmNext(arm));
+        controller.b().onTrue(new ArmNext(arm));
 
         // Circle button sends the arm to the HOME Waypoint
-        armController.circle().onTrue(arm.cGoToWaypoint(ARM_TARGET.HOME));
+        controller.a().onTrue(arm.cGoToWaypoint(ARM_TARGET.HOME));
 
         // Left bumper turns vacuum on
-        armController.L1().onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::vacuum)));
+        controller
+                .leftBumper()
+                .onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::vacuum)));
 
         // Right bumper turns vacuum off
-        armController.R1().onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::dump)));
+        controller
+                .rightBumper()
+                .onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::dump)));
+
+        // Manual arm control
+        arm.setDefaultCommand(
+                new ArmDriveCommand(
+                        arm,
+                        () -> -deadband(controller.getRawAxis(1), 0.2),
+                        () -> -deadband(controller.getRawAxis(5), 0.2),
+                        () -> {
+                            double left = controller.getRawAxis(2);
+                            double right = controller.getRawAxis(3);
+
+                            return deadband(right - left, 0.2);
+                        }));
+    }
+
+    public void setupArmController(CommandPS4Controller controller) {
+        // POV Left goes to Floor pickup
+        controller.povLeft().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.FLOOR)));
+
+        // POV Down goes to score Low
+        controller.povDown().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.LOW)));
+
+        // POV Right goes to score Mid
+        controller.povRight().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.MID)));
+
+        // POV Up goes to score High
+        controller.povUp().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.HIGH)));
+
+        // Touchpad moves the arm to take a cone or cube of the slide part of teh double substation.
+        // armController.share().onTrue(new InstantCommand(() ->
+        // arm.setArmTarget(ARM_TARGET.DOUBLE_SUBSTATION)));
+        controller
+                .touchpad()
+                .onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.DOUBLE_SUBSTATION)));
+
+        // Square button sets mode to Cube
+        controller.square().onTrue(new InstantCommand(arm::gamePieceCube));
+
+        // Triangle button sets mode to Cone
+        controller.triangle().onTrue(new InstantCommand(arm::gamePieceCone));
+
+        // Cross button tells the arm to move to the Waypoint
+        controller.cross().onTrue(new ArmNext(arm));
+
+        // Circle button sends the arm to the HOME Waypoint
+        controller.circle().onTrue(arm.cGoToWaypoint(ARM_TARGET.HOME));
+
+        // Left bumper turns vacuum on
+        controller.L1().onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::vacuum)));
+
+        // Right bumper turns vacuum off
+        controller.R1().onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::dump)));
 
         // Manual arm control
         arm.setDefaultCommand(
@@ -141,7 +202,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return Autos.doNothing();
+        return Tests.armCycle1(arm);
     }
 
     private static double deadband(double value) {

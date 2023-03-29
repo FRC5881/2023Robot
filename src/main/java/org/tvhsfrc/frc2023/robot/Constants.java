@@ -6,7 +6,9 @@
 package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.*;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +36,11 @@ public final class Constants {
     public static class OperatorConstants {
         public static final int DRIVER_CONTROLLER_PORT = 0;
         public static final int ARM_CONTROLLER_PORT = 1;
+    }
+
+    /** Identifiers for all Digital IO devices on the robot. */
+    public static class DIOConstants {
+        public static final int STAGE_1_LIMIT_SWITCH = 0;
     }
 
     /** Identifiers for all the CAN devices on the robot. */
@@ -73,10 +80,22 @@ public final class Constants {
         public static final double STAGE_1_LENGTH = Units.inchesToMeters(38.136);
 
         public static final double GEARBOX_RATIO_STAGE_1 = 5 * 5 * 5;
-        public static final double STAGE_1_HOME = 0 / 360d;
+        public static final double STAGE_1_HOME = -1 / 360d;
         public static final double STAGE_1_LIMIT = 60 / 360d;
+
+        /** Max velocity in rotations per second. Take 8 seconds to go from HOME to LIMIT */
+        public static final double STAGE_1_MAX_VEL = (STAGE_1_LIMIT - STAGE_1_HOME) / 16;
+
+        /**
+         * Max acceleration in rotations per second per second. Take 0.5 seconds to reach max vel
+         */
+        public static final double STAGE_1_MAX_ACCEL = STAGE_1_MAX_VEL / 0.5;
+
         /** Stage 1 PID Settings */
-        public static final PIDFConfig STAGE_1_PID = new PIDFConfig(0.032, 0.0001, 0.05, 0);
+        public static final ProfiledPIDController STAGE_1_PID =
+                new ProfiledPIDController(
+                        4.0, 0.1, 0.4, new Constraints(STAGE_1_MAX_VEL, STAGE_1_MAX_ACCEL));
+
         /** Stage 1 Maximum output (as percentage) for PID control */
         public static final double STAGE_1_MIN_OUTPUT = -0.25;
         /** Stage 1 Minimum output (as negative percentage) for PID control */
@@ -327,7 +346,7 @@ public final class Constants {
 
     public enum WAYPOINT {
         HOME(Arm.STAGE_1_HOME, 0.0, 0.0),
-        SAFE(Arm.STAGE_1_HOME, 0.07, 0.0),
+        SAFE(Arm.STAGE_1_HOME, 0.1, 0.0),
 
         LOW_CUBE(Arm.STAGE_1_HOME, 0.0568, 0.2),
         MID_CUBE_MIDPOINT(Arm.STAGE_1_HOME, 0.1596, 0.0),
@@ -339,7 +358,7 @@ public final class Constants {
 
         LOW_CONE(0.0249, 0.0733, 0.1352),
         MID_CONE_MIDPOINT(Arm.STAGE_1_HOME, 0.2171, 0.0),
-        MID_CONE(0.0190, 0.2161, 0.2823), // score
+        MID_CONE(0.039, 0.2161, 0.2823), // score
         HIGH_CONE_MIDPOINT(Arm.STAGE_1_HOME, 0.2495, 0.0),
         HIGH_CONE(0.0996, 0.3879, 0.3890), // score
         FLOOR_CONE(0.0756, 0.0574, 0.1024),

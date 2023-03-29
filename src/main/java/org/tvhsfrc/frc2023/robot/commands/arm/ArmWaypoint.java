@@ -14,8 +14,6 @@ public class ArmWaypoint extends CommandBase {
         this.armSubsystem = armSubsystem;
         this.waypoint = waypoint;
 
-        SmartDashboard.putString("Arm Waypoint", waypoint.toString());
-
         addRequirements(armSubsystem);
     }
 
@@ -26,6 +24,11 @@ public class ArmWaypoint extends CommandBase {
         armSubsystem.setStage1Rotations(position.getA());
         armSubsystem.setStage2Rotations(position.getB());
         armSubsystem.setStage3Rotations(position.getC());
+    }
+
+    @Override
+    public void execute() {
+        armSubsystem.setStage1Output();
     }
 
     @Override

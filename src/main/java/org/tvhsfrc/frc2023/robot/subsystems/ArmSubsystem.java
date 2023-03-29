@@ -4,12 +4,13 @@ import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
 import com.revrobotics.*;
 import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -24,6 +25,11 @@ public class ArmSubsystem extends SubsystemBase {
     private final CANSparkMax stage1 =
             new CANSparkMax(
                     Constants.CANConstants.ARM_STAGE_ONE, CANSparkMaxLowLevel.MotorType.kBrushless);
+    private final RelativeEncoder stage1Encoder =
+            stage1.getAlternateEncoder(SparkMaxAlternateEncoder.Type.kQuadrature, 2048);
+    private final DigitalInput stage1LimitSwitch =
+            new DigitalInput(Constants.DIOConstants.STAGE_1_LIMIT_SWITCH);
+
     private final CANSparkMax stage2 =
             new CANSparkMax(
                     Constants.CANConstants.ARM_STAGE_TWO, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -31,8 +37,6 @@ public class ArmSubsystem extends SubsystemBase {
             new CANSparkMax(
                     Constants.CANConstants.ARM_STAGE_THREE,
                     CANSparkMaxLowLevel.MotorType.kBrushless);
-    private final RelativeEncoder stage1Encoder =
-            stage1.getAlternateEncoder(SparkMaxAlternateEncoder.Type.kQuadrature, 2048);
 
     private double stage1SetPoint;
     private double stage2SetPoint;
@@ -42,23 +46,16 @@ public class ArmSubsystem extends SubsystemBase {
     private WAYPOINT previousArmWaypoint = WAYPOINT.HOME;
     private ARM_TARGET currentArmTarget = ARM_TARGET.HOME;
 
+    private final ProfiledPIDController stage1PidController = Constants.Arm.STAGE_1_PID;
+
     public ArmSubsystem() {
         // Stage 1
-        setStage1P(STAGE_1_PID.p);
-        setStage1I(STAGE_1_PID.i);
-        setStage1D(STAGE_1_PID.d);
-        stage1.getPIDController().setFF(STAGE_1_PID.f);
-        stage1.getPIDController().setOutputRange(STAGE_1_MIN_OUTPUT, STAGE_1_MAX_OUTPUT);
-
         stage1.setInverted(false);
         stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
         stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
-        stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
-        stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) STAGE_1_HOME);
+        stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, false);
         stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_1_LIMIT);
-        stage1.getPIDController().setFeedbackDevice(stage1Encoder);
-        stage1.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
-        stage1.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
+        stage1PidController.setTolerance(STAGE_1_TOLERANCE);
 
         // Stage 2
         setStage2P(STAGE_2_PID.p);
@@ -98,161 +95,34 @@ public class ArmSubsystem extends SubsystemBase {
         setStage3Rotations(0);
     }
 
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        builder.addDoubleProperty("Stage 1", this::getStage1Rotations, null);
-        builder.addDoubleProperty("Stage 2", this::getStage2Rotations, null);
-        builder.addDoubleProperty("Stage 3", this::getStage3Rotations, null);
-
-        builder.addDoubleProperty("Stage 1 slop", this::slop, null);
-        builder.addDoubleProperty("inner", () -> stage1.getEncoder().getPosition(), null);
-        builder.addDoubleProperty("outer", () -> stage1Encoder.getPosition(), null);
-        builder.addDoubleProperty("calculate", () -> calculate(), null);
-
-        builder.addDoubleProperty(
-                "Stage 1 Set Point", () -> stage1SetPoint, this::setStage1Rotations);
-        builder.addDoubleProperty(
-                "Stage 2 Set Point", () -> stage2SetPoint, this::setStage2Rotations);
-        builder.addDoubleProperty(
-                "Stage 3 Set Point", () -> stage3SetPoint, this::setStage3Rotations);
-
-        builder.addDoubleProperty("PID Stage 1 P", this::getStage1P, this::setStage1P);
-        builder.addDoubleProperty("PID Stage 1 I", this::getStage1I, this::setStage1I);
-        builder.addDoubleProperty("PID Stage 1 D", this::getStage1D, this::setStage1D);
-
-        builder.addDoubleProperty("PID Stage 2 P", this::getStage2P, this::setStage2P);
-        builder.addDoubleProperty("PID Stage 2 I", this::getStage2I, this::setStage2I);
-        builder.addDoubleProperty("PID Stage 2 D", this::getStage2D, this::setStage2D);
-
-        builder.addDoubleProperty("PID Stage 3 P", this::getStage3P, this::setStage3P);
-        builder.addDoubleProperty("PID Stage 3 I", this::getStage3I, this::setStage3I);
-        builder.addDoubleProperty("PID Stage 3 D", this::getStage3D, this::setStage3D);
-
-        builder.addStringProperty("Game Piece", () -> currentGamePieceTarget.toString(), null);
-        builder.addStringProperty("Arm Target", () -> currentArmTarget.toString(), null);
-        builder.addStringProperty(
-                "Previous Arm Waypoint", () -> previousArmWaypoint.toString(), null);
-        builder.addBooleanProperty("isAtSetPoint", () -> this.isAtSetPoint(), null);
-
-        builder.addDoubleProperty("Stage 1 Temperature", stage1::getMotorTemperature, null);
-        builder.addDoubleProperty("Stage 2 Temperature", stage2::getMotorTemperature, null);
-        builder.addDoubleProperty("Stage 3 Temperature", stage3::getMotorTemperature, null);
-
-        builder.addDoubleProperty("Stage 1 Output", () -> 100 * stage1.getAppliedOutput(), null);
-        builder.addDoubleProperty("Stage 2 Output", () -> 100 * stage2.getAppliedOutput(), null);
-        builder.addDoubleProperty("Stage 3 Output", () -> 100 * stage3.getAppliedOutput(), null);
-    }
-
-    public double getStage1P() {
-        return stage1.getPIDController().getP() / GEARBOX_RATIO_STAGE_1;
-    }
-
-    public void setStage1P(double p) {
-        stage1.getPIDController().setP(p * GEARBOX_RATIO_STAGE_1);
-    }
-
-    public double getStage1I() {
-        return stage1.getPIDController().getI() / GEARBOX_RATIO_STAGE_1;
-    }
-
-    public void setStage1I(double i) {
-        stage1.getPIDController().setI(i * GEARBOX_RATIO_STAGE_1);
-    }
-
-    public double getStage1D() {
-        return stage1.getPIDController().getD() / GEARBOX_RATIO_STAGE_1;
-    }
-
-    public void setStage1D(double d) {
-        stage1.getPIDController().setD(d * GEARBOX_RATIO_STAGE_1);
-    }
-
-    public double getStage2P() {
-        return stage2.getPIDController().getP() / GEARBOX_RATIO_STAGE_2;
-    }
-
-    public void setStage2P(double p) {
-        stage2.getPIDController().setP(p * GEARBOX_RATIO_STAGE_2);
-    }
-
-    public double getStage2I() {
-        return stage2.getPIDController().getI() / GEARBOX_RATIO_STAGE_2;
-    }
-
-    public void setStage2I(double i) {
-        stage2.getPIDController().setI(i * GEARBOX_RATIO_STAGE_2);
-    }
-
-    public double getStage2D() {
-        return stage2.getPIDController().getD() / GEARBOX_RATIO_STAGE_2;
-    }
-
-    public void setStage2D(double d) {
-        stage2.getPIDController().setD(d * GEARBOX_RATIO_STAGE_2);
-    }
-
-    public double getStage3P() {
-        return stage3.getPIDController().getP() / GEARBOX_RATIO_STAGE_3;
-    }
-
-    public void setStage3P(double p) {
-        stage3.getPIDController().setP(p * GEARBOX_RATIO_STAGE_3);
-    }
-
-    public double getStage3I() {
-        return stage3.getPIDController().getI() / GEARBOX_RATIO_STAGE_3;
-    }
-
-    public void setStage3I(double i) {
-        stage3.getPIDController().setI(i * GEARBOX_RATIO_STAGE_3);
-    }
-
-    public double getStage3D() {
-        return stage3.getPIDController().getD() / GEARBOX_RATIO_STAGE_3;
-    }
-
-    public void setStage3D(double d) {
-        stage3.getPIDController().setD(d * GEARBOX_RATIO_STAGE_3);
-    }
-
-    public void setStage1Rotations(double stage1Rotations) {
-
-        stage1.getPIDController().setReference(stage1Rotations, CANSparkMax.ControlType.kPosition);
-        stage1SetPoint = stage1Rotations;
-    }
-
-    public double getStage1Rotations() {
-        return stage1Encoder.getPosition();
-    }
-
-    public double getStage1Vel() {
-        return stage1Encoder.getVelocity();
-    }
-
-    public void setStage2Rotations(double stage2Rotations) {
-        stage2.getPIDController().setReference(stage2Rotations, CANSparkMax.ControlType.kPosition);
-        stage2SetPoint = stage2Rotations;
-    }
-
-    public double getStage2Rotations() {
-        return stage2.getEncoder().getPosition();
-    }
-
-    public void setStage3Rotations(double stage3Rotations) {
-        stage3.getPIDController().setReference(stage3Rotations, CANSparkMax.ControlType.kPosition);
-        stage3SetPoint = stage3Rotations;
-    }
-
-    public double getStage3Rotations() {
-        return stage3.getEncoder().getPosition();
-    }
-
     public boolean isAtSetPoint() {
         // Compare the current position to the set point
-        return Math.abs(getStage1Rotations() - stage1SetPoint) < Constants.Arm.STAGE_1_TOLERANCE
-                && Math.abs(getStage2Rotations() - stage2SetPoint) < Constants.Arm.STAGE_2_TOLERANCE
-                && Math.abs(getStage3Rotations() - stage3SetPoint)
-                        < Constants.Arm.STAGE_3_TOLERANCE;
+        boolean stage1AtGoal = stage1PidController.atGoal();
+        boolean stage2AtGoal = Math.abs(getStage2Rotations() - stage2SetPoint) < STAGE_2_TOLERANCE;
+        boolean stage3AtGoal = Math.abs(getStage3Rotations() - stage3SetPoint) < STAGE_3_TOLERANCE;
+
+        return stage1AtGoal && stage2AtGoal && stage3AtGoal;
+    }
+
+    private double calculateStage1Output() {
+        double output = stage1PidController.calculate(getStage1Rotations());
+
+        if (!stage1LimitSwitch.get()) {
+            output = Math.max(output, 0);
+        }
+
+        return output;
+    }
+
+    public void setStage1Output() {
+        stage1.set(calculateStage1Output());
+    }
+
+    @Override
+    public void periodic() {
+        if (!stage1LimitSwitch.get()) {
+            stage1Encoder.setPosition(0);
+        }
     }
 
     /**
@@ -331,10 +201,10 @@ public class ArmSubsystem extends SubsystemBase {
 
             // Loop through all the neighbors
             for (WAYPOINT v : ADJACENCY_LIST.get(u)) {
-                // Calculate the distance to the neighbor
+                // Calculate the distance from start to the neighbor
                 double alt = distance.get(u) + distance(u, v);
 
-                // If the distance is less than the current distance, update the distance
+                // If new the distance is less than the current distance, update the distance
                 if (alt < distance.get(v)) {
                     distance.put(v, alt);
                     previous.put(v, u);
@@ -366,7 +236,7 @@ public class ArmSubsystem extends SubsystemBase {
         // Build the command group
         SequentialCommandGroup commandGroup = new SequentialCommandGroup();
         for (WAYPOINT waypoint : path) {
-            commandGroup.addCommands(new ArmWaypoint(this, waypoint).withTimeout(5));
+            commandGroup.addCommands(new ArmWaypoint(this, waypoint));
         }
 
         return commandGroup;
@@ -414,7 +284,10 @@ public class ArmSubsystem extends SubsystemBase {
         }
     }
 
-    /** Sets game piece to cube when gamePieceCube is called and set to cone when gamePieceCone is called. */
+    /**
+     * Sets game piece to cube when gamePieceCube is called and set to cone when gamePieceCone is
+     * called.
+     */
     public void gamePieceCube() {
         currentGamePieceTarget = GAME_PIECE_TYPE.CUBE;
     }
@@ -423,63 +296,8 @@ public class ArmSubsystem extends SubsystemBase {
         currentGamePieceTarget = GAME_PIECE_TYPE.CONE;
     }
 
-    /** Cycles though the available ARM_TARGET values. */
-    public void cycleArmTarget(boolean reverse) {
-        if (reverse) {
-            switch (currentArmTarget) {
-                case HOME:
-                    currentArmTarget = ARM_TARGET.DOUBLE_SUBSTATION;
-                    break;
-                case SAFE:
-                    currentArmTarget = ARM_TARGET.HOME;
-                    break;
-                case FLOOR:
-                    currentArmTarget = ARM_TARGET.SAFE;
-                    break;
-                case LOW:
-                    currentArmTarget = ARM_TARGET.FLOOR;
-                    break;
-                case MID:
-                    currentArmTarget = ARM_TARGET.LOW;
-                    break;
-                case HIGH:
-                    currentArmTarget = ARM_TARGET.MID;
-                    break;
-                case DOUBLE_SUBSTATION:
-                    currentArmTarget = ARM_TARGET.HIGH;
-                    break;
-            }
-        } else {
-            switch (currentArmTarget) {
-                case HOME:
-                    currentArmTarget = ARM_TARGET.SAFE;
-                    break;
-                case SAFE:
-                    currentArmTarget = ARM_TARGET.FLOOR;
-                    break;
-                case FLOOR:
-                    currentArmTarget = ARM_TARGET.LOW;
-                    break;
-                case LOW:
-                    currentArmTarget = ARM_TARGET.MID;
-                    break;
-                case MID:
-                    currentArmTarget = ARM_TARGET.HIGH;
-                    break;
-                case HIGH:
-                    currentArmTarget = ARM_TARGET.DOUBLE_SUBSTATION;
-                    break;
-                case DOUBLE_SUBSTATION:
-                    currentArmTarget = ARM_TARGET.HOME;
-                    break;
-            }
-        }
-    }
-
-    public CommandBase cGoToWaypoint(ARM_TARGET target){
-        return Commands.sequence(
-                new InstantCommand(() -> setArmTarget(target)),
-                new ArmNext(this));
+    public CommandBase cGoToWaypoint(ARM_TARGET target) {
+        return Commands.sequence(new InstantCommand(() -> setArmTarget(target)), new ArmNext(this));
     }
 
     public void setArmTarget(ARM_TARGET target) {
@@ -502,9 +320,200 @@ public class ArmSubsystem extends SubsystemBase {
         return inner - outer;
     }
 
-    public double calculate() {
-        double error = getStage1Rotations() - stage1SetPoint;
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.addDoubleProperty("Stage 1", this::getStage1Rotations, null);
+        builder.addDoubleProperty("Stage 2", this::getStage2Rotations, null);
+        builder.addDoubleProperty("Stage 3", this::getStage3Rotations, null);
 
-        return getStage1P() * error;
+        builder.addDoubleProperty("Stage 1 slop", this::slop, null);
+        builder.addDoubleProperty("outer", () -> stage1Encoder.getPosition(), null);
+
+        builder.addDoubleProperty(
+                "Stage 1 Position Set Point",
+                () -> stage1PidController.getSetpoint().position,
+                this::setStage1Rotations);
+        builder.addDoubleProperty(
+                "Stage 1 Velocity Set Point",
+                () -> stage1PidController.getSetpoint().velocity,
+                null);
+
+        builder.addDoubleProperty(
+                "Stage 2 Set Point", () -> stage2SetPoint, this::setStage2Rotations);
+        builder.addDoubleProperty(
+                "Stage 3 Set Point", () -> stage3SetPoint, this::setStage3Rotations);
+
+        builder.addDoubleProperty("PID Stage 1 P", this::getStage1P, this::setStage1P);
+        builder.addDoubleProperty("PID Stage 1 I", this::getStage1I, this::setStage1I);
+        builder.addDoubleProperty("PID Stage 1 D", this::getStage1D, this::setStage1D);
+        builder.addDoubleProperty(
+                "PID Stage 1 Min Output", this::getStage1MinOutput, this::setStage1MinOutput);
+        builder.addDoubleProperty(
+                "PID Stage 1 Max Output", this::getStage1MaxOutput, this::setStage1MaxOutput);
+        builder.addDoubleProperty(
+                "PID Stage 1 tolerance", this::getStage1Tolerance, this::setStage1Tolerance);
+
+        builder.addDoubleProperty("PID Stage 2 P", this::getStage2P, this::setStage2P);
+        builder.addDoubleProperty("PID Stage 2 I", this::getStage2I, this::setStage2I);
+        builder.addDoubleProperty("PID Stage 2 D", this::getStage2D, this::setStage2D);
+
+        builder.addDoubleProperty("PID Stage 3 P", this::getStage3P, this::setStage3P);
+        builder.addDoubleProperty("PID Stage 3 I", this::getStage3I, this::setStage3I);
+        builder.addDoubleProperty("PID Stage 3 D", this::getStage3D, this::setStage3D);
+
+        builder.addStringProperty("Game Piece", () -> currentGamePieceTarget.toString(), null);
+        builder.addStringProperty("Arm Target", () -> currentArmTarget.toString(), null);
+        builder.addStringProperty(
+                "Previous Arm Waypoint", () -> previousArmWaypoint.toString(), null);
+        builder.addBooleanProperty("isAtSetPoint", () -> this.isAtSetPoint(), null);
+
+        builder.addDoubleProperty("Stage 1 Temperature", stage1::getMotorTemperature, null);
+        builder.addDoubleProperty("Stage 2 Temperature", stage2::getMotorTemperature, null);
+        builder.addDoubleProperty("Stage 3 Temperature", stage3::getMotorTemperature, null);
+
+        builder.addDoubleProperty("Stage 1 Output", stage1::getAppliedOutput, null);
+        builder.addDoubleProperty("Stage 1 Calculate", this::calculateStage1Output, null);
+        builder.addDoubleProperty("Stage 1 Velocity", this::getStage1Vel, null);
+        builder.addBooleanProperty("Stage 1 Limit Switch", () -> !stage1LimitSwitch.get(), null);
+        builder.addDoubleProperty("Stage 2 Output", stage2::getAppliedOutput, null);
+        builder.addDoubleProperty("Stage 3 Output", stage3::getAppliedOutput, null);
+    }
+
+    public double getStage1P() {
+        return stage1PidController.getP();
+    }
+
+    public void setStage1P(double p) {
+        stage1PidController.setP(p);
+    }
+
+    public double getStage1I() {
+        return stage1PidController.getI();
+    }
+
+    public void setStage1I(double i) {
+        stage1PidController.setI(i);
+    }
+
+    public double getStage1D() {
+        return stage1PidController.getD();
+    }
+
+    public void setStage1D(double d) {
+        stage1PidController.setD(d);
+    }
+
+    public double getStage1MinOutput() {
+        return stage1.getPIDController().getOutputMin();
+    }
+
+    public double getStage1MaxOutput() {
+        return stage1.getPIDController().getOutputMax();
+    }
+
+    public void setStage1MinOutput(double min) {
+        stage1.getPIDController().setOutputRange(min, getStage1MaxOutput());
+    }
+
+    public void setStage1MaxOutput(double max) {
+        stage1.getPIDController().setOutputRange(getStage1MinOutput(), max);
+    }
+
+    public double getStage1Tolerance() {
+        return stage1PidController.getPositionTolerance();
+    }
+
+    public void setStage1Tolerance(double tolerance) {
+        stage1PidController.setTolerance(tolerance);
+    }
+
+    public double getStage2P() {
+        return stage2.getPIDController().getP() / GEARBOX_RATIO_STAGE_2;
+    }
+
+    public void setStage2P(double p) {
+        stage2.getPIDController().setP(p * GEARBOX_RATIO_STAGE_2);
+    }
+
+    public double getStage2I() {
+        return stage2.getPIDController().getI() / GEARBOX_RATIO_STAGE_2;
+    }
+
+    public void setStage2I(double i) {
+        stage2.getPIDController().setI(i * GEARBOX_RATIO_STAGE_2);
+    }
+
+    public double getStage2D() {
+        return stage2.getPIDController().getD() / GEARBOX_RATIO_STAGE_2;
+    }
+
+    public void setStage2D(double d) {
+        stage2.getPIDController().setD(d * GEARBOX_RATIO_STAGE_2);
+    }
+
+    public double getStage3P() {
+        return stage3.getPIDController().getP() / GEARBOX_RATIO_STAGE_3;
+    }
+
+    public void setStage3P(double p) {
+        stage3.getPIDController().setP(p * GEARBOX_RATIO_STAGE_3);
+    }
+
+    public double getStage3I() {
+        return stage3.getPIDController().getI() / GEARBOX_RATIO_STAGE_3;
+    }
+
+    public void setStage3I(double i) {
+        stage3.getPIDController().setI(i * GEARBOX_RATIO_STAGE_3);
+    }
+
+    public double getStage3D() {
+        return stage3.getPIDController().getD() / GEARBOX_RATIO_STAGE_3;
+    }
+
+    public void setStage3D(double d) {
+        stage3.getPIDController().setD(d * GEARBOX_RATIO_STAGE_3);
+    }
+
+    public void setStage1Rotations(double stage1Rotations) {
+        stage1PidController.setGoal(stage1Rotations);
+    }
+
+    public double getStage1Rotations() {
+        return stage1Encoder.getPosition();
+    }
+
+    public double getStage1Vel() {
+        return stage1Encoder.getVelocity();
+    }
+
+    public void setStage2Rotations(double stage2Rotations) {
+        stage2.getPIDController().setReference(stage2Rotations, CANSparkMax.ControlType.kPosition);
+        stage2SetPoint = stage2Rotations;
+    }
+
+    public double getStage2Rotations() {
+        return stage2.getEncoder().getPosition();
+    }
+
+    public void setStage3Rotations(double stage3Rotations) {
+        stage3.getPIDController().setReference(stage3Rotations, CANSparkMax.ControlType.kPosition);
+        stage3SetPoint = stage3Rotations;
+    }
+
+    public double getStage3Rotations() {
+        return stage3.getEncoder().getPosition();
+    }
+
+    public double getStage1SetPoint() {
+        return stage1PidController.getGoal().position;
+    }
+
+    public double getStage2SetPoint() {
+        return stage2SetPoint;
+    }
+
+    public double getStage3SetPoint() {
+        return stage3SetPoint;
     }
 }
