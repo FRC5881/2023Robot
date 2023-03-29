@@ -20,7 +20,6 @@ import org.tvhsfrc.frc2023.robot.Constants.Arm.ARM_TARGET;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmDriveCommand;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmNext;
-import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.auto.Tests;
 import org.tvhsfrc.frc2023.robot.commands.drive.RelativeRelativeDrive;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
@@ -53,8 +52,8 @@ public class RobotContainer {
     private final CommandPS4Controller armController =
             new CommandPS4Controller(OperatorConstants.ARM_CONTROLLER_PORT);
 
-//     private final CommandXboxController armController =
-        //     new CommandXboxController(OperatorConstants.ARM_CONTROLLER_PORT);
+    //     private final CommandXboxController armController =
+    //     new CommandXboxController(OperatorConstants.ARM_CONTROLLER_PORT);
 
     // ROBORIO "User" button
     Trigger userButton = new Trigger(RobotController::getUserButton);
