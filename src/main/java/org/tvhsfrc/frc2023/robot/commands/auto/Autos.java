@@ -42,7 +42,7 @@ public final class Autos {
         return Commands.sequence(
                 new RepeatCommand(
                         new InstantCommand(
-                                () -> swerve.drive(new Translation2d(1, 0), 5, true, true),
+                                () -> swerve.drive(new Translation2d(1, 0), 5, true, true, false),
                                 swerve)));
     }
 

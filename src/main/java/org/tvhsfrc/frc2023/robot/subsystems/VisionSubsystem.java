@@ -2,9 +2,6 @@ package org.tvhsfrc.frc2023.robot.subsystems;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.networktables.GenericEntry;
-import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.io.IOException;
@@ -13,7 +10,6 @@ import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-import org.photonvision.common.hardware.VisionLEDMode;
 import org.tvhsfrc.frc2023.robot.Constants;
 
 /**
@@ -35,9 +31,9 @@ public class VisionSubsystem extends SubsystemBase {
     public VisionSubsystem() {
         setName("Vision");
 
-        connect();
+        // connect();
 
-        initShuffleboard();
+        // initShuffleboard();
     }
 
     /** Initialize camera and pose estimator */
@@ -111,7 +107,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (poseEstimator.isPresent()) {
+        /*if (poseEstimator.isPresent()) {
             Optional<EstimatedRobotPose> pose = poseEstimator.get().update();
             if (pose.isPresent()) {
                 poseEstimation = pose;
@@ -121,7 +117,7 @@ public class VisionSubsystem extends SubsystemBase {
             }
         } else {
             cam.setLED(VisionLEDMode.kOff);
-        }
+        }*/
     }
 
     // ----------------
@@ -170,7 +166,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     public void initShuffleboard() {
         // Shuffleboard
-        ShuffleboardTab tab = Shuffleboard.getTab("Vision");
+        /*ShuffleboardTab tab = Shuffleboard.getTab("Vision");
 
         tab.addString("Camera Name", () -> cam.getName()).withWidget(BuiltInWidgets.kTextView);
         tab.addBoolean("Camera Connected", () -> cam.isConnected())
@@ -192,6 +188,6 @@ public class VisionSubsystem extends SubsystemBase {
 
         layoutEntry = tab.add("Layout", layoutName).getEntry();
 
-        tab.add("Set Layout", this.cSetLayout());
+        tab.add("Set Layout", this.cSetLayout());*/
     }
 }

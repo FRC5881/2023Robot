@@ -4,13 +4,11 @@
 
 package org.tvhsfrc.frc2023.robot.subsystems;
 
-import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.io.File;
 import java.util.Optional;
@@ -24,21 +22,18 @@ import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 
 public class SwerveSubsystem extends SubsystemBase {
-    /// NavX connected over MXP
-    private final AHRS navx = new AHRS(SPI.Port.kMXP);
-
     /** Swerve drive object. */
     private final SwerveDrive swerveDrive;
 
     /** PhotonVision object */
-    private final VisionSubsystem vision;
+    private final Optional<VisionSubsystem> vision;
 
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
      *
      * @param directory Directory of swerve drive config files.
      */
-    public SwerveSubsystem(File directory, VisionSubsystem vision) {
+    public SwerveSubsystem(File directory, Optional<VisionSubsystem> vision) {
         // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects
         // being created.
         SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
@@ -69,7 +64,11 @@ public class SwerveSubsystem extends SubsystemBase {
      *     closed-loop.
      */
     public void drive(
-            Translation2d translation, double rotation, boolean fieldRelative, boolean isOpenLoop) {
+            Translation2d translation,
+            double rotation,
+            boolean fieldRelative,
+            boolean isOpenLoop,
+            boolean headingCorrection) {
         swerveDrive.drive(translation, rotation, fieldRelative, isOpenLoop);
     }
 
@@ -77,7 +76,7 @@ public class SwerveSubsystem extends SubsystemBase {
     public void periodic() {
         swerveDrive.updateOdometry();
 
-        Optional<EstimatedRobotPose> visionPose = vision.getEstimatedPose();
+        Optional<EstimatedRobotPose> visionPose = vision.flatMap(VisionSubsystem::getEstimatedPose);
         if (visionPose.isPresent()) {
             Pose2d pose = visionPose.get().estimatedPose.toPose2d();
             double timestamp = visionPose.get().timestampSeconds;
@@ -143,11 +142,6 @@ public class SwerveSubsystem extends SubsystemBase {
         swerveDrive.zeroGyro();
     }
 
-    public void calibrateGyro() {
-        swerveDrive.zeroGyro();
-        navx.calibrate();
-    }
-
     /**
      * Sets the drive motors to brake/coast mode.
      *
@@ -178,8 +172,6 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public ChassisSpeeds getTargetSpeeds(
             double xInput, double yInput, double headingX, double headingY) {
-        xInput = Math.pow(xInput, 3);
-        yInput = Math.pow(yInput, 3);
         return swerveDrive.swerveController.getTargetSpeeds(
                 xInput, yInput, headingX, headingY, getHeading().getRadians());
     }
@@ -193,8 +185,6 @@ public class SwerveSubsystem extends SubsystemBase {
      * @return {@link ChassisSpeeds} which can be sent to th Swerve Drive.
      */
     public ChassisSpeeds getTargetSpeeds(double xInput, double yInput, Rotation2d angle) {
-        xInput = Math.pow(xInput, 3);
-        yInput = Math.pow(yInput, 3);
         return swerveDrive.swerveController.getTargetSpeeds(
                 xInput, yInput, angle.getRadians(), getHeading().getRadians());
     }
