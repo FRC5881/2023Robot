@@ -18,9 +18,9 @@ public class ArmDriveCommand extends CommandBase {
     private final DoubleSupplier stage3DoubleSupplier;
 
     // In rotations per 20ms
-    private final double STAGE_1_RATE = (5.0 / 360) * 0.05;
-    private final double STAGE_2_RATE = (5.0 / 360) * 0.05;
-    private final double STAGE_3_RATE = (20.0 / 360) * 0.05;
+    private final double STAGE_1_RATE = (5.0 / 360) * 0.08;
+    private final double STAGE_2_RATE = (5.0 / 360) * 0.08;
+    private final double STAGE_3_RATE = (20.0 / 360) * 0.06;
 
     public ArmDriveCommand(
             ArmSubsystem armSubsystem,

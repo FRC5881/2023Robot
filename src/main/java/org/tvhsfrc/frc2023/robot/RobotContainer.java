@@ -5,21 +5,27 @@
 
 package org.tvhsfrc.frc2023.robot;
 
+import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.io.File;
+import java.util.HashMap;
 import java.util.Optional;
 import org.tvhsfrc.frc2023.robot.Constants.Arm.ARM_TARGET;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmDriveCommand;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmNext;
+import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.auto.Tests;
 import org.tvhsfrc.frc2023.robot.commands.drive.RelativeRelativeDrive;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
@@ -62,6 +68,11 @@ public class RobotContainer {
     public RobotContainer() {
         // Configure the trigger bindings
         configureBindings();
+
+        sendableChooser.setDefaultOption(kNothing, kNothing);
+        sendableChooser.addOption(kAutoline, kAutoline);
+
+        SmartDashboard.putData(sendableChooser);
     }
 
     /**
@@ -82,7 +93,7 @@ public class RobotContainer {
                         swerveSubsystem,
                         () -> deadband(driverController.getLeftY(), 0.15),
                         () -> deadband(driverController.getLeftX(), 0.15),
-                        () -> deadband(driverController.getRawAxis(4), 0.15));
+                        () -> deadband(driverController.getRawAxis(2), 0.15));
 
         swerveSubsystem.setDefaultCommand(drive);
 
@@ -201,8 +212,22 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return Tests.armCycle1(arm);
+        switch (sendableChooser.getSelected()) {
+            case kNothing:
+                return Autos.doNothing();
+            case kAutoline:
+                return Autos.autoline(swerveSubsystem);
+            default:
+                return Autos.doNothing();
+        }
     }
+
+    private final String kAutoline = "autoline";
+    private final String kNothing = "nothing";
+
+    private String selected;
+
+    private final SendableChooser<String> sendableChooser = new SendableChooser<>();
 
     private static double deadband(double value) {
         return deadband(value, 0.07);

@@ -222,7 +222,7 @@ public class ArmSubsystem extends SubsystemBase {
             path.add(current);
             current = previous.get(current);
         }
-        path.add(start); // include the starting waypoint as part of the path
+//        path.add(start); // include the starting waypoint as part of the path
 
         // Reverse the path
         Collections.reverse(path);

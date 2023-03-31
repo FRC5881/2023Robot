@@ -84,7 +84,7 @@ public final class Constants {
         public static final double STAGE_1_LIMIT = 60 / 360d;
 
         /** Max velocity in rotations per second. Take 8 seconds to go from HOME to LIMIT */
-        public static final double STAGE_1_MAX_VEL = (STAGE_1_LIMIT - STAGE_1_HOME) / 16;
+        public static final double STAGE_1_MAX_VEL = (STAGE_1_LIMIT - STAGE_1_HOME) / 12;
 
         /**
          * Max acceleration in rotations per second per second. Take 0.5 seconds to reach max vel
@@ -97,9 +97,9 @@ public final class Constants {
                         4.0, 0.1, 0.4, new Constraints(STAGE_1_MAX_VEL, STAGE_1_MAX_ACCEL));
 
         /** Stage 1 Maximum output (as percentage) for PID control */
-        public static final double STAGE_1_MIN_OUTPUT = -0.25;
+        public static final double STAGE_1_MIN_OUTPUT = -0.3;
         /** Stage 1 Minimum output (as negative percentage) for PID control */
-        public static final double STAGE_1_MAX_OUTPUT = 0.25;
+        public static final double STAGE_1_MAX_OUTPUT = 0.3;
 
         /** Length of the second stage of the arm in meters */
         public static final double STAGE_2_LENGTH = Units.inchesToMeters(35);
@@ -109,9 +109,9 @@ public final class Constants {
         /** Stage 2 PID Settings - Use values from the SPARK Max Hardware Client */
         public static final PIDFConfig STAGE_2_PID = new PIDFConfig(0.15, 0, 0.05, 0);
         /** Stage 2 Maximum output (as percentage) for PID control */
-        public static final double STAGE_2_MIN_OUTPUT = -0.15;
+        public static final double STAGE_2_MIN_OUTPUT = -0.25;
         /** Stage 2 Minimum output (as negative percentage) for PID control */
-        public static final double STAGE_2_MAX_OUTPUT = 0.15;
+        public static final double STAGE_2_MAX_OUTPUT = 0.25;
 
         /** Length of the third stage of the arm/the grabber in meters */
         public static final double STAGE_3_LENGTH = Units.inchesToMeters(7);
@@ -122,9 +122,9 @@ public final class Constants {
         /** Stage 3 PID Settings */
         public static final PIDFConfig STAGE_3_PID = new PIDFConfig(0.15, 0, 0.3, 0);
         /** Stage 3 Maximum output (as percentage) for PID control */
-        public static final double STAGE_3_MIN_OUTPUT = -0.2;
+        public static final double STAGE_3_MIN_OUTPUT = -0.25;
         /** Stage 3 Minimum output (as negative percentage) for PID control */
-        public static final double STAGE_3_MAX_OUTPUT = 0.2;
+        public static final double STAGE_3_MAX_OUTPUT = 0.25;
 
         // TODO: choose tolerances
         public static final double STAGE_1_TOLERANCE = 0.01;
@@ -298,7 +298,13 @@ public final class Constants {
                                 new ArrayList<>(
                                         Arrays.asList(
                                                 // mid points
-                                                WAYPOINT.MID_CONE_MIDPOINT // TODO: can we reach
+                                                WAYPOINT.MID_CONE_MIDPOINT, // TODO: can we reach
+                                                WAYPOINT.SAFE,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE,
+                                                WAYPOINT.HIGH_CONE,
+                                                WAYPOINT.MID_CUBE,
+                                                WAYPOINT.HIGH_CUBE
                                                 // other positions?
                                                 )));
                         put(
@@ -306,7 +312,13 @@ public final class Constants {
                                 new ArrayList<>(
                                         Arrays.asList(
                                                 // mid points
-                                                WAYPOINT.MID_CUBE_MIDPOINT // TODO: can we reach
+                                                WAYPOINT.MID_CUBE_MIDPOINT, // TODO: can we reach
+                                                WAYPOINT.SAFE,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
+                                                WAYPOINT.HIGH_CUBE,
+                                                WAYPOINT.MID_CONE,
+                                                WAYPOINT.HIGH_CONE
                                                 // other positions?
                                                 )));
                         put(
@@ -314,7 +326,11 @@ public final class Constants {
                                 new ArrayList<>(
                                         Arrays.asList(
                                                 // mid points
-                                                WAYPOINT.HIGH_CONE_MIDPOINT // TODO: can we reach
+                                                WAYPOINT.HIGH_CONE_MIDPOINT, // TODO: can we reach
+                                                WAYPOINT.HIGH_CUBE,
+                                                WAYPOINT.MID_CONE,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
+                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE
                                                 // other positions?
                                                 )));
                         put(
@@ -346,23 +362,23 @@ public final class Constants {
 
     public enum WAYPOINT {
         HOME(Arm.STAGE_1_HOME, 0.0, 0.0),
-        SAFE(Arm.STAGE_1_HOME, 0.1, 0.0),
+        SAFE(Arm.STAGE_1_HOME, 0.0504, 0.0),
 
-        LOW_CUBE(Arm.STAGE_1_HOME, 0.0568, 0.2),
-        MID_CUBE_MIDPOINT(Arm.STAGE_1_HOME, 0.1596, 0.0),
-        MID_CUBE(0.039, 0.2057, 0.445), // score
-        HIGH_CUBE_MIDPOINT(Arm.STAGE_1_HOME, 0.3101, 0.0),
-        HIGH_CUBE(0.0737, 0.3101, 0.3837), // score
-        FLOOR_CUBE(0.0136, 0.0784, 0.3806),
-        DOUBLE_SUBSTATION_CUBE(Arm.STAGE_1_HOME, 0.2050, 0.2932),
+        LOW_CUBE(Arm.STAGE_1_HOME, 0.0876, 0.2954),
+        MID_CUBE_MIDPOINT(Arm.STAGE_1_HOME, 0.185, 0.0),
+        MID_CUBE(Arm.STAGE_1_HOME, 0.2311, 0.3778), // score
+        HIGH_CUBE_MIDPOINT(Arm.STAGE_1_HOME, 0.3758, 0.0),
+        HIGH_CUBE(0.0805, 0.3847, 0.4037), // score
+        FLOOR_CUBE(0.041, 0.0933, 0.359), // Floor cube midpoint stage 2: 0.0933
+        DOUBLE_SUBSTATION_CUBE(Arm.STAGE_1_HOME, 0.2314, 0.2501),
 
         LOW_CONE(0.0249, 0.0733, 0.1352),
-        MID_CONE_MIDPOINT(Arm.STAGE_1_HOME, 0.2171, 0.0),
-        MID_CONE(0.039, 0.2161, 0.2823), // score
+        MID_CONE_MIDPOINT(Arm.STAGE_1_HOME, 0.218, 0.0),
+        MID_CONE(Arm.STAGE_1_HOME, 0.2457, 0.2193), // score
         HIGH_CONE_MIDPOINT(Arm.STAGE_1_HOME, 0.2495, 0.0),
         HIGH_CONE(0.0996, 0.3879, 0.3890), // score
-        FLOOR_CONE(0.0756, 0.0574, 0.1024),
-        DOUBLE_SUBSTATION_CONE(Arm.STAGE_1_HOME, 0.2050, 0.2932);
+        FLOOR_CONE(0.0673, 0.0822, 0.4556),
+        DOUBLE_SUBSTATION_CONE(Arm.STAGE_1_HOME, 0.2314, 0.2501);
 
         public final Triple<Double, Double, Double> position;
 

@@ -46,6 +46,16 @@ public final class Autos {
                                 swerve)));
     }
 
+    public static CommandBase autoline(SwerveSubsystem swerve) {
+        return Commands.deadline(Commands.waitSeconds(4), Commands.run(() -> swerve.drive(
+                new Translation2d(-0.3, 0),
+                0,
+                true,
+                false,
+                true
+        ), swerve));
+    }
+
     /** Example static factory for an autonomous command. */
     public static CommandBase exampleAuto(SwerveSubsystem swerve) {
         boolean onTheFly = false; // Use the path defined in code or loaded from PathPlanner.
