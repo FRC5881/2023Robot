@@ -50,15 +50,13 @@ public class ArmDriveCommand extends CommandBase {
         stage3 += stage3DoubleSupplier.getAsDouble() * STAGE_3_RATE;
 
         // clamp the values
-        stage1 = MathUtil.clamp(stage1, Constants.Arm.STAGE_1_HOME, Constants.Arm.STAGE_1_LIMIT);
+        stage1 = MathUtil.clamp(stage1, 0, Constants.Arm.STAGE_1_LIMIT);
         stage2 = MathUtil.clamp(stage2, 0, Constants.Arm.STAGE_2_LIMIT);
         stage3 = MathUtil.clamp(stage3, 0, Constants.Arm.STAGE_3_LIMIT);
 
         armSubsystem.setStage1Rotations(stage1);
         armSubsystem.setStage2Rotations(stage2);
         armSubsystem.setStage3Rotations(stage3);
-
-        armSubsystem.setStage1Output();
     }
 
     @Override

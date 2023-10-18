@@ -6,9 +6,7 @@
 package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.*;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +25,7 @@ import swervelib.parser.PIDFConfig;
  */
 public final class Constants {
     public static class MassConstants {
-        public static final double ROBOT_MASS = Units.lbsToKilograms(148); // TODO
+        public static final double ROBOT_MASS = Units.lbsToKilograms(148);
         public static final Matter CHASSIS =
                 new Matter(new Translation3d(0, 0, Units.inchesToMeters(8)), ROBOT_MASS);
         public static final double LOOP_TIME = 0.13; // s, 20ms + 110ms sprk max velocity lag
@@ -79,27 +77,16 @@ public final class Constants {
         /** Length of the first stage of the arm in meters */
         public static final double STAGE_1_LENGTH = Units.inchesToMeters(38.136);
 
-        public static final double GEARBOX_RATIO_STAGE_1 = 5 * 5 * 5;
-        public static final double STAGE_1_HOME = -1 / 360d;
+        public static final double GEARBOX_RATIO_STAGE_1 = 3 * 5 * 5 * 5;
         public static final double STAGE_1_LIMIT = 60 / 360d;
 
-        /** Max velocity in rotations per second. Take 8 seconds to go from HOME to LIMIT */
-        public static final double STAGE_1_MAX_VEL = (STAGE_1_LIMIT - STAGE_1_HOME) / 12;
-
-        /**
-         * Max acceleration in rotations per second per second. Take 0.5 seconds to reach max vel
-         */
-        public static final double STAGE_1_MAX_ACCEL = STAGE_1_MAX_VEL / 0.5;
-
         /** Stage 1 PID Settings */
-        public static final ProfiledPIDController STAGE_1_PID =
-                new ProfiledPIDController(
-                        4.0, 0.1, 0.4, new Constraints(STAGE_1_MAX_VEL, STAGE_1_MAX_ACCEL));
+        public static final PIDFConfig STAGE_1_PID = new PIDFConfig(4.0, 0.1, 0.4, 0);
 
         /** Stage 1 Maximum output (as percentage) for PID control */
-        public static final double STAGE_1_MIN_OUTPUT = -0.3;
+        public static final double STAGE_1_MIN_OUTPUT = -1;
         /** Stage 1 Minimum output (as negative percentage) for PID control */
-        public static final double STAGE_1_MAX_OUTPUT = 0.3;
+        public static final double STAGE_1_MAX_OUTPUT = 1;
 
         /** Length of the second stage of the arm in meters */
         public static final double STAGE_2_LENGTH = Units.inchesToMeters(35);
@@ -136,8 +123,6 @@ public final class Constants {
          * reached
          *
          * <p>Every waypoint should have an entry in the map.
-         *
-         * <p>TODO: Add more edges to the graph to generate more efficient paths
          */
         public static final HashMap<WAYPOINT, ArrayList<WAYPOINT>> ADJACENCY_LIST =
                 new HashMap<>() {
@@ -298,7 +283,7 @@ public final class Constants {
                                 new ArrayList<>(
                                         Arrays.asList(
                                                 // mid points
-                                                WAYPOINT.MID_CONE_MIDPOINT, // TODO: can we reach
+                                                WAYPOINT.MID_CONE_MIDPOINT,
                                                 WAYPOINT.SAFE,
                                                 WAYPOINT.DOUBLE_SUBSTATION_CONE,
                                                 WAYPOINT.DOUBLE_SUBSTATION_CUBE,
@@ -312,7 +297,7 @@ public final class Constants {
                                 new ArrayList<>(
                                         Arrays.asList(
                                                 // mid points
-                                                WAYPOINT.MID_CUBE_MIDPOINT, // TODO: can we reach
+                                                WAYPOINT.MID_CUBE_MIDPOINT,
                                                 WAYPOINT.SAFE,
                                                 WAYPOINT.DOUBLE_SUBSTATION_CUBE,
                                                 WAYPOINT.DOUBLE_SUBSTATION_CONE,
@@ -326,7 +311,7 @@ public final class Constants {
                                 new ArrayList<>(
                                         Arrays.asList(
                                                 // mid points
-                                                WAYPOINT.HIGH_CONE_MIDPOINT, // TODO: can we reach
+                                                WAYPOINT.HIGH_CONE_MIDPOINT,
                                                 WAYPOINT.HIGH_CUBE,
                                                 WAYPOINT.MID_CONE,
                                                 WAYPOINT.DOUBLE_SUBSTATION_CONE,
@@ -338,7 +323,7 @@ public final class Constants {
                                 new ArrayList<>(
                                         Arrays.asList(
                                                 // mid points
-                                                WAYPOINT.HIGH_CUBE_MIDPOINT // TODO: can we reach
+                                                WAYPOINT.HIGH_CUBE_MIDPOINT
                                                 // other positions?
                                                 )));
                     }
@@ -361,24 +346,24 @@ public final class Constants {
     }
 
     public enum WAYPOINT {
-        HOME(Arm.STAGE_1_HOME, 0.0, 0.0),
-        SAFE(Arm.STAGE_1_HOME, 0.0504, 0.0),
+        HOME(0, 0.0, 0.0),
+        SAFE(0, 0.0504, 0.0),
 
-        LOW_CUBE(Arm.STAGE_1_HOME, 0.0876, 0.2954),
-        MID_CUBE_MIDPOINT(Arm.STAGE_1_HOME, 0.185, 0.0),
-        MID_CUBE(Arm.STAGE_1_HOME, 0.2311, 0.3778), // score
-        HIGH_CUBE_MIDPOINT(Arm.STAGE_1_HOME, 0.3758, 0.0),
+        LOW_CUBE(0, 0.0876, 0.2954),
+        MID_CUBE_MIDPOINT(0, 0.185, 0.0),
+        MID_CUBE(0, 0.2311, 0.3778), // score
+        HIGH_CUBE_MIDPOINT(0, 0.3758, 0.0),
         HIGH_CUBE(0.0805, 0.3847, 0.4037), // score
         FLOOR_CUBE(0.041, 0.0933, 0.359), // Floor cube midpoint stage 2: 0.0933
-        DOUBLE_SUBSTATION_CUBE(Arm.STAGE_1_HOME, 0.2314, 0.2501),
+        DOUBLE_SUBSTATION_CUBE(0, 0.2314, 0.2501),
 
         LOW_CONE(0.0249, 0.0733, 0.1352),
-        MID_CONE_MIDPOINT(Arm.STAGE_1_HOME, 0.218, 0.0),
-        MID_CONE(Arm.STAGE_1_HOME, 0.2457, 0.2193), // score
-        HIGH_CONE_MIDPOINT(Arm.STAGE_1_HOME, 0.2495, 0.0),
+        MID_CONE_MIDPOINT(0, 0.218, 0.0),
+        MID_CONE(0, 0.2457, 0.2193), // score
+        HIGH_CONE_MIDPOINT(0, 0.2495, 0.0),
         HIGH_CONE(0.0996, 0.3879, 0.3890), // score
         FLOOR_CONE(0.0673, 0.0822, 0.4556),
-        DOUBLE_SUBSTATION_CONE(Arm.STAGE_1_HOME, 0.2314, 0.2501);
+        DOUBLE_SUBSTATION_CONE(0, 0.2314, 0.2501);
 
         public final Triple<Double, Double, Double> position;
 
@@ -393,11 +378,7 @@ public final class Constants {
 
     /** Constants related to PhotoVision, the camera, and the raspberry pi. */
     public static final class Vision {
-        /**
-         * Position and angle of the camera relative to the center of the bot
-         *
-         * <p>TODO: define bot axes
-         */
+        /** Position and angle of the camera relative to the center of the bot */
         public static final Transform3d CAMERA_TRANSFORM =
                 new Transform3d(new Translation3d(), new Rotation3d());
 

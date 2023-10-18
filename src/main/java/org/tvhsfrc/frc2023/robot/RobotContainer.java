@@ -5,33 +5,27 @@
 
 package org.tvhsfrc.frc2023.robot;
 
-import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Optional;
 import org.tvhsfrc.frc2023.robot.Constants.Arm.ARM_TARGET;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmDriveCommand;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmNext;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
-import org.tvhsfrc.frc2023.robot.commands.auto.Tests;
 import org.tvhsfrc.frc2023.robot.commands.drive.RelativeRelativeDrive;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
-import org.tvhsfrc.frc2023.robot.subsystems.VisionSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -40,12 +34,9 @@ import org.tvhsfrc.frc2023.robot.subsystems.VisionSubsystem;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-    private final Optional<VisionSubsystem> visionSubsystem = Optional.empty();
-    // private final Optional<VisionSubsystem> visionSubsystem = Optional.of(new VisionSubsystem());
 
     private final SwerveSubsystem swerveSubsystem =
-            new SwerveSubsystem(
-                    new File(Filesystem.getDeployDirectory(), "swerve"), visionSubsystem);
+            new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
     private final ArmSubsystem arm = new ArmSubsystem();
     private final PowerDistribution pdh =
             new PowerDistribution(1, PowerDistribution.ModuleType.kRev);
@@ -224,8 +215,6 @@ public class RobotContainer {
 
     private final String kAutoline = "autoline";
     private final String kNothing = "nothing";
-
-    private String selected;
 
     private final SendableChooser<String> sendableChooser = new SendableChooser<>();
 

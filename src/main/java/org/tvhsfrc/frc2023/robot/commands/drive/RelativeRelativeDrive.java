@@ -24,7 +24,6 @@ public class RelativeRelativeDrive extends CommandBase {
 
     @Override
     public void execute() {
-        // TODO: Try cubic scaling
         Translation2d translation =
                 new Translation2d(vx.getAsDouble(), vy.getAsDouble())
                         .times(swerve.getSwerveDriveConfiguration().maxSpeed);

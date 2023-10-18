@@ -47,13 +47,11 @@ public final class Autos {
     }
 
     public static CommandBase autoline(SwerveSubsystem swerve) {
-        return Commands.deadline(Commands.waitSeconds(4), Commands.run(() -> swerve.drive(
-                new Translation2d(-0.3, 0),
-                0,
-                true,
-                false,
-                true
-        ), swerve));
+        return Commands.deadline(
+                Commands.waitSeconds(4),
+                Commands.run(
+                        () -> swerve.drive(new Translation2d(-0.3, 0), 0, true, false, true),
+                        swerve));
     }
 
     /** Example static factory for an autonomous command. */

@@ -4,7 +4,6 @@ import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
 import com.revrobotics.*;
 import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -46,16 +45,20 @@ public class ArmSubsystem extends SubsystemBase {
     private WAYPOINT previousArmWaypoint = WAYPOINT.HOME;
     private ARM_TARGET currentArmTarget = ARM_TARGET.HOME;
 
-    private final ProfiledPIDController stage1PidController = Constants.Arm.STAGE_1_PID;
-
     public ArmSubsystem() {
         // Stage 1
-        stage1.setInverted(false);
-        stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
+        setStage1P(STAGE_1_PID.p);
+        setStage1I(STAGE_1_PID.i);
+        setStage1D(STAGE_1_PID.d);
+        stage1.getPIDController().setFF(STAGE_1_PID.f);
+        stage1.getPIDController().setOutputRange(STAGE_1_MIN_OUTPUT, STAGE_1_MAX_OUTPUT);
+
+        stage1.setInverted(true);
+        stage1.setIdleMode(CANSparkMax.IdleMode.kCoast);
         stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
-        stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, false);
+        stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
         stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_1_LIMIT);
-        stage1PidController.setTolerance(STAGE_1_TOLERANCE);
+        stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
 
         // Stage 2
         setStage2P(STAGE_2_PID.p);
@@ -90,32 +93,18 @@ public class ArmSubsystem extends SubsystemBase {
         SmartDashboard.putData("Arm", this);
 
         // Start at home
-        setStage1Rotations(STAGE_1_HOME);
+        setStage1Rotations(0);
         setStage2Rotations(0);
         setStage3Rotations(0);
     }
 
     public boolean isAtSetPoint() {
         // Compare the current position to the set point
-        boolean stage1AtGoal = stage1PidController.atGoal();
+        boolean stage1AtGoal = Math.abs(getStage1Rotations() - stage1SetPoint) < STAGE_1_TOLERANCE;
         boolean stage2AtGoal = Math.abs(getStage2Rotations() - stage2SetPoint) < STAGE_2_TOLERANCE;
         boolean stage3AtGoal = Math.abs(getStage3Rotations() - stage3SetPoint) < STAGE_3_TOLERANCE;
 
         return stage1AtGoal && stage2AtGoal && stage3AtGoal;
-    }
-
-    private double calculateStage1Output() {
-        double output = stage1PidController.calculate(getStage1Rotations());
-
-        if (!stage1LimitSwitch.get()) {
-            output = Math.max(output, 0);
-        }
-
-        return output;
-    }
-
-    public void setStage1Output() {
-        stage1.set(calculateStage1Output());
     }
 
     @Override
@@ -222,7 +211,7 @@ public class ArmSubsystem extends SubsystemBase {
             path.add(current);
             current = previous.get(current);
         }
-//        path.add(start); // include the starting waypoint as part of the path
+        //        path.add(start); // include the starting waypoint as part of the path
 
         // Reverse the path
         Collections.reverse(path);
@@ -330,14 +319,7 @@ public class ArmSubsystem extends SubsystemBase {
         builder.addDoubleProperty("outer", () -> stage1Encoder.getPosition(), null);
 
         builder.addDoubleProperty(
-                "Stage 1 Position Set Point",
-                () -> stage1PidController.getSetpoint().position,
-                this::setStage1Rotations);
-        builder.addDoubleProperty(
-                "Stage 1 Velocity Set Point",
-                () -> stage1PidController.getSetpoint().velocity,
-                null);
-
+                "Stage 1 Set Point", () -> stage1SetPoint, this::setStage1Rotations);
         builder.addDoubleProperty(
                 "Stage 2 Set Point", () -> stage2SetPoint, this::setStage2Rotations);
         builder.addDoubleProperty(
@@ -350,8 +332,6 @@ public class ArmSubsystem extends SubsystemBase {
                 "PID Stage 1 Min Output", this::getStage1MinOutput, this::setStage1MinOutput);
         builder.addDoubleProperty(
                 "PID Stage 1 Max Output", this::getStage1MaxOutput, this::setStage1MaxOutput);
-        builder.addDoubleProperty(
-                "PID Stage 1 tolerance", this::getStage1Tolerance, this::setStage1Tolerance);
 
         builder.addDoubleProperty("PID Stage 2 P", this::getStage2P, this::setStage2P);
         builder.addDoubleProperty("PID Stage 2 I", this::getStage2I, this::setStage2I);
@@ -372,7 +352,6 @@ public class ArmSubsystem extends SubsystemBase {
         builder.addDoubleProperty("Stage 3 Temperature", stage3::getMotorTemperature, null);
 
         builder.addDoubleProperty("Stage 1 Output", stage1::getAppliedOutput, null);
-        builder.addDoubleProperty("Stage 1 Calculate", this::calculateStage1Output, null);
         builder.addDoubleProperty("Stage 1 Velocity", this::getStage1Vel, null);
         builder.addBooleanProperty("Stage 1 Limit Switch", () -> !stage1LimitSwitch.get(), null);
         builder.addDoubleProperty("Stage 2 Output", stage2::getAppliedOutput, null);
@@ -380,27 +359,27 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     public double getStage1P() {
-        return stage1PidController.getP();
+        return stage1.getPIDController().getP();
     }
 
     public void setStage1P(double p) {
-        stage1PidController.setP(p);
+        stage1.getPIDController().setP(p);
     }
 
     public double getStage1I() {
-        return stage1PidController.getI();
+        return stage1.getPIDController().getI();
     }
 
     public void setStage1I(double i) {
-        stage1PidController.setI(i);
+        stage1.getPIDController().setI(i);
     }
 
     public double getStage1D() {
-        return stage1PidController.getD();
+        return stage1.getPIDController().getD();
     }
 
     public void setStage1D(double d) {
-        stage1PidController.setD(d);
+        stage1.getPIDController().setD(d);
     }
 
     public double getStage1MinOutput() {
@@ -417,14 +396,6 @@ public class ArmSubsystem extends SubsystemBase {
 
     public void setStage1MaxOutput(double max) {
         stage1.getPIDController().setOutputRange(getStage1MinOutput(), max);
-    }
-
-    public double getStage1Tolerance() {
-        return stage1PidController.getPositionTolerance();
-    }
-
-    public void setStage1Tolerance(double tolerance) {
-        stage1PidController.setTolerance(tolerance);
     }
 
     public double getStage2P() {
@@ -476,15 +447,16 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     public void setStage1Rotations(double stage1Rotations) {
-        stage1PidController.setGoal(stage1Rotations);
+        stage1.getPIDController().setReference(stage1SetPoint, CANSparkMax.ControlType.kPosition);
+        stage1SetPoint = stage1Rotations;
     }
 
     public double getStage1Rotations() {
-        return stage1Encoder.getPosition();
+        return stage1.getEncoder().getPosition();
     }
 
     public double getStage1Vel() {
-        return stage1Encoder.getVelocity();
+        return stage1.getEncoder().getVelocity();
     }
 
     public void setStage2Rotations(double stage2Rotations) {
@@ -506,7 +478,7 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     public double getStage1SetPoint() {
-        return stage1PidController.getGoal().position;
+        return stage1SetPoint;
     }
 
     public double getStage2SetPoint() {

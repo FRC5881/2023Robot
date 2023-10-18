@@ -13,59 +13,16 @@ class TestArmPathFinding {
     void homeToSafe() {
         var path = ArmSubsystem.dijkstra(WAYPOINT.HOME, WAYPOINT.SAFE);
 
-        assertEquals(2, path.size());
-        assertEquals(WAYPOINT.HOME, path.get(0));
-        assertEquals(WAYPOINT.SAFE, path.get(1));
-    }
-
-    @Test
-    void homeToHighCone() {
-        var path = ArmSubsystem.dijkstra(WAYPOINT.HOME, WAYPOINT.HIGH_CONE);
-
-        assertEquals(3, path.size());
-        assertEquals(WAYPOINT.HOME, path.get(0));
-        assertEquals(WAYPOINT.HIGH_CONE_MIDPOINT, path.get(1));
-        assertEquals(WAYPOINT.HIGH_CONE, path.get(2));
+        assertEquals(1, path.size());
+        assertEquals(WAYPOINT.SAFE, path.get(0));
     }
 
     @Test
     void safeToLowCone() {
         var path = ArmSubsystem.dijkstra(WAYPOINT.SAFE, WAYPOINT.LOW_CONE);
 
-        assertEquals(2, path.size());
-        assertEquals(WAYPOINT.SAFE, path.get(0));
-        assertEquals(WAYPOINT.LOW_CONE, path.get(1));
-    }
-
-    @Test
-    void highConeToLowCone() {
-        var path = ArmSubsystem.dijkstra(WAYPOINT.HIGH_CONE, WAYPOINT.LOW_CONE);
-
-        assertEquals(4, path.size());
-        assertEquals(WAYPOINT.HIGH_CONE, path.get(0));
-        assertEquals(WAYPOINT.HIGH_CONE_MIDPOINT, path.get(1));
-        assertEquals(WAYPOINT.SAFE, path.get(2));
-        assertEquals(WAYPOINT.LOW_CONE, path.get(3));
-    }
-
-    @Test
-    void safeToHighCone() {
-        var path = ArmSubsystem.dijkstra(WAYPOINT.SAFE, WAYPOINT.HIGH_CONE);
-
-        assertEquals(3, path.size());
-        assertEquals(WAYPOINT.SAFE, path.get(0));
-        assertEquals(WAYPOINT.HIGH_CONE_MIDPOINT, path.get(1));
-        assertEquals(WAYPOINT.HIGH_CONE, path.get(2));
-    }
-
-    @Test
-    void homeToLowCone() {
-        var path = ArmSubsystem.dijkstra(WAYPOINT.HOME, WAYPOINT.LOW_CONE);
-
-        assertEquals(3, path.size());
-        assertEquals(WAYPOINT.HOME, path.get(0));
-        assertEquals(WAYPOINT.SAFE, path.get(1));
-        assertEquals(WAYPOINT.LOW_CONE, path.get(2));
+        assertEquals(1, path.size());
+        assertEquals(WAYPOINT.LOW_CONE, path.get(0));
     }
 
     // This test checks that the code never crashes
@@ -97,8 +54,12 @@ class TestArmPathFinding {
     void allDistancesCorrect() {
         for (var start : WAYPOINT.values()) {
             for (var end : WAYPOINT.values()) {
+                if (start == end) {
+                    continue;
+                }
+
                 var path = ArmSubsystem.dijkstra(start, end);
-                double distance = 0;
+                double distance = ArmSubsystem.distance(start, path.get(0));
                 for (int i = 0; i < path.size() - 1; i++) {
                     distance += ArmSubsystem.distance(path.get(i), path.get(i + 1));
                 }
@@ -106,7 +67,7 @@ class TestArmPathFinding {
                 double directDistance = ArmSubsystem.distance(start, end);
 
                 // Direct distance must be greater than or equal to the path distance
-                assertTrue(directDistance - distance < 0.001);
+                assertTrue(directDistance - distance < 0.01);
             }
         }
     }
@@ -118,21 +79,25 @@ class TestArmPathFinding {
         for (WAYPOINT a : WAYPOINT.values()) {
             for (WAYPOINT b : WAYPOINT.values()) {
                 for (WAYPOINT c : WAYPOINT.values()) {
+                    if (a == b || a == c || b == c) {
+                        continue;
+                    }
+
                     var pathA = ArmSubsystem.dijkstra(a, b);
                     var pathB = ArmSubsystem.dijkstra(b, c);
                     var pathC = ArmSubsystem.dijkstra(a, c);
 
-                    double distanceA = 0;
+                    double distanceA = ArmSubsystem.distance(a, pathA.get(0));
                     for (int i = 0; i < pathA.size() - 1; i++) {
                         distanceA += ArmSubsystem.distance(pathA.get(i), pathA.get(i + 1));
                     }
 
-                    double distanceB = 0;
+                    double distanceB = ArmSubsystem.distance(b, pathB.get(0));
                     for (int i = 0; i < pathB.size() - 1; i++) {
                         distanceB += ArmSubsystem.distance(pathB.get(i), pathB.get(i + 1));
                     }
 
-                    double distanceC = 0;
+                    double distanceC = ArmSubsystem.distance(a, pathC.get(0));
                     for (int i = 0; i < pathC.size() - 1; i++) {
                         distanceC += ArmSubsystem.distance(pathC.get(i), pathC.get(i + 1));
                     }

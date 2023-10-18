@@ -11,8 +11,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.io.File;
-import java.util.Optional;
-import org.photonvision.EstimatedRobotPose;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveKinematics2;
@@ -25,15 +23,12 @@ public class SwerveSubsystem extends SubsystemBase {
     /** Swerve drive object. */
     private final SwerveDrive swerveDrive;
 
-    /** PhotonVision object */
-    private final Optional<VisionSubsystem> vision;
-
     /**
      * Initialize {@link SwerveDrive} with the directory provided.
      *
      * @param directory Directory of swerve drive config files.
      */
-    public SwerveSubsystem(File directory, Optional<VisionSubsystem> vision) {
+    public SwerveSubsystem(File directory) {
         // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects
         // being created.
         SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
@@ -42,8 +37,6 @@ public class SwerveSubsystem extends SubsystemBase {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-        this.vision = vision;
     }
 
     /**
@@ -75,14 +68,6 @@ public class SwerveSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         swerveDrive.updateOdometry();
-
-        Optional<EstimatedRobotPose> visionPose = vision.flatMap(VisionSubsystem::getEstimatedPose);
-        if (visionPose.isPresent()) {
-            Pose2d pose = visionPose.get().estimatedPose.toPose2d();
-            double timestamp = visionPose.get().timestampSeconds;
-
-            swerveDrive.addVisionMeasurement(pose, timestamp, true, 1);
-        }
     }
 
     @Override

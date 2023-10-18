@@ -26,9 +26,7 @@ public class ArmWaypoint extends CommandBase {
     }
 
     @Override
-    public void execute() {
-        armSubsystem.setStage1Output();
-    }
+    public void execute() {}
 
     @Override
     public boolean isFinished() {
