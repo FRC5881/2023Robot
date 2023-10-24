@@ -41,9 +41,7 @@ class TestArmPathFinding {
         for (var start : WAYPOINT.values()) {
             for (var end : WAYPOINT.values()) {
                 var path = ArmSubsystem.dijkstra(start, end);
-
                 System.out.println("start: " + start + " end: " + end + " path: " + path);
-
                 assertTrue(path.size() <= 4);
             }
         }
@@ -125,6 +123,10 @@ class TestArmPathFinding {
     void printDistances() {
         for (var start : WAYPOINT.values()) {
             for (var end : WAYPOINT.values()) {
+                if (start == end) {
+                    continue;
+                }
+
                 var path = ArmSubsystem.dijkstra(start, end);
                 System.out.println(start + " to " + end + " = " + path.size());
 
@@ -153,18 +155,21 @@ class TestArmPathFinding {
     void printWorstCaseDistances() {
         ArrayList<Pair<ArrayList<WAYPOINT>, Double>> paths = new ArrayList<>();
 
-        WAYPOINT[] values = WAYPOINT.values();
+        for (var start : WAYPOINT.values()) {
+            for (var end : WAYPOINT.values()) {
+                if (start == end) {
+                    continue;
+                }
 
-        for (int i = 0; i < values.length; i++) {
-            for (int j = i; j < values.length; j++) {
-                var path = ArmSubsystem.dijkstra(values[i], values[j]);
+                var path = ArmSubsystem.dijkstra(start, end);
+                path.add(0, start);
+
                 double distance = 0;
                 for (int k = 0; k < path.size() - 1; k++) {
                     distance += ArmSubsystem.distance(path.get(k), path.get(k + 1));
                 }
 
-                double directDistance = ArmSubsystem.distance(values[i], values[j]);
-
+                double directDistance = ArmSubsystem.distance(start, end);
                 paths.add(new Pair<>(path, distance - directDistance));
             }
         }

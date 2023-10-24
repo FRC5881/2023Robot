@@ -4,6 +4,7 @@ import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
 import com.revrobotics.*;
 import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -16,9 +17,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 import org.tvhsfrc.frc2023.robot.Constants;
+import org.tvhsfrc.frc2023.robot.Constants.Arm.ARM_TARGET;
+import org.tvhsfrc.frc2023.robot.Constants.Arm.GAME_PIECE_TYPE;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmNext;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmWaypoint;
+import org.tvhsfrc.frc2023.robot.utils.Triple;
 
 public class ArmSubsystem extends SubsystemBase {
     private final CANSparkMax stage1 =
@@ -115,23 +119,79 @@ public class ArmSubsystem extends SubsystemBase {
     }
 
     /**
+     * This just takes the inputs for the Law of Cosines, and spits out the desired angle, gamma.
+     *
+     * <p>If the edges suggest the triangle is impossible this returns NaN.
+     *
+     * @param a a leg
+     * @param b a leg
+     * @param c side opposite the returned angle (gamma)
+     * @return Gives the value of gamma in radians
+     */
+    private static double lawOfCosines(double a, double b, double c) {
+        return Math.acos((a * a + b * b - c * c) / (2 * a * b));
+    }
+
+    /**
+     * Given a Pose2d (a position & a angle) of the end effector return the angles of the joints.
+     *
+     * <p>If the target is out of reach, stage 1 and 2 will be made into a straight line that points
+     * to the target.
+     *
+     * @param pose The position and angle of the end effector
+     * @return The angles of the joints
+     */
+    public static Triple<Rotation2d, Rotation2d, Rotation2d> inverseKinematics(Pose2d pose) {
+        Translation2d translation = pose.getTranslation();
+        double c = translation.getNorm();
+
+        // Outside the outer circle of the donut
+        if (c >= STAGE_1_LENGTH + STAGE_2_LENGTH) {
+            Rotation2d r1 = Rotation2d.fromDegrees(90).minus(translation.getAngle());
+            Rotation2d r2 = Rotation2d.fromDegrees(180);
+            Rotation2d r3 = pose.getRotation().minus(r1).minus(r2);
+            return new Triple<>(r1, r2, r3);
+        }
+
+        // Inside the inner circle of the donut
+        if (c <= Math.abs(STAGE_1_LENGTH - STAGE_2_LENGTH)) {
+            Rotation2d r1 = Rotation2d.fromDegrees(90).minus(translation.getAngle());
+            Rotation2d r2 = Rotation2d.fromDegrees(0);
+            Rotation2d r3 = pose.getRotation().minus(r1).minus(r2);
+            return new Triple<>(r1, r2, r3);
+        }
+
+        double r1 =
+                lawOfCosines(STAGE_1_LENGTH, c, STAGE_2_LENGTH)
+                        + translation.getAngle().getRadians();
+        double r2 = lawOfCosines(STAGE_1_LENGTH, STAGE_2_LENGTH, c);
+        double r3 = pose.getRotation().getRadians() - r1 - r2;
+
+        return new Triple<>(
+                Rotation2d.fromDegrees(90).minus(Rotation2d.fromRadians(r1)),
+                Rotation2d.fromRadians(r2),
+                Rotation2d.fromRadians(r3));
+    }
+
+    /**
      * Given the angles of the joints, return the position of the end effector.
      *
      * @param r1 The angle of the first joint
      * @param r2 The angle of the second joint
+     * @param r3 The angle of the third joint
      * @return The position of the end effector
      */
-    public static Translation2d forwardKinematics(Rotation2d r1, Rotation2d r2) {
-        r1 = Rotation2d.fromDegrees(90).minus(r1);
+    public static Pose2d forwardKinematics(Rotation2d r1, Rotation2d r2, Rotation2d r3) {
+        Rotation2d angle1 = Rotation2d.fromDegrees(90).minus(r1);
+        double x1 = STAGE_1_LENGTH * angle1.getCos();
+        double y1 = STAGE_1_LENGTH * angle1.getSin();
 
-        double x1 = STAGE_1_LENGTH * r1.getCos();
-        double y1 = STAGE_1_LENGTH * r1.getSin();
-
-        Rotation2d angle2 = r1.plus(r2).minus(Rotation2d.fromDegrees(180));
+        Rotation2d angle2 = r2.minus(Rotation2d.fromDegrees(90)).minus(r1);
         double x2 = STAGE_2_LENGTH * angle2.getCos();
         double y2 = STAGE_2_LENGTH * angle2.getSin();
 
-        return new Translation2d(x1 + x2, y1 + y2);
+        Rotation2d angle3 = angle2.plus(r3).minus(Rotation2d.fromDegrees(180));
+        return new Pose2d(x1 + x2, y1 + y2, angle3);
     }
 
     /**
@@ -144,17 +204,18 @@ public class ArmSubsystem extends SubsystemBase {
      */
     public static double distance(WAYPOINT a, WAYPOINT b) {
         // run the forward kinematics on the two waypoints
-        Translation2d aPos =
+        Pose2d aPos =
                 forwardKinematics(
                         Rotation2d.fromRotations(a.position.getA()),
-                        Rotation2d.fromRotations(a.position.getB()));
-        Translation2d bPos =
+                        Rotation2d.fromRotations(a.position.getB()),
+                        Rotation2d.fromDegrees(0));
+        Pose2d bPos =
                 forwardKinematics(
                         Rotation2d.fromRotations(b.position.getA()),
-                        Rotation2d.fromRotations(b.position.getB()));
+                        Rotation2d.fromRotations(b.position.getB()),
+                        Rotation2d.fromDegrees(0));
 
-        // return the distance between the two points
-        return aPos.getDistance(bPos);
+        return aPos.getTranslation().getDistance(bPos.getTranslation());
     }
 
     /**
@@ -211,11 +272,10 @@ public class ArmSubsystem extends SubsystemBase {
             path.add(current);
             current = previous.get(current);
         }
-        //        path.add(start); // include the starting waypoint as part of the path
+        // path.add(start); // include the starting waypoint as part of the path
 
         // Reverse the path
         Collections.reverse(path);
-
         return path;
     }
 

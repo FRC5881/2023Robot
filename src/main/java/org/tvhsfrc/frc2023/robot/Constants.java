@@ -5,7 +5,6 @@
 
 package org.tvhsfrc.frc2023.robot;
 
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import java.util.ArrayList;
@@ -43,26 +42,27 @@ public final class Constants {
 
     /** Identifiers for all the CAN devices on the robot. */
     public static class CANConstants {
-        /* Removed as defined in the swerve lib json
-
-        public static final int FRONT_RIGHT_MODULE_STEER_ENCODER = 1;
-        public static final int FRONT_LEFT_MODULE_STEER_ENCODER = 2;
-
-        public static final int BACK_LEFT_MODULE_STEER_ENCODER = 3;
-        public static final int BACK_RIGHT_MODULE_STEER_ENCODER = 4;
-
-        public static final int FRONT_RIGHT_MODULE_DRIVE_MOTOR = 10;
-        public static final int FRONT_RIGHT_MODULE_STEER_MOTOR = 11;
-
-        public static final int FRONT_LEFT_MODULE_DRIVE_MOTOR = 12;
-        public static final int FRONT_LEFT_MODULE_STEER_MOTOR = 13;
-
-        public static final int BACK_LEFT_MODULE_DRIVE_MOTOR = 14;
-        public static final int BACK_LEFT_MODULE_STEER_MOTOR = 15;
-
-        public static final int BACK_RIGHT_MODULE_DRIVE_MOTOR = 16;
-        public static final int BACK_RIGHT_MODULE_STEER_MOTOR = 17;
-        */
+        /*
+         * Removed as defined in the swerve lib json
+         *
+         * public static final int FRONT_RIGHT_MODULE_STEER_ENCODER = 1;
+         * public static final int FRONT_LEFT_MODULE_STEER_ENCODER = 2;
+         *
+         * public static final int BACK_LEFT_MODULE_STEER_ENCODER = 3;
+         * public static final int BACK_RIGHT_MODULE_STEER_ENCODER = 4;
+         *
+         * public static final int FRONT_RIGHT_MODULE_DRIVE_MOTOR = 10;
+         * public static final int FRONT_RIGHT_MODULE_STEER_MOTOR = 11;
+         *
+         * public static final int FRONT_LEFT_MODULE_DRIVE_MOTOR = 12;
+         * public static final int FRONT_LEFT_MODULE_STEER_MOTOR = 13;
+         *
+         * public static final int BACK_LEFT_MODULE_DRIVE_MOTOR = 14;
+         * public static final int BACK_LEFT_MODULE_STEER_MOTOR = 15;
+         *
+         * public static final int BACK_RIGHT_MODULE_DRIVE_MOTOR = 16;
+         * public static final int BACK_RIGHT_MODULE_STEER_MOTOR = 17;
+         */
 
         public static final int VACUUM_ONE = 20;
         public static final int VACUUM_TWO = 21;
@@ -78,7 +78,6 @@ public final class Constants {
         public static final double STAGE_1_LENGTH = Units.inchesToMeters(38.136);
 
         public static final double GEARBOX_RATIO_STAGE_1 = 3 * 5 * 5 * 5;
-        public static final double STAGE_1_LIMIT = 60 / 360d;
 
         /** Stage 1 PID Settings */
         public static final PIDFConfig STAGE_1_PID = new PIDFConfig(4.0, 0.1, 0.4, 0);
@@ -92,7 +91,6 @@ public final class Constants {
         public static final double STAGE_2_LENGTH = Units.inchesToMeters(35);
 
         public static final double GEARBOX_RATIO_STAGE_2 = 3 * 5 * 5;
-        public static final double STAGE_2_LIMIT = 180 / 360d;
         /** Stage 2 PID Settings - Use values from the SPARK Max Hardware Client */
         public static final PIDFConfig STAGE_2_PID = new PIDFConfig(0.15, 0, 0.05, 0);
         /** Stage 2 Maximum output (as percentage) for PID control */
@@ -105,18 +103,43 @@ public final class Constants {
 
         public static final double GEARBOX_RATIO_STAGE_3 =
                 4 * 4 * (28 / 16d) * (28 / 16d) * (28 / 16d);
+
+        /** Stage 1 motor starting position (rotations) */
+        public static final double STAGE_1_HOME = -10 / 360d;
+        /** Stage 1 motor soft-forward limit */
+        public static final double STAGE_1_LIMIT = 60 / 360d;
+        /**
+         * Stage 1 will continuously attempt to get closer to the setpoint, but when within the
+         * TOLERANCE it will report that it is at the setpoint
+         */
+        public static final double STAGE_1_TOLERANCE = 5 / 360d;
+
+        /** Stage 2 motor starting position (rotations) */
+        public static final double STAGE_2_HOME = 0 / 360d;
+        /** Stage 2 motor soft-forward limit */
+        public static final double STAGE_2_LIMIT = 180 / 360d;
+        /**
+         * Stage 2 will continuously attempt to get closer to the setpoint, but when within the
+         * TOLERANCE it will report that it is at the setpoint
+         */
+        public static final double STAGE_2_TOLERANCE = 5 / 360d;
+
+        /** Stage 3 motor starting position (rotations) */
+        public static final double STAGE_3_HOME = 0 / 360d;
+        /** Stage 3 motor soft-forward limit */
         public static final double STAGE_3_LIMIT = 270 / 360d;
+        /**
+         * Stage 3 will continuously attempt to get closer to the setpoint, but when within the
+         * TOLERANCE it will report that it is at the setpoint
+         */
+        public static final double STAGE_3_TOLERANCE = 5 / 360d;
+
         /** Stage 3 PID Settings */
         public static final PIDFConfig STAGE_3_PID = new PIDFConfig(0.15, 0, 0.3, 0);
         /** Stage 3 Maximum output (as percentage) for PID control */
         public static final double STAGE_3_MIN_OUTPUT = -0.25;
         /** Stage 3 Minimum output (as negative percentage) for PID control */
         public static final double STAGE_3_MAX_OUTPUT = 0.25;
-
-        // TODO: choose tolerances
-        public static final double STAGE_1_TOLERANCE = 0.01;
-        public static final double STAGE_2_TOLERANCE = 0.01;
-        public static final double STAGE_3_TOLERANCE = 0.01;
 
         /**
          * ADJACENCY_LIST is a HashMap that maps a waypoint to a list of waypoints that can be
@@ -374,18 +397,6 @@ public final class Constants {
         WAYPOINT(double stage1, double stage2, double stage3) {
             this(new Triple<>(stage1, stage2, stage3));
         }
-    }
-
-    /** Constants related to PhotoVision, the camera, and the raspberry pi. */
-    public static final class Vision {
-        /** Position and angle of the camera relative to the center of the bot */
-        public static final Transform3d CAMERA_TRANSFORM =
-                new Transform3d(new Translation3d(), new Rotation3d());
-
-        /** The april tag layout to use */
-        public static final String FIELD_LAYOUT = AprilTagFields.k2023ChargedUp.m_resourceFile;
-
-        public static final String CAMERA_NAME = "photonvision";
     }
 
     public static class Vacuum {
