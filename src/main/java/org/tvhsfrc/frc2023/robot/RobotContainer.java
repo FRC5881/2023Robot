@@ -49,8 +49,8 @@ public class RobotContainer {
     private final CommandPS4Controller armController =
             new CommandPS4Controller(OperatorConstants.ARM_CONTROLLER_PORT);
 
-    //     private final CommandXboxController armController =
-    //     new CommandXboxController(OperatorConstants.ARM_CONTROLLER_PORT);
+    // private final CommandXboxController armController =
+    // new CommandXboxController(OperatorConstants.ARM_CONTROLLER_PORT);
 
     // ROBORIO "User" button
     Trigger userButton = new Trigger(RobotController::getUserButton);
@@ -104,7 +104,8 @@ public class RobotContainer {
         // POV Up goes to score High
         controller.povUp().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.HIGH)));
 
-        // Back moves the arm to take a cone or cube of the slide part of teh double substation.
+        // Back moves the arm to take a cone or cube of the slide part of teh double
+        // substation.
         controller
                 .back()
                 .onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.DOUBLE_SUBSTATION)));
@@ -120,6 +121,8 @@ public class RobotContainer {
 
         // Circle button sends the arm to the HOME Waypoint
         controller.a().onTrue(arm.cGoToWaypoint(ARM_TARGET.HOME));
+
+        // TODO: Control Intake
 
         // Left bumper turns vacuum on
         controller
@@ -158,7 +161,8 @@ public class RobotContainer {
         // POV Up goes to score High
         controller.povUp().onTrue(new InstantCommand(() -> arm.setArmTarget(ARM_TARGET.HIGH)));
 
-        // Touchpad moves the arm to take a cone or cube of the slide part of teh double substation.
+        // Touchpad moves the arm to take a cone or cube of the slide part of teh double
+        // substation.
         // armController.share().onTrue(new InstantCommand(() ->
         // arm.setArmTarget(ARM_TARGET.DOUBLE_SUBSTATION)));
         controller
@@ -176,6 +180,8 @@ public class RobotContainer {
 
         // Circle button sends the arm to the HOME Waypoint
         controller.circle().onTrue(arm.cGoToWaypoint(ARM_TARGET.HOME));
+
+        // TODO: Control Intake
 
         // Left bumper turns vacuum on
         controller.L1().onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::vacuum)));
