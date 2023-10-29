@@ -5,12 +5,13 @@
 
 package org.tvhsfrc.frc2023.robot;
 
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import org.tvhsfrc.frc2023.robot.utils.Triple;
+import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 import swervelib.math.Matter;
 import swervelib.parser.PIDFConfig;
 
@@ -64,10 +65,6 @@ public final class Constants {
          * public static final int BACK_RIGHT_MODULE_STEER_MOTOR = 17;
          */
 
-        public static final int VACUUM_ONE = 20;
-        public static final int VACUUM_TWO = 21;
-        public static final int VACUUM_THREE = 22;
-
         public static final int ARM_STAGE_ONE = 25;
         public static final int ARM_STAGE_TWO = 26;
         public static final int ARM_STAGE_THREE = 27;
@@ -98,12 +95,6 @@ public final class Constants {
         /** Stage 2 Minimum output (as negative percentage) for PID control */
         public static final double STAGE_2_MAX_OUTPUT = 0.25;
 
-        /** Length of the third stage of the arm/the grabber in meters */
-        public static final double STAGE_3_LENGTH = Units.inchesToMeters(7);
-
-        public static final double GEARBOX_RATIO_STAGE_3 =
-                4 * 4 * (28 / 16d) * (28 / 16d) * (28 / 16d);
-
         /** Stage 1 motor starting position (rotations) */
         public static final double STAGE_1_HOME = -10 / 360d;
         /** Stage 1 motor soft-forward limit */
@@ -123,23 +114,6 @@ public final class Constants {
          * TOLERANCE it will report that it is at the setpoint
          */
         public static final double STAGE_2_TOLERANCE = 5 / 360d;
-
-        /** Stage 3 motor starting position (rotations) */
-        public static final double STAGE_3_HOME = 0 / 360d;
-        /** Stage 3 motor soft-forward limit */
-        public static final double STAGE_3_LIMIT = 270 / 360d;
-        /**
-         * Stage 3 will continuously attempt to get closer to the setpoint, but when within the
-         * TOLERANCE it will report that it is at the setpoint
-         */
-        public static final double STAGE_3_TOLERANCE = 5 / 360d;
-
-        /** Stage 3 PID Settings */
-        public static final PIDFConfig STAGE_3_PID = new PIDFConfig(0.15, 0, 0.3, 0);
-        /** Stage 3 Maximum output (as percentage) for PID control */
-        public static final double STAGE_3_MIN_OUTPUT = -0.25;
-        /** Stage 3 Minimum output (as negative percentage) for PID control */
-        public static final double STAGE_3_MAX_OUTPUT = 0.25;
 
         /**
          * ADJACENCY_LIST is a HashMap that maps a waypoint to a list of waypoints that can be
@@ -369,51 +343,39 @@ public final class Constants {
     }
 
     public enum WAYPOINT {
-        HOME(0, 0.0, 0.0),
-        SAFE(0, 0.0504, 0.0),
+        HOME(0, 0.0),
+        SAFE(0, 0.0504),
 
-        LOW_CUBE(0, 0.0876, 0.2954),
-        MID_CUBE_MIDPOINT(0, 0.185, 0.0),
-        MID_CUBE(0, 0.2311, 0.3778), // score
-        HIGH_CUBE_MIDPOINT(0, 0.3758, 0.0),
-        HIGH_CUBE(0.0805, 0.3847, 0.4037), // score
-        FLOOR_CUBE(0.041, 0.0933, 0.359), // Floor cube midpoint stage 2: 0.0933
-        DOUBLE_SUBSTATION_CUBE(0, 0.2314, 0.2501),
+        LOW_CUBE(0, 0.0876),
+        MID_CUBE_MIDPOINT(0, 0.185),
+        MID_CUBE(0, 0.2311), // score
+        HIGH_CUBE_MIDPOINT(0, 0.3758),
+        HIGH_CUBE(0.0805, 0.3847), // score
+        FLOOR_CUBE(0.041, 0.0933), // Floor cube midpoint stage 2: 0.0933
+        DOUBLE_SUBSTATION_CUBE(0, 0.2314),
 
-        LOW_CONE(0.0249, 0.0733, 0.1352),
-        MID_CONE_MIDPOINT(0, 0.218, 0.0),
-        MID_CONE(0, 0.2457, 0.2193), // score
-        HIGH_CONE_MIDPOINT(0, 0.2495, 0.0),
-        HIGH_CONE(0.0996, 0.3879, 0.3890), // score
-        FLOOR_CONE(0.0673, 0.0822, 0.4556),
-        DOUBLE_SUBSTATION_CONE(0, 0.2314, 0.2501);
+        LOW_CONE(0.0249, 0.0733),
+        MID_CONE_MIDPOINT(0, 0.218),
+        MID_CONE(0, 0.2457), // score
+        HIGH_CONE_MIDPOINT(0, 0.2495),
+        HIGH_CONE(0.0996, 0.3879), // score
+        FLOOR_CONE(0.0673, 0.0822),
+        DOUBLE_SUBSTATION_CONE(0, 0.2314);
 
-        public final Triple<Double, Double, Double> position;
+        private final Pair<Rotation2d, Rotation2d> angles;
 
-        WAYPOINT(Triple<Double, Double, Double> position) {
-            this.position = new Triple<>(position.getA(), position.getB(), position.getC());
+        private WAYPOINT(double stage1, double stage2) {
+            this.angles =
+                    new Pair<>(Rotation2d.fromRotations(stage1), Rotation2d.fromRotations(stage2));
         }
 
-        WAYPOINT(double stage1, double stage2, double stage3) {
-            this(new Triple<>(stage1, stage2, stage3));
+        public Pair<Rotation2d, Rotation2d> getAngle() {
+            return this.angles;
         }
-    }
 
-    public static class Vacuum {
-        /** This is the target velocity in RPM. */
-        public static final double VACUUM_VELOCITY = 6000;
-
-        /**
-         * Original motor was rated for 5500 RPM. Our motor is rated for ~11000 RPM. 0.6 current
-         * limiting keeps it from exceeding the original rating by an excessive amount.
-         */
-        public static final double MAX_OUTPUT = 0.6;
-
-        /**
-         * The time in seconds that the vacuum dump valve should be open for when purging the
-         * vacuum.
-         */
-        public static final double DUMP_TIME = 5;
+        public Translation2d getTranslation() {
+            return ArmSubsystem.forwardKinematics(angles.getFirst(), angles.getSecond());
+        }
     }
 
     public static class Autonomous {

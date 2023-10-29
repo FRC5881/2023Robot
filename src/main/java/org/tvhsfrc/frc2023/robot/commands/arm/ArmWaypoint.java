@@ -1,9 +1,10 @@
 package org.tvhsfrc.frc2023.robot.commands.arm;
 
+import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
-import org.tvhsfrc.frc2023.robot.utils.Triple;
 
 public class ArmWaypoint extends CommandBase {
     private final ArmSubsystem armSubsystem;
@@ -18,11 +19,10 @@ public class ArmWaypoint extends CommandBase {
 
     @Override
     public void initialize() {
-        Triple<Double, Double, Double> position = waypoint.position;
+        Pair<Rotation2d, Rotation2d> angles = waypoint.getAngle();
 
-        armSubsystem.setStage1Rotations(position.getA());
-        armSubsystem.setStage2Rotations(position.getB());
-        armSubsystem.setStage3Rotations(position.getC());
+        armSubsystem.setStage1Rotations(angles.getFirst().getRotations());
+        armSubsystem.setStage2Rotations(angles.getSecond().getRotations());
     }
 
     @Override

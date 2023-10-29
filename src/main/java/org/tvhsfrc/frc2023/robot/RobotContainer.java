@@ -6,12 +6,10 @@
 package org.tvhsfrc.frc2023.robot;
 
 import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -25,7 +23,6 @@ import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.drive.RelativeRelativeDrive;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
-import org.tvhsfrc.frc2023.robot.subsystems.VacuumSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -38,9 +35,6 @@ public class RobotContainer {
     private final SwerveSubsystem swerveSubsystem =
             new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
     private final ArmSubsystem arm = new ArmSubsystem();
-    private final PowerDistribution pdh =
-            new PowerDistribution(1, PowerDistribution.ModuleType.kRev);
-    private final VacuumSubsystem vacuumSubsystem = new VacuumSubsystem(pdh);
 
     // Driver controller
     private final CommandPS4Controller driverController =
@@ -124,28 +118,12 @@ public class RobotContainer {
 
         // TODO: Control Intake
 
-        // Left bumper turns vacuum on
-        controller
-                .leftBumper()
-                .onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::vacuum)));
-
-        // Right bumper turns vacuum off
-        controller
-                .rightBumper()
-                .onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::dump)));
-
         // Manual arm control
         arm.setDefaultCommand(
                 new ArmDriveCommand(
                         arm,
                         () -> -deadband(controller.getRawAxis(1), 0.2),
-                        () -> -deadband(controller.getRawAxis(5), 0.2),
-                        () -> {
-                            double left = controller.getRawAxis(2);
-                            double right = controller.getRawAxis(3);
-
-                            return deadband(right - left, 0.2);
-                        }));
+                        () -> -deadband(controller.getRawAxis(5), 0.2)));
     }
 
     public void setupArmController(CommandPS4Controller controller) {
@@ -183,24 +161,12 @@ public class RobotContainer {
 
         // TODO: Control Intake
 
-        // Left bumper turns vacuum on
-        controller.L1().onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::vacuum)));
-
-        // Right bumper turns vacuum off
-        controller.R1().onTrue(Commands.sequence(new InstantCommand(vacuumSubsystem::dump)));
-
         // Manual arm control
         arm.setDefaultCommand(
                 new ArmDriveCommand(
                         arm,
                         () -> -deadband(armController.getRawAxis(1)),
-                        () -> -deadband(armController.getRawAxis(5)),
-                        () -> {
-                            double left = (armController.getRawAxis(3) + 1) / 2.0;
-                            double right = (armController.getRawAxis(4) + 1) / 2.0;
-
-                            return right - left;
-                        }));
+                        () -> -deadband(armController.getRawAxis(5))));
     }
 
     /**

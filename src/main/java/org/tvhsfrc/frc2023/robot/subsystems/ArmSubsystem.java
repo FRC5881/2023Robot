@@ -4,7 +4,6 @@ import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
 
 import com.revrobotics.*;
 import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.util.sendable.SendableBuilder;
@@ -22,7 +21,6 @@ import org.tvhsfrc.frc2023.robot.Constants.Arm.GAME_PIECE_TYPE;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmNext;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmWaypoint;
-import org.tvhsfrc.frc2023.robot.utils.Triple;
 
 public class ArmSubsystem extends SubsystemBase {
     private final CANSparkMax stage1 =
@@ -36,14 +34,9 @@ public class ArmSubsystem extends SubsystemBase {
     private final CANSparkMax stage2 =
             new CANSparkMax(
                     Constants.CANConstants.ARM_STAGE_TWO, CANSparkMaxLowLevel.MotorType.kBrushless);
-    private final CANSparkMax stage3 =
-            new CANSparkMax(
-                    Constants.CANConstants.ARM_STAGE_THREE,
-                    CANSparkMaxLowLevel.MotorType.kBrushless);
 
     private double stage1SetPoint;
     private double stage2SetPoint;
-    private double stage3SetPoint;
 
     private GAME_PIECE_TYPE currentGamePieceTarget = GAME_PIECE_TYPE.CONE;
     private WAYPOINT previousArmWaypoint = WAYPOINT.HOME;
@@ -79,36 +72,19 @@ public class ArmSubsystem extends SubsystemBase {
         stage2.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
         stage2.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
 
-        // Stage 3
-        setStage3P(STAGE_3_PID.p);
-        setStage3I(STAGE_3_PID.i);
-        setStage3D(STAGE_3_PID.d);
-        stage3.getPIDController().setFF(STAGE_3_PID.f);
-        stage3.getPIDController().setOutputRange(STAGE_3_MIN_OUTPUT, STAGE_3_MAX_OUTPUT);
-
-        stage3.setIdleMode(CANSparkMax.IdleMode.kBrake);
-        stage3.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
-        stage3.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
-        stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
-        stage3.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_3_LIMIT);
-        stage3.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
-        stage3.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_3);
-
         SmartDashboard.putData("Arm", this);
 
         // Start at home
         setStage1Rotations(0);
         setStage2Rotations(0);
-        setStage3Rotations(0);
     }
 
     public boolean isAtSetPoint() {
         // Compare the current position to the set point
         boolean stage1AtGoal = Math.abs(getStage1Rotations() - stage1SetPoint) < STAGE_1_TOLERANCE;
         boolean stage2AtGoal = Math.abs(getStage2Rotations() - stage2SetPoint) < STAGE_2_TOLERANCE;
-        boolean stage3AtGoal = Math.abs(getStage3Rotations() - stage3SetPoint) < STAGE_3_TOLERANCE;
 
-        return stage1AtGoal && stage2AtGoal && stage3AtGoal;
+        return stage1AtGoal && stage2AtGoal;
     }
 
     @Override
@@ -138,39 +114,34 @@ public class ArmSubsystem extends SubsystemBase {
      * <p>If the target is out of reach, stage 1 and 2 will be made into a straight line that points
      * to the target.
      *
-     * @param pose The position and angle of the end effector
+     * @param translation The position and angle of the end effector
      * @return The angles of the joints
      */
-    public static Triple<Rotation2d, Rotation2d, Rotation2d> inverseKinematics(Pose2d pose) {
-        Translation2d translation = pose.getTranslation();
+    public static Pair<Rotation2d, Rotation2d> inverseKinematics(Translation2d translation) {
         double c = translation.getNorm();
 
         // Outside the outer circle of the donut
         if (c >= STAGE_1_LENGTH + STAGE_2_LENGTH) {
             Rotation2d r1 = Rotation2d.fromDegrees(90).minus(translation.getAngle());
             Rotation2d r2 = Rotation2d.fromDegrees(180);
-            Rotation2d r3 = pose.getRotation().minus(r1).minus(r2);
-            return new Triple<>(r1, r2, r3);
+            return new Pair<>(r1, r2);
         }
 
         // Inside the inner circle of the donut
         if (c <= Math.abs(STAGE_1_LENGTH - STAGE_2_LENGTH)) {
             Rotation2d r1 = Rotation2d.fromDegrees(90).minus(translation.getAngle());
             Rotation2d r2 = Rotation2d.fromDegrees(0);
-            Rotation2d r3 = pose.getRotation().minus(r1).minus(r2);
-            return new Triple<>(r1, r2, r3);
+            return new Pair<>(r1, r2);
         }
 
         double r1 =
                 lawOfCosines(STAGE_1_LENGTH, c, STAGE_2_LENGTH)
                         + translation.getAngle().getRadians();
         double r2 = lawOfCosines(STAGE_1_LENGTH, STAGE_2_LENGTH, c);
-        double r3 = pose.getRotation().getRadians() - r1 - r2;
 
-        return new Triple<>(
+        return new Pair<>(
                 Rotation2d.fromDegrees(90).minus(Rotation2d.fromRadians(r1)),
-                Rotation2d.fromRadians(r2),
-                Rotation2d.fromRadians(r3));
+                Rotation2d.fromRadians(r2));
     }
 
     /**
@@ -178,10 +149,9 @@ public class ArmSubsystem extends SubsystemBase {
      *
      * @param r1 The angle of the first joint
      * @param r2 The angle of the second joint
-     * @param r3 The angle of the third joint
      * @return The position of the end effector
      */
-    public static Pose2d forwardKinematics(Rotation2d r1, Rotation2d r2, Rotation2d r3) {
+    public static Translation2d forwardKinematics(Rotation2d r1, Rotation2d r2) {
         Rotation2d angle1 = Rotation2d.fromDegrees(90).minus(r1);
         double x1 = STAGE_1_LENGTH * angle1.getCos();
         double y1 = STAGE_1_LENGTH * angle1.getSin();
@@ -190,8 +160,7 @@ public class ArmSubsystem extends SubsystemBase {
         double x2 = STAGE_2_LENGTH * angle2.getCos();
         double y2 = STAGE_2_LENGTH * angle2.getSin();
 
-        Rotation2d angle3 = angle2.plus(r3).minus(Rotation2d.fromDegrees(180));
-        return new Pose2d(x1 + x2, y1 + y2, angle3);
+        return new Translation2d(x1 + x2, y1 + y2);
     }
 
     /**
@@ -204,18 +173,10 @@ public class ArmSubsystem extends SubsystemBase {
      */
     public static double distance(WAYPOINT a, WAYPOINT b) {
         // run the forward kinematics on the two waypoints
-        Pose2d aPos =
-                forwardKinematics(
-                        Rotation2d.fromRotations(a.position.getA()),
-                        Rotation2d.fromRotations(a.position.getB()),
-                        Rotation2d.fromDegrees(0));
-        Pose2d bPos =
-                forwardKinematics(
-                        Rotation2d.fromRotations(b.position.getA()),
-                        Rotation2d.fromRotations(b.position.getB()),
-                        Rotation2d.fromDegrees(0));
+        Translation2d aTranslation = a.getTranslation();
+        Translation2d bTranslation = b.getTranslation();
 
-        return aPos.getTranslation().getDistance(bPos.getTranslation());
+        return aTranslation.getDistance(bTranslation);
     }
 
     /**
@@ -373,7 +334,6 @@ public class ArmSubsystem extends SubsystemBase {
     public void initSendable(SendableBuilder builder) {
         builder.addDoubleProperty("Stage 1", this::getStage1Rotations, null);
         builder.addDoubleProperty("Stage 2", this::getStage2Rotations, null);
-        builder.addDoubleProperty("Stage 3", this::getStage3Rotations, null);
 
         builder.addDoubleProperty("Stage 1 slop", this::slop, null);
         builder.addDoubleProperty("outer", () -> stage1Encoder.getPosition(), null);
@@ -382,8 +342,6 @@ public class ArmSubsystem extends SubsystemBase {
                 "Stage 1 Set Point", () -> stage1SetPoint, this::setStage1Rotations);
         builder.addDoubleProperty(
                 "Stage 2 Set Point", () -> stage2SetPoint, this::setStage2Rotations);
-        builder.addDoubleProperty(
-                "Stage 3 Set Point", () -> stage3SetPoint, this::setStage3Rotations);
 
         builder.addDoubleProperty("PID Stage 1 P", this::getStage1P, this::setStage1P);
         builder.addDoubleProperty("PID Stage 1 I", this::getStage1I, this::setStage1I);
@@ -397,10 +355,6 @@ public class ArmSubsystem extends SubsystemBase {
         builder.addDoubleProperty("PID Stage 2 I", this::getStage2I, this::setStage2I);
         builder.addDoubleProperty("PID Stage 2 D", this::getStage2D, this::setStage2D);
 
-        builder.addDoubleProperty("PID Stage 3 P", this::getStage3P, this::setStage3P);
-        builder.addDoubleProperty("PID Stage 3 I", this::getStage3I, this::setStage3I);
-        builder.addDoubleProperty("PID Stage 3 D", this::getStage3D, this::setStage3D);
-
         builder.addStringProperty("Game Piece", () -> currentGamePieceTarget.toString(), null);
         builder.addStringProperty("Arm Target", () -> currentArmTarget.toString(), null);
         builder.addStringProperty(
@@ -409,13 +363,11 @@ public class ArmSubsystem extends SubsystemBase {
 
         builder.addDoubleProperty("Stage 1 Temperature", stage1::getMotorTemperature, null);
         builder.addDoubleProperty("Stage 2 Temperature", stage2::getMotorTemperature, null);
-        builder.addDoubleProperty("Stage 3 Temperature", stage3::getMotorTemperature, null);
 
         builder.addDoubleProperty("Stage 1 Output", stage1::getAppliedOutput, null);
         builder.addDoubleProperty("Stage 1 Velocity", this::getStage1Vel, null);
         builder.addBooleanProperty("Stage 1 Limit Switch", () -> !stage1LimitSwitch.get(), null);
         builder.addDoubleProperty("Stage 2 Output", stage2::getAppliedOutput, null);
-        builder.addDoubleProperty("Stage 3 Output", stage3::getAppliedOutput, null);
     }
 
     public double getStage1P() {
@@ -482,30 +434,6 @@ public class ArmSubsystem extends SubsystemBase {
         stage2.getPIDController().setD(d * GEARBOX_RATIO_STAGE_2);
     }
 
-    public double getStage3P() {
-        return stage3.getPIDController().getP() / GEARBOX_RATIO_STAGE_3;
-    }
-
-    public void setStage3P(double p) {
-        stage3.getPIDController().setP(p * GEARBOX_RATIO_STAGE_3);
-    }
-
-    public double getStage3I() {
-        return stage3.getPIDController().getI() / GEARBOX_RATIO_STAGE_3;
-    }
-
-    public void setStage3I(double i) {
-        stage3.getPIDController().setI(i * GEARBOX_RATIO_STAGE_3);
-    }
-
-    public double getStage3D() {
-        return stage3.getPIDController().getD() / GEARBOX_RATIO_STAGE_3;
-    }
-
-    public void setStage3D(double d) {
-        stage3.getPIDController().setD(d * GEARBOX_RATIO_STAGE_3);
-    }
-
     public void setStage1Rotations(double stage1Rotations) {
         stage1.getPIDController().setReference(stage1SetPoint, CANSparkMax.ControlType.kPosition);
         stage1SetPoint = stage1Rotations;
@@ -528,24 +456,11 @@ public class ArmSubsystem extends SubsystemBase {
         return stage2.getEncoder().getPosition();
     }
 
-    public void setStage3Rotations(double stage3Rotations) {
-        stage3.getPIDController().setReference(stage3Rotations, CANSparkMax.ControlType.kPosition);
-        stage3SetPoint = stage3Rotations;
-    }
-
-    public double getStage3Rotations() {
-        return stage3.getEncoder().getPosition();
-    }
-
     public double getStage1SetPoint() {
         return stage1SetPoint;
     }
 
     public double getStage2SetPoint() {
         return stage2SetPoint;
-    }
-
-    public double getStage3SetPoint() {
-        return stage3SetPoint;
     }
 }
