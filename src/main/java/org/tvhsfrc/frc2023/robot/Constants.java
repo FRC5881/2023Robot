@@ -65,9 +65,8 @@ public final class Constants {
          * public static final int BACK_RIGHT_MODULE_STEER_MOTOR = 17;
          */
 
-        public static final int ARM_STAGE_ONE = 25;
-        public static final int ARM_STAGE_TWO = 26;
-        public static final int ARM_STAGE_THREE = 27;
+        public static final int ARM_STAGE_1 = 25;
+        public static final int ARM_STAGE_2 = 26;
     }
 
     public static final class Arm {

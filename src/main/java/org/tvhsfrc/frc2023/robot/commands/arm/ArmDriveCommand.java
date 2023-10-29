@@ -16,8 +16,8 @@ public class ArmDriveCommand extends CommandBase {
     private final DoubleSupplier stage2DoubleSupplier;
 
     // In rotations per 20ms
-    private final double STAGE_1_RATE = (5.0 / 360) * 0.08;
-    private final double STAGE_2_RATE = (5.0 / 360) * 0.08;
+    private static final double STAGE_1_RATE = (10.0 / 360) * 0.02;
+    private static final double STAGE_2_RATE = (120.0 / 360) * 0.02;
 
     public ArmDriveCommand(
             ArmSubsystem armSubsystem,
@@ -43,8 +43,8 @@ public class ArmDriveCommand extends CommandBase {
         stage2 += stage2DoubleSupplier.getAsDouble() * STAGE_2_RATE;
 
         // clamp the values
-        stage1 = MathUtil.clamp(stage1, 0, Constants.Arm.STAGE_1_LIMIT);
-        stage2 = MathUtil.clamp(stage2, 0, Constants.Arm.STAGE_2_LIMIT);
+        stage1 = MathUtil.clamp(stage1, Constants.Arm.STAGE_1_HOME, Constants.Arm.STAGE_1_LIMIT);
+        stage2 = MathUtil.clamp(stage2, Constants.Arm.STAGE_2_HOME, Constants.Arm.STAGE_2_LIMIT);
 
         armSubsystem.setStage1Rotations(stage1);
         armSubsystem.setStage2Rotations(stage2);

@@ -23,17 +23,16 @@ import org.tvhsfrc.frc2023.robot.commands.arm.ArmNext;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmWaypoint;
 
 public class ArmSubsystem extends SubsystemBase {
-    private final CANSparkMax stage1 =
-            new CANSparkMax(
-                    Constants.CANConstants.ARM_STAGE_ONE, CANSparkMaxLowLevel.MotorType.kBrushless);
-    private final RelativeEncoder stage1Encoder =
-            stage1.getAlternateEncoder(SparkMaxAlternateEncoder.Type.kQuadrature, 2048);
     private final DigitalInput stage1LimitSwitch =
             new DigitalInput(Constants.DIOConstants.STAGE_1_LIMIT_SWITCH);
 
+    private final CANSparkMax stage1 =
+            new CANSparkMax(
+                    Constants.CANConstants.ARM_STAGE_1, CANSparkMaxLowLevel.MotorType.kBrushless);
+
     private final CANSparkMax stage2 =
             new CANSparkMax(
-                    Constants.CANConstants.ARM_STAGE_TWO, CANSparkMaxLowLevel.MotorType.kBrushless);
+                    Constants.CANConstants.ARM_STAGE_2, CANSparkMaxLowLevel.MotorType.kBrushless);
 
     private double stage1SetPoint;
     private double stage2SetPoint;
@@ -44,6 +43,8 @@ public class ArmSubsystem extends SubsystemBase {
 
     public ArmSubsystem() {
         // Stage 1
+        stage1.restoreFactoryDefaults();
+
         setStage1P(STAGE_1_PID.p);
         setStage1I(STAGE_1_PID.i);
         setStage1D(STAGE_1_PID.d);
@@ -55,9 +56,14 @@ public class ArmSubsystem extends SubsystemBase {
         stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
         stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
         stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_1_LIMIT);
-        stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
+        stage1.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) STAGE_1_HOME);
+        stage1.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
+        stage1.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
+        stage1.getEncoder().setPosition(STAGE_1_HOME);
 
         // Stage 2
+        stage2.restoreFactoryDefaults();
+
         setStage2P(STAGE_2_PID.p);
         setStage2I(STAGE_2_PID.i);
         setStage2D(STAGE_2_PID.d);
@@ -67,16 +73,17 @@ public class ArmSubsystem extends SubsystemBase {
         stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
         stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
         stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
-        stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) 0);
         stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_2_LIMIT);
+        stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) STAGE_2_HOME);
         stage2.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
         stage2.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
+        stage2.getEncoder().setPosition(STAGE_2_HOME);
 
         SmartDashboard.putData("Arm", this);
 
         // Start at home
-        setStage1Rotations(0);
-        setStage2Rotations(0);
+        setStage1Rotations(STAGE_1_HOME);
+        setStage2Rotations(STAGE_2_HOME);
     }
 
     public boolean isAtSetPoint() {
@@ -90,7 +97,7 @@ public class ArmSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         if (!stage1LimitSwitch.get()) {
-            stage1Encoder.setPosition(0);
+            stage1.getEncoder().setPosition(0);
         }
     }
 
@@ -322,21 +329,10 @@ public class ArmSubsystem extends SubsystemBase {
         return previousArmWaypoint;
     }
 
-    // Calculate slop
-    public double slop() {
-        double inner = stage1.getEncoder().getPosition();
-        double outer = stage1Encoder.getPosition();
-
-        return inner - outer;
-    }
-
     @Override
     public void initSendable(SendableBuilder builder) {
         builder.addDoubleProperty("Stage 1", this::getStage1Rotations, null);
         builder.addDoubleProperty("Stage 2", this::getStage2Rotations, null);
-
-        builder.addDoubleProperty("Stage 1 slop", this::slop, null);
-        builder.addDoubleProperty("outer", () -> stage1Encoder.getPosition(), null);
 
         builder.addDoubleProperty(
                 "Stage 1 Set Point", () -> stage1SetPoint, this::setStage1Rotations);
