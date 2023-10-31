@@ -54,6 +54,8 @@ public final class Constants {
 
         public static final int ARM_STAGE_1 = 25;
         public static final int ARM_STAGE_2 = 26;
+
+        public static final int INTAKE = 30;
     }
 
     public static final class LEDs {
@@ -248,6 +250,11 @@ public final class Constants {
         public Translation2d getTranslation() {
             return ArmSubsystem.forwardKinematics(angles.getFirst(), angles.getSecond());
         }
+    }
+
+    public static final class Intake {
+        public static final double speedIN = 0.4;
+        public static final double speedOUT = -0.4;
     }
 
     public static class Autonomous {

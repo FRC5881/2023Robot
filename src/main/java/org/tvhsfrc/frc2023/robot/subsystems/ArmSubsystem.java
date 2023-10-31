@@ -53,7 +53,7 @@ public class ArmSubsystem extends SubsystemBase {
         stage1.getPIDController().setOutputRange(STAGE_1_MIN_OUTPUT, STAGE_1_MAX_OUTPUT);
 
         stage1.setInverted(true);
-        stage1.setIdleMode(CANSparkMax.IdleMode.kCoast);
+        stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
         stage1.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
         stage1.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
         stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
