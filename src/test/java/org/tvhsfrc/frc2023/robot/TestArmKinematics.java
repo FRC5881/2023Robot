@@ -74,4 +74,17 @@ class TestArmKinematics {
             assert (calculatedPose.equals(pose));
         }
     }
+
+    @Test
+    void Waypoints() {
+        // Prints positions of waypoints
+        var waypoints = Constants.WAYPOINT.values();
+
+        for (var waypoint : waypoints) {
+            var pose = waypoint.getTranslation();
+
+            System.out.println("Waypoint: " + waypoint);
+            System.out.println("Pose: (" + pose.getX() + ", " + pose.getY() + ")");
+        }
+    }
 }

@@ -14,16 +14,19 @@ public class IntakeSubsystem extends SubsystemBase {
     // TODO: Add motor
 
     public IntakeSubsystem() {
-        // TODO: Initialize motor
+        // TODO: Initialize motor parameters
     }
 
-    public void set(IntakeState state) {
+    @Override
+    public void periodic() {
+        // TODO: Drive motor based on state
+    }
+
+    public void setState(IntakeState state) {
         this.state = state;
-
-        // TODO: Control motor
     }
 
-    public IntakeState get() {
+    public IntakeState getState() {
         return state;
     }
 }

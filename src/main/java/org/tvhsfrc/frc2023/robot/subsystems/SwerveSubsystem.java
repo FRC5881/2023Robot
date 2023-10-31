@@ -11,6 +11,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.io.File;
+import org.tvhsfrc.frc2023.robot.Constants;
 import swervelib.SwerveController;
 import swervelib.SwerveDrive;
 import swervelib.math.SwerveKinematics2;
@@ -30,9 +31,14 @@ public class SwerveSubsystem extends SubsystemBase {
      */
     public SwerveSubsystem(File directory) {
         // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary
-        // objects
-        // being created.
-        SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+        // objects being created.
+
+        if (Constants.COMPETITION_MODE) {
+            SwerveDriveTelemetry.verbosity = TelemetryVerbosity.MACHINE;
+        } else {
+            SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+        }
+
         try {
             swerveDrive = new SwerveParser(directory).createSwerveDrive();
         } catch (Exception e) {
@@ -41,21 +47,23 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     /**
-     * The primary method for controlling the drivebase. Takes a {@link Translation2d} and a
-     * rotation rate, and calculates and commands module states accordingly. Can use either
-     * open-loop or closed-loop velocity control for the wheel velocities. Also has field- and
-     * robot-relative modes, which affect how the translation vector is used.
+     * The primary method for controlling the drivebase. Takes a Translation2d and a rotation rate,
+     * and calculates and commands module states accordingly. Can use either open-loop or
+     * closed-loop velocity control for the wheel velocities. Also has field- and robot-relative
+     * modes, which affect how the translation vector is used.
      *
      * @param translation {@link Translation2d} that is the commanded linear velocity of the robot,
-     *     in meters per second. In robot-relative mode, positive x is towards the bow (front) and
-     *     positive y is towards port (left). In field-relative mode, positive x is away from the
-     *     alliance wall (field North) and positive y is towards the left wall when looking through
+     *     in meters per second. In robot-relative mode, positive x is torwards the bow (front) and
+     *     positive y is torwards port (left). In field-relative mode, positive x is away from the
+     *     alliance wall (field North) and positive y is torwards the left wall when looking through
      *     the driver station glass (field West).
      * @param rotation Robot angular rate, in radians per second. CCW positive. Unaffected by
      *     field/robot relativity.
      * @param fieldRelative Drive mode. True for field-relative, false for robot-relative.
      * @param isOpenLoop Whether to use closed-loop velocity control. Set to true to disable
      *     closed-loop.
+     * @param headingCorrection Whether to correct heading when driving translationally. Set to true
+     *     to enable.
      */
     public void drive(
             Translation2d translation,
@@ -63,7 +71,7 @@ public class SwerveSubsystem extends SubsystemBase {
             boolean fieldRelative,
             boolean isOpenLoop,
             boolean headingCorrection) {
-        swerveDrive.drive(translation, rotation, fieldRelative, isOpenLoop);
+        swerveDrive.drive(translation, rotation, fieldRelative, isOpenLoop, headingCorrection);
     }
 
     @Override

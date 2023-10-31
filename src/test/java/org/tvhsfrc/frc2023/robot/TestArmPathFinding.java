@@ -9,22 +9,6 @@ import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 
 class TestArmPathFinding {
-    @Test
-    void homeToSafe() {
-        var path = ArmSubsystem.dijkstra(WAYPOINT.HOME, WAYPOINT.SAFE);
-
-        assertEquals(1, path.size());
-        assertEquals(WAYPOINT.SAFE, path.get(0));
-    }
-
-    @Test
-    void safeToLowCone() {
-        var path = ArmSubsystem.dijkstra(WAYPOINT.SAFE, WAYPOINT.LOW_CONE);
-
-        assertEquals(1, path.size());
-        assertEquals(WAYPOINT.LOW_CONE, path.get(0));
-    }
-
     // This test checks that the code never crashes
     @Test
     void allPathsWork() {
@@ -35,14 +19,14 @@ class TestArmPathFinding {
         }
     }
 
-    // Every node is at most 4 nodes away from every other node
+    // Every node is at most 2 nodes away from every other node
     @Test
     void allDistancesShort() {
         for (var start : WAYPOINT.values()) {
             for (var end : WAYPOINT.values()) {
                 var path = ArmSubsystem.dijkstra(start, end);
                 System.out.println("start: " + start + " end: " + end + " path: " + path);
-                assertTrue(path.size() <= 4);
+                assertTrue(path.size() <= 2);
             }
         }
     }

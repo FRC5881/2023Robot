@@ -16,8 +16,6 @@ public class ArmNext extends CommandBase {
         WAYPOINT previous = armSubsystem.getPreviousArmWaypoint();
         WAYPOINT waypoint = armSubsystem.waypointTarget();
 
-        System.out.println("ArmNext: " + previous.toString() + " " + waypoint);
-
         CommandBase c = armSubsystem.buildPath(previous, waypoint);
         c.schedule();
     }

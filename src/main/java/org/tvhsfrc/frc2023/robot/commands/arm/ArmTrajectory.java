@@ -12,7 +12,7 @@ public class ArmTrajectory extends SequentialCommandGroup {
                 addCommands(new ArmWaypoint(armSubsystem, points.get(i)));
             }
         } else {
-            System.out.println("Null points");
+            System.err.println("ArmTrajectory: points is null");
         }
     }
 }

@@ -20,9 +20,7 @@ public class ArmWaypoint extends CommandBase {
     @Override
     public void initialize() {
         Pair<Rotation2d, Rotation2d> angles = waypoint.getAngle();
-
-        armSubsystem.setStage1Rotations(angles.getFirst().getRotations());
-        armSubsystem.setStage2Rotations(angles.getSecond().getRotations());
+        armSubsystem.setSetpoint(angles);
     }
 
     @Override

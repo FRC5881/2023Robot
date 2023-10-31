@@ -1,16 +1,12 @@
 package org.tvhsfrc.frc2023.robot.commands.arm;
 
-import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import java.util.function.DoubleSupplier;
-import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 
 public class ArmDriveCommand extends CommandBase {
     private final ArmSubsystem armSubsystem;
-
-    private double stage1 = 0;
-    private double stage2 = 0;
 
     private final DoubleSupplier stage1DoubleSupplier;
     private final DoubleSupplier stage2DoubleSupplier;
@@ -31,23 +27,16 @@ public class ArmDriveCommand extends CommandBase {
     }
 
     @Override
-    public void initialize() {
-        // Reset the deltas
-        stage1 = armSubsystem.getStage1SetPoint();
-        stage2 = armSubsystem.getStage2SetPoint();
-    }
+    public void initialize() {}
 
     @Override
     public void execute() {
-        stage1 += stage1DoubleSupplier.getAsDouble() * STAGE_1_RATE;
-        stage2 += stage2DoubleSupplier.getAsDouble() * STAGE_2_RATE;
+        Rotation2d stage1 =
+                Rotation2d.fromRotations(stage1DoubleSupplier.getAsDouble() * STAGE_1_RATE);
+        Rotation2d stage2 =
+                Rotation2d.fromRotations(stage2DoubleSupplier.getAsDouble() * STAGE_2_RATE);
 
-        // clamp the values
-        stage1 = MathUtil.clamp(stage1, Constants.Arm.STAGE_1_HOME, Constants.Arm.STAGE_1_LIMIT);
-        stage2 = MathUtil.clamp(stage2, Constants.Arm.STAGE_2_HOME, Constants.Arm.STAGE_2_LIMIT);
-
-        armSubsystem.setStage1Rotations(stage1);
-        armSubsystem.setStage2Rotations(stage2);
+        armSubsystem.addSetPoint(stage1, stage2);
     }
 
     @Override
