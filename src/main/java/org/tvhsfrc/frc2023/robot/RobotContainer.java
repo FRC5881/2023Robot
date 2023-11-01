@@ -16,9 +16,13 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.io.File;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
+import org.tvhsfrc.frc2023.robot.commands.arm.ArmDriveCommand;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.drive.RelativeRelativeDrive;
+import org.tvhsfrc.frc2023.robot.commands.intake.IntakeIn;
+import org.tvhsfrc.frc2023.robot.commands.intake.IntakeOut;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
+import org.tvhsfrc.frc2023.robot.subsystems.IntakeSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
 
 /**
@@ -31,9 +35,10 @@ public class RobotContainer {
     private final SwerveSubsystem swerveSubsystem =
             new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
     private final ArmSubsystem arm = new ArmSubsystem();
+    private final IntakeSubsystem intake = new IntakeSubsystem();
 
     // Driver controller
-    private final CommandPS4Controller driverController =
+    private final CommandPS4Controller controller =
             new CommandPS4Controller(OperatorConstants.DRIVER_CONTROLLER_PORT);
 
     // ROBORIO "User" button
@@ -66,16 +71,31 @@ public class RobotContainer {
      */
     private void configureBindings() {
         // ------ Driving ------ //
-        driverController.touchpad().onTrue(new InstantCommand(swerveSubsystem::zeroGyro));
+        controller.touchpad().onTrue(new InstantCommand(swerveSubsystem::zeroGyro));
 
         RelativeRelativeDrive drive =
                 new RelativeRelativeDrive(
                         swerveSubsystem,
-                        () -> deadband(driverController.getLeftY(), 0.10),
-                        () -> deadband(driverController.getLeftX(), 0.10),
-                        () -> deadband(driverController.getRightX(), 0.10));
+                        () -> deadband(controller.getLeftY(), 0.10),
+                        () -> deadband(controller.getLeftX(), 0.10),
+                        () -> deadband(controller.getRightX(), 0.10));
 
         swerveSubsystem.setDefaultCommand(drive);
+
+        // Manual arm control
+        arm.setDefaultCommand(
+                new ArmDriveCommand(
+                        arm, () -> 0,
+                        () -> {
+                            double left = (controller.getRawAxis(3) + 1) / 2.0;
+                            double right = (controller.getRawAxis(4) + 1) / 2.0;
+
+                            return right - left;
+                        }
+                        ));
+
+        controller.L1().whileTrue(new IntakeIn(intake));
+        controller.R1().whileTrue(new IntakeOut(intake));
     }
 
     /**

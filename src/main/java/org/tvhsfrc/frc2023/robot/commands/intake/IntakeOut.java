@@ -2,6 +2,7 @@ package org.tvhsfrc.frc2023.robot.commands.intake;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import org.tvhsfrc.frc2023.robot.subsystems.IntakeSubsystem;
+import org.tvhsfrc.frc2023.robot.subsystems.IntakeSubsystem.IntakeState;
 
 public class IntakeOut extends CommandBase {
     private final IntakeSubsystem intake;
@@ -13,17 +14,16 @@ public class IntakeOut extends CommandBase {
 
     @Override
     public void initialize() {
-        // TODO: Start the intake
+        intake.setState(IntakeState.OUT);
     }
 
     @Override
     public boolean isFinished() {
-        // TODO: Is "false" the correct value here?
         return false;
     }
 
     @Override
     public void end(boolean interrupted) {
-        // TODO: Stop the intake
+        intake.setState(IntakeState.STOPPED);
     }
 }

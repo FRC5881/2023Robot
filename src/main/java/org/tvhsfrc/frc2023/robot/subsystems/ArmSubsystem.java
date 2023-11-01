@@ -44,16 +44,12 @@ public class ArmSubsystem extends SubsystemBase {
 
     public ArmSubsystem() {
         // Stage 1 motor controller setup
-        stage1.restoreFactoryDefaults();
-
-        stage1.getPIDController().setP(STAGE_1_PID.p);
-        stage1.getPIDController().setI(STAGE_1_PID.i);
-        stage1.getPIDController().setD(STAGE_1_PID.d);
-        stage1.getPIDController().setFF(STAGE_1_PID.f);
-        stage1.getPIDController().setOutputRange(STAGE_1_MIN_OUTPUT, STAGE_1_MAX_OUTPUT);
+        setStage1P(STAGE_1_PID.p);
+        setStage1I(STAGE_1_PID.i);
+        setStage1D(STAGE_1_PID.d);
 
         stage1.setInverted(true);
-        stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
+        stage1.setIdleMode(CANSparkMax.IdleMode.kCoast);
         stage1.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
         stage1.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
         stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
@@ -65,19 +61,15 @@ public class ArmSubsystem extends SubsystemBase {
         stage1.burnFlash();
 
         // Stage 2 motor controller setup
-        stage2.restoreFactoryDefaults();
-
-        stage2.getPIDController().setP(STAGE_2_PID.p);
-        stage2.getPIDController().setI(STAGE_2_PID.i);
-        stage2.getPIDController().setD(STAGE_2_PID.d);
-        stage2.getPIDController().setFF(STAGE_2_PID.f);
-        stage2.getPIDController().setOutputRange(STAGE_2_MIN_OUTPUT, STAGE_2_MAX_OUTPUT);
+        setStage2P(STAGE_2_PID.p);
+        setStage2I(STAGE_2_PID.i);
+        setStage2D(STAGE_2_PID.d);
 
         stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
         stage2.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
         stage2.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
-        stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
-        stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
+        stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, false);
+        stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, false);
         stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_2_LIMIT);
         stage2.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, (float) STAGE_2_HOME);
         stage2.getEncoder().setPosition(STAGE_2_HOME);
@@ -93,7 +85,7 @@ public class ArmSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         if (!stage1LimitSwitch.get()) {
-            stage1.getEncoder().setPosition(0);
+            stage1.getEncoder().setPosition(STAGE_1_HOME);
         }
     }
 
@@ -218,7 +210,10 @@ public class ArmSubsystem extends SubsystemBase {
      * @return a triple of rotations
      */
     public Pair<Rotation2d, Rotation2d> getSetpointRotations() {
-        return new Pair<>(new Rotation2d(stage1Setpoint), new Rotation2d(stage2Setpoint));
+        Rotation2d stage1 = Rotation2d.fromRotations(this.stage1Setpoint);
+        Rotation2d stage2 = Rotation2d.fromRotations(this.stage2Setpoint);
+
+        return new Pair<>(stage1, stage2);
     }
 
     /**
@@ -251,11 +246,11 @@ public class ArmSubsystem extends SubsystemBase {
      * @param stage1Delta the change in rotation for stage 1
      * @param stage2Delta the change in rotation for stage 2
      */
-    public void addSetPoint(Rotation2d stage1Delta, Rotation2d stage2Delta) {
+    public void addSetpoint(Rotation2d stage1Delta, Rotation2d stage2Delta) {
         Pair<Rotation2d, Rotation2d> rotations = getSetpointRotations();
 
-        Rotation2d stage1 = rotations.getFirst().rotateBy(stage2Delta);
-        Rotation2d stage2 = rotations.getSecond().rotateBy(stage2Delta);
+        Rotation2d stage1 = rotations.getFirst().plus(stage1Delta);
+        Rotation2d stage2 = rotations.getSecond().plus(stage2Delta);
 
         setSetpoint(stage1, stage2);
     }
@@ -265,8 +260,8 @@ public class ArmSubsystem extends SubsystemBase {
      *
      * @param rotations a pair of rotations to move the set point by
      */
-    public void addSetPoint(Pair<Rotation2d, Rotation2d> rotations) {
-        addSetPoint(rotations.getFirst(), rotations.getSecond());
+    public void addSetpoint(Pair<Rotation2d, Rotation2d> rotations) {
+        addSetpoint(rotations.getFirst(), rotations.getSecond());
     }
 
     /**
@@ -274,7 +269,7 @@ public class ArmSubsystem extends SubsystemBase {
      *
      * @param poseDelta
      */
-    public void addSetPoint(Translation2d poseDelta) {
+    public void addSetpoint(Translation2d poseDelta) {
         Translation2d pose = getSetpointPosition().plus(poseDelta);
         setSetpoint(pose);
     }
@@ -461,5 +456,61 @@ public class ArmSubsystem extends SubsystemBase {
 
         builder.addDoubleProperty("Stage 1 Output", stage1::getAppliedOutput, null);
         builder.addDoubleProperty("Stage 2 Output", stage2::getAppliedOutput, null);
+
+        builder.addDoubleProperty("PID Stage 1 P", this::getStage1P, this::setStage1P);
+        builder.addDoubleProperty("PID Stage 1 I", this::getStage1I, this::setStage1I);
+        builder.addDoubleProperty("PID Stage 1 D", this::getStage1D, this::setStage1D);
+
+        builder.addDoubleProperty("PID Stage 2 P", this::getStage2P, this::setStage2P);
+        builder.addDoubleProperty("PID Stage 2 I", this::getStage2I, this::setStage2I);
+        builder.addDoubleProperty("PID Stage 2 D", this::getStage2D, this::setStage2D);
+    }
+
+    public double getStage1P() {
+        return stage1.getPIDController().getP();
+    }
+
+    public void setStage1P(double p) {
+        stage1.getPIDController().setP(p);
+    }
+
+    public double getStage1I() {
+        return stage1.getPIDController().getI();
+    }
+
+    public void setStage1I(double i) {
+        stage1.getPIDController().setI(i);
+    }
+
+    public double getStage1D() {
+        return stage1.getPIDController().getD();
+    }
+
+    public void setStage1D(double d) {
+        stage1.getPIDController().setD(d);
+    }
+
+    public double getStage2P() {
+        return stage2.getPIDController().getP() / GEARBOX_RATIO_STAGE_2;
+    }
+
+    public void setStage2P(double p) {
+        stage2.getPIDController().setP(p * GEARBOX_RATIO_STAGE_2);
+    }
+
+    public double getStage2I() {
+        return stage2.getPIDController().getI() / GEARBOX_RATIO_STAGE_2;
+    }
+
+    public void setStage2I(double i) {
+        stage2.getPIDController().setI(i * GEARBOX_RATIO_STAGE_2);
+    }
+
+    public double getStage2D() {
+        return stage2.getPIDController().getD() / GEARBOX_RATIO_STAGE_2;
+    }
+
+    public void setStage2D(double d) {
+        stage2.getPIDController().setD(d * GEARBOX_RATIO_STAGE_2);
     }
 }

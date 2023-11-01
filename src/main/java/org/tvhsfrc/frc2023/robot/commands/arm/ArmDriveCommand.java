@@ -19,6 +19,7 @@ public class ArmDriveCommand extends CommandBase {
             ArmSubsystem armSubsystem,
             DoubleSupplier stage1DoubleSupplier,
             DoubleSupplier stage2DoubleSupplier) {
+
         this.armSubsystem = armSubsystem;
         this.stage1DoubleSupplier = stage1DoubleSupplier;
         this.stage2DoubleSupplier = stage2DoubleSupplier;
@@ -36,7 +37,7 @@ public class ArmDriveCommand extends CommandBase {
         Rotation2d stage2 =
                 Rotation2d.fromRotations(stage2DoubleSupplier.getAsDouble() * STAGE_2_RATE);
 
-        armSubsystem.addSetPoint(stage1, stage2);
+        armSubsystem.addSetpoint(stage1, stage2);
     }
 
     @Override

@@ -91,9 +91,9 @@ public final class Constants {
         /** Stage 2 PID Settings - Use values from the SPARK Max Hardware Client */
         public static final PIDFConfig STAGE_2_PID = new PIDFConfig(0.15, 0, 0.05, 0);
         /** Stage 2 Maximum output (as percentage) for PID control */
-        public static final double STAGE_2_MIN_OUTPUT = -0.25;
+        public static final double STAGE_2_MIN_OUTPUT = -1;
         /** Stage 2 Minimum output (as negative percentage) for PID control */
-        public static final double STAGE_2_MAX_OUTPUT = 0.25;
+        public static final double STAGE_2_MAX_OUTPUT = 1;
 
         /** Stage 1 motor starting position (rotations) */
         public static final double STAGE_1_HOME = -10 / 360d;
@@ -253,8 +253,8 @@ public final class Constants {
     }
 
     public static final class Intake {
-        public static final double speedIN = 0.4;
-        public static final double speedOUT = -0.4;
+        public static final double speedIN = 1.0;
+        public static final double speedOUT = -1.0;
     }
 
     public static class Autonomous {
