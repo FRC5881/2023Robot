@@ -5,6 +5,9 @@
 
 package org.tvhsfrc.frc2023.robot;
 
+import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
+import org.tvhsfrc.frc2023.robot.commands.arm.ArmWaypoint;
+
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -84,6 +87,8 @@ public class Robot extends TimedRobot {
         if (autonomousCommand != null) {
             autonomousCommand.cancel();
         }
+
+        new ArmWaypoint(this.robotContainer.arm, WAYPOINT.HOME, true).schedule();
     }
 
     /** This method is called periodically during operator control. */

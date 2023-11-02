@@ -20,7 +20,7 @@ public class IntakeSubsystem extends SubsystemBase {
         // Motor controller setup for the intake
         intakeSparkMax.restoreFactoryDefaults();
 
-        intakeSparkMax.setInverted(true);
+        intakeSparkMax.setInverted(false);
         intakeSparkMax.setIdleMode(CANSparkMax.IdleMode.kBrake);
 
         intakeSparkMax.burnFlash();

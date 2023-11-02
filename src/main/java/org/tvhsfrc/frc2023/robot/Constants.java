@@ -8,9 +8,6 @@ package org.tvhsfrc.frc2023.robot;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 import org.tvhsfrc.frc2023.robot.utils.Triple;
 import swervelib.parser.PIDFConfig;
@@ -29,6 +26,7 @@ public final class Constants {
 
     public static class OperatorConstants {
         public static final int DRIVER_CONTROLLER_PORT = 0;
+        public static final int TEST_CONTROLLER_PORT = 1;
     }
 
     /** Identifiers for all Digital IO devices on the robot. */
@@ -114,112 +112,6 @@ public final class Constants {
          * TOLERANCE it will report that it is at the setpoint
          */
         public static final double STAGE_2_TOLERANCE = 5 / 360d;
-
-        /**
-         * ADJACENCY_LIST is a HashMap that maps a waypoint to a list of waypoints that can be
-         * reached
-         *
-         * <p>Every waypoint should have an entry in the map.
-         */
-        public static final HashMap<WAYPOINT, ArrayList<WAYPOINT>> ADJACENCY_LIST =
-                new HashMap<>() {
-                    {
-                        // HOME, LOW, MID, DOUBLE_SUBSTATION are all reachable from any other
-                        // HIGH CUBE is ONLY reachable from mid-cube
-
-                        put(
-                                WAYPOINT.HOME,
-                                new ArrayList<>(
-                                        Arrays.asList(
-                                                WAYPOINT.LOW_CONE,
-                                                WAYPOINT.LOW_CUBE,
-                                                WAYPOINT.MID_CONE,
-                                                WAYPOINT.MID_CUBE,
-                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE)));
-
-                        put(
-                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                                new ArrayList<>(
-                                        Arrays.asList(
-                                                WAYPOINT.HOME,
-                                                WAYPOINT.LOW_CONE,
-                                                WAYPOINT.LOW_CUBE,
-                                                WAYPOINT.MID_CONE,
-                                                WAYPOINT.MID_CUBE)));
-
-                        put(
-                                WAYPOINT.DOUBLE_SUBSTATION_CUBE,
-                                new ArrayList<>(
-                                        Arrays.asList(
-                                                WAYPOINT.HOME,
-                                                WAYPOINT.LOW_CONE,
-                                                WAYPOINT.LOW_CUBE,
-                                                WAYPOINT.MID_CONE,
-                                                WAYPOINT.MID_CUBE)));
-
-                        put(
-                                WAYPOINT.LOW_CONE,
-                                new ArrayList<>(
-                                        Arrays.asList(
-                                                WAYPOINT.HOME,
-                                                WAYPOINT.LOW_CUBE,
-                                                WAYPOINT.MID_CONE,
-                                                WAYPOINT.MID_CUBE,
-                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE)));
-
-                        put(
-                                WAYPOINT.LOW_CUBE,
-                                new ArrayList<>(
-                                        Arrays.asList(
-                                                WAYPOINT.HOME,
-                                                WAYPOINT.LOW_CONE,
-                                                WAYPOINT.MID_CONE,
-                                                WAYPOINT.MID_CUBE,
-                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE)));
-
-                        put(
-                                WAYPOINT.MID_CONE,
-                                new ArrayList<>(
-                                        Arrays.asList(
-                                                WAYPOINT.HOME,
-                                                WAYPOINT.LOW_CONE,
-                                                WAYPOINT.LOW_CUBE,
-                                                WAYPOINT.MID_CUBE,
-                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE)));
-
-                        put(
-                                WAYPOINT.MID_CUBE,
-                                new ArrayList<>(
-                                        Arrays.asList(
-                                                // Uniquely reachable from mid-cube
-                                                WAYPOINT.HIGH_CUBE,
-                                                WAYPOINT.HOME,
-                                                WAYPOINT.LOW_CONE,
-                                                WAYPOINT.LOW_CUBE,
-                                                WAYPOINT.MID_CONE,
-                                                WAYPOINT.DOUBLE_SUBSTATION_CONE,
-                                                WAYPOINT.DOUBLE_SUBSTATION_CUBE)));
-
-                        put(WAYPOINT.HIGH_CUBE, new ArrayList<>(Arrays.asList(WAYPOINT.MID_CUBE)));
-                    }
-                };
-
-        public enum GAME_PIECE_TYPE {
-            CONE,
-            CUBE
-        }
-
-        public enum ARM_TARGET {
-            HOME,
-            LOW,
-            MID,
-            HIGH,
-            DOUBLE_SUBSTATION;
-        }
     }
 
     public enum WAYPOINT {
@@ -232,6 +124,7 @@ public final class Constants {
         MID_CONE(Arm.STAGE_1_HOME, 0.2457),
 
         HIGH_CUBE(0.0805, 0.3847),
+        HIGH_CONE(0.0805, 0.3847),
 
         DOUBLE_SUBSTATION_CUBE(Arm.STAGE_1_HOME, 0.2314),
         DOUBLE_SUBSTATION_CONE(Arm.STAGE_1_HOME, 0.2314);

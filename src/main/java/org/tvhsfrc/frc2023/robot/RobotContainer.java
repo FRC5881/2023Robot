@@ -32,10 +32,10 @@ import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-    private final SwerveSubsystem swerveSubsystem =
+    public final SwerveSubsystem swerveSubsystem =
             new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
-    private final ArmSubsystem arm = new ArmSubsystem();
-    private final IntakeSubsystem intake = new IntakeSubsystem();
+            public final ArmSubsystem arm = new ArmSubsystem();
+            public final IntakeSubsystem intake = new IntakeSubsystem();
 
     // Driver controller
     private final CommandPS4Controller controller =
@@ -85,14 +85,14 @@ public class RobotContainer {
         // Manual arm control
         arm.setDefaultCommand(
                 new ArmDriveCommand(
-                        arm, () -> 0,
+                        arm,
+                        () -> 0,
                         () -> {
                             double left = (controller.getRawAxis(3) + 1) / 2.0;
                             double right = (controller.getRawAxis(4) + 1) / 2.0;
 
                             return right - left;
-                        }
-                        ));
+                        }));
 
         controller.L1().whileTrue(new IntakeIn(intake));
         controller.R1().whileTrue(new IntakeOut(intake));

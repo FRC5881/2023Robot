@@ -11,17 +11,8 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.PriorityQueue;
 import org.tvhsfrc.frc2023.robot.Constants;
-import org.tvhsfrc.frc2023.robot.Constants.Arm.ARM_TARGET;
-import org.tvhsfrc.frc2023.robot.Constants.Arm.GAME_PIECE_TYPE;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
-import org.tvhsfrc.frc2023.robot.commands.arm.ArmNext;
-import org.tvhsfrc.frc2023.robot.commands.arm.ArmWaypoint;
 
 public class ArmSubsystem extends SubsystemBase {
     private final DigitalInput stage1LimitSwitch =
@@ -38,10 +29,6 @@ public class ArmSubsystem extends SubsystemBase {
     private double stage1Setpoint;
     private double stage2Setpoint;
 
-    private GAME_PIECE_TYPE currentGamePieceTarget = GAME_PIECE_TYPE.CONE;
-    private WAYPOINT previousArmWaypoint = WAYPOINT.HOME;
-    private ARM_TARGET currentArmTarget = ARM_TARGET.HOME;
-
     public ArmSubsystem() {
         // Stage 1 motor controller setup
         setStage1P(STAGE_1_PID.p);
@@ -49,7 +36,7 @@ public class ArmSubsystem extends SubsystemBase {
         setStage1D(STAGE_1_PID.d);
 
         stage1.setInverted(true);
-        stage1.setIdleMode(CANSparkMax.IdleMode.kCoast);
+        stage1.setIdleMode(CANSparkMax.IdleMode.kBrake);
         stage1.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
         stage1.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_1);
         stage1.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
@@ -166,6 +153,22 @@ public class ArmSubsystem extends SubsystemBase {
      */
     public static Translation2d forwardKinematics(Pair<Rotation2d, Rotation2d> angles) {
         return forwardKinematics(angles.getFirst(), angles.getSecond());
+    }
+
+    /**
+     * The distance metric used for the pathfinding algorithm. Currently this uses kinematics to
+     * calculate the distance between two waypoints.
+     *
+     * @param a first waypoint
+     * @param b second waypoint
+     * @return the distance between the two waypoints
+     */
+    public static double distance(WAYPOINT a, WAYPOINT b) {
+        // run the forward kinematics on the two waypoints
+        Translation2d aTranslation = a.getTranslation();
+        Translation2d bTranslation = b.getTranslation();
+
+        return aTranslation.getDistance(bTranslation);
     }
 
     /**
@@ -288,155 +291,6 @@ public class ArmSubsystem extends SubsystemBase {
     /** Gets the current position of the arm. */
     public Translation2d getPose() {
         return forwardKinematics(getRotations());
-    }
-
-    /**
-     * The distance metric used for the pathfinding algorithm. Currently this uses kinematics to
-     * calculate the distance between two waypoints.
-     *
-     * @param a first waypoint
-     * @param b second waypoint
-     * @return the distance between the two waypoints
-     */
-    public static double distance(WAYPOINT a, WAYPOINT b) {
-        // run the forward kinematics on the two waypoints
-        Translation2d aTranslation = a.getTranslation();
-        Translation2d bTranslation = b.getTranslation();
-
-        return aTranslation.getDistance(bTranslation);
-    }
-
-    /**
-     * Uses dijkstra's algorithm to find the shortest path between the two waypoints.
-     *
-     * <p>https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
-     *
-     * @param start waypoint
-     * @param end waypoint
-     * @return A SequentialCommandGroup
-     */
-    public static ArrayList<WAYPOINT> dijkstra(WAYPOINT start, WAYPOINT end) {
-        // Priority queue for the waypoints
-        PriorityQueue<Pair<Double, WAYPOINT>> queue =
-                new PriorityQueue<>(Comparator.comparing(Pair::getFirst));
-
-        HashMap<WAYPOINT, WAYPOINT> previous = new HashMap<WAYPOINT, WAYPOINT>();
-        HashMap<WAYPOINT, Double> distance = new HashMap<WAYPOINT, Double>();
-
-        // Initialize the queue
-        for (WAYPOINT waypoint : WAYPOINT.values()) {
-            distance.put(waypoint, Double.POSITIVE_INFINITY);
-            previous.put(waypoint, null);
-        }
-
-        // Add the start waypoint to the queue
-        queue.add(new Pair<Double, WAYPOINT>(0.0, start));
-        distance.put(start, 0.0);
-
-        while (!queue.isEmpty()) {
-            // Get the waypoint with the smallest distance
-            WAYPOINT u = queue.poll().getSecond();
-
-            // Loop through all the neighbors
-            for (WAYPOINT v : ADJACENCY_LIST.get(u)) {
-                // Calculate the distance from start to the neighbor
-                double alt = distance.get(u) + distance(u, v);
-
-                // If new the distance is less than the current distance, update the distance
-                if (alt < distance.get(v)) {
-                    distance.put(v, alt);
-                    previous.put(v, u);
-                    queue.add(new Pair<Double, WAYPOINT>(alt, v));
-                }
-            }
-        }
-
-        // Build the path
-        ArrayList<WAYPOINT> path = new ArrayList<WAYPOINT>();
-
-        // Start at the end and work backwards
-        WAYPOINT current = end;
-        while (current != start) {
-            path.add(current);
-            current = previous.get(current);
-        }
-        // path.add(start); // include the starting waypoint as part of the path
-
-        // Reverse the path
-        Collections.reverse(path);
-        return path;
-    }
-
-    public CommandBase buildPath(WAYPOINT start, WAYPOINT end) {
-        ArrayList<WAYPOINT> path = dijkstra(start, end);
-
-        // Build the command group
-        SequentialCommandGroup commandGroup = new SequentialCommandGroup();
-        for (WAYPOINT waypoint : path) {
-            commandGroup.addCommands(new ArmWaypoint(this, waypoint));
-        }
-
-        return commandGroup;
-    }
-
-    public WAYPOINT waypointTarget() {
-        if (currentGamePieceTarget.equals(GAME_PIECE_TYPE.CUBE)) {
-            switch (currentArmTarget) {
-                case HOME:
-                    return WAYPOINT.HOME;
-                case LOW:
-                    return WAYPOINT.LOW_CUBE;
-                case MID:
-                    return WAYPOINT.MID_CUBE;
-                case HIGH:
-                    return WAYPOINT.HIGH_CUBE;
-                case DOUBLE_SUBSTATION:
-                    return WAYPOINT.DOUBLE_SUBSTATION_CUBE;
-                default:
-                    return WAYPOINT.HOME;
-            }
-        } else {
-            switch (currentArmTarget) {
-                case HOME:
-                    return WAYPOINT.HOME;
-                case LOW:
-                    return WAYPOINT.LOW_CONE;
-                case MID:
-                    return WAYPOINT.MID_CONE;
-                case DOUBLE_SUBSTATION:
-                    return WAYPOINT.DOUBLE_SUBSTATION_CONE;
-                default:
-                    return WAYPOINT.HOME;
-            }
-        }
-    }
-
-    /**
-     * Sets game piece to cube when gamePieceCube is called and set to cone when gamePieceCone is
-     * called.
-     */
-    public void gamePieceCube() {
-        currentGamePieceTarget = GAME_PIECE_TYPE.CUBE;
-    }
-
-    public void gamePieceCone() {
-        currentGamePieceTarget = GAME_PIECE_TYPE.CONE;
-    }
-
-    public CommandBase cGoToWaypoint(ARM_TARGET target) {
-        return Commands.sequence(new InstantCommand(() -> setArmTarget(target)), new ArmNext(this));
-    }
-
-    public void setArmTarget(ARM_TARGET target) {
-        currentArmTarget = target;
-    }
-
-    public void setPreviousArmWaypoint(WAYPOINT waypoint) {
-        previousArmWaypoint = waypoint;
-    }
-
-    public WAYPOINT getPreviousArmWaypoint() {
-        return previousArmWaypoint;
     }
 
     @Override
