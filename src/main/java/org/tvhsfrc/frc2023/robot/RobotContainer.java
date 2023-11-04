@@ -16,7 +16,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.io.File;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
+import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmDriveCommand;
+import org.tvhsfrc.frc2023.robot.commands.arm.ArmWaypoint;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.drive.RelativeRelativeDrive;
 import org.tvhsfrc.frc2023.robot.commands.intake.IntakeIn;
@@ -34,14 +36,14 @@ import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
 public class RobotContainer {
     public final SwerveSubsystem swerveSubsystem =
             new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
-            public final ArmSubsystem arm = new ArmSubsystem();
-            public final IntakeSubsystem intake = new IntakeSubsystem();
+    public final ArmSubsystem arm = new ArmSubsystem();
+    public final IntakeSubsystem intake = new IntakeSubsystem();
 
     // Driver controller
     private final CommandPS4Controller controller =
             new CommandPS4Controller(OperatorConstants.DRIVER_CONTROLLER_PORT);
 
-    // ROBORIO "User" button
+    // roboRIO "User" button
     Trigger userButton = new Trigger(RobotController::getUserButton);
 
     private final SendableChooser<String> sendableChooser = new SendableChooser<>();
@@ -86,13 +88,18 @@ public class RobotContainer {
         arm.setDefaultCommand(
                 new ArmDriveCommand(
                         arm,
-                        () -> 0,
                         () -> {
                             double left = (controller.getRawAxis(3) + 1) / 2.0;
                             double right = (controller.getRawAxis(4) + 1) / 2.0;
 
                             return right - left;
                         }));
+
+        controller.circle().onTrue(new ArmWaypoint(arm, WAYPOINT.HOME));
+        controller.povDown().onTrue(new ArmWaypoint(arm, WAYPOINT.LOW_CUBE));
+        controller.povLeft().onTrue(new ArmWaypoint(arm, WAYPOINT.MID_CUBE));
+        controller.povUp().onTrue(new ArmWaypoint(arm, WAYPOINT.HIGH_CUBE));
+        controller.triangle().onTrue(new ArmWaypoint(arm, WAYPOINT.DOUBLE_SUBSTATION_CUBE));
 
         controller.L1().whileTrue(new IntakeIn(intake));
         controller.R1().whileTrue(new IntakeOut(intake));
