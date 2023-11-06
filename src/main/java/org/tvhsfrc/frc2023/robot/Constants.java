@@ -10,7 +10,6 @@ import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
-import org.tvhsfrc.frc2023.robot.utils.Triple;
 import swervelib.parser.PIDFConfig;
 
 /**
@@ -53,18 +52,6 @@ public final class Constants {
         public static final int INTAKE = 30;
     }
 
-    public static final class LEDs {
-        public static final int LED_PWM = 0;
-        public static final int LED_LENGTH = 60;
-
-        public static final Triple<Integer, Integer, Integer> COLOR_CUBE =
-                new Triple<>(159, 23, 169);
-        public static final Triple<Integer, Integer, Integer> COLOR_CONE =
-                new Triple<>(235, 220, 13);
-        public static final Triple<Integer, Integer, Integer> COLOR_DISABLED =
-                new Triple<>(255, 0, 0);
-    }
-
     public static final class Arm {
         // ------ STAGE 1 ------ //
 
@@ -84,7 +71,7 @@ public final class Constants {
         public static final double STAGE_1_MAX_OUTPUT = 0.1;
 
         /** Stage 1 Away angle (rotations) */
-        public static final Rotation2d STAGE_1_AWAY = Rotation2d.fromDegrees(45);
+        public static final Rotation2d STAGE_1_AWAY = Rotation2d.fromRotations(0.0161);
 
         /** Stage 1 Soft limit */
         public static final Rotation2d STAGE_1_LIMIT = Rotation2d.fromDegrees(60);
@@ -92,7 +79,6 @@ public final class Constants {
         /** Stage 1 Starting Position */
         public static final Rotation2d STAGE_1_HOME = Rotation2d.fromDegrees(-10);
 
-        
         /**
          * Stage 1 will continuously attempt to get closer to the setpoint, but when within the
          * TOLERANCE it will report that it is at the setpoint
@@ -120,7 +106,7 @@ public final class Constants {
         public static final Rotation2d STAGE_2_HOME = Rotation2d.fromDegrees(0);
 
         /** Stage 2 motor soft-forward limit */
-        public static final Rotation2d STAGE_2_LIMIT = Rotation2d.fromDegrees(110);
+        public static final Rotation2d STAGE_2_LIMIT = Rotation2d.fromDegrees(135);
 
         /**
          * Stage 2 will continuously attempt to get closer to the setpoint, but when within the
@@ -142,10 +128,10 @@ public final class Constants {
      */
     public enum WAYPOINT {
         HOME(true, 0),
-        LOW_CUBE(true, 0.0876),
-        MID_CUBE(true, 0.2311),
-        HIGH_CUBE(false, 0.3847),
-        DOUBLE_SUBSTATION_CUBE(false, 0.2314);
+        LOW_CUBE(true, 0.0784),
+        MID_CUBE(true, 0.1742),
+        HIGH_CUBE(false, 0.3314),
+        DOUBLE_SUBSTATION_CUBE(true, 0.1869);
 
         private final Pair<Boolean, Rotation2d> angles;
 

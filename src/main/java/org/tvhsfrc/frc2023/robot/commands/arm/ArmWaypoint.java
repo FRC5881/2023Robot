@@ -7,7 +7,7 @@ import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 
-public class ArmWaypoint extends CommandBase {    
+public class ArmWaypoint extends CommandBase {
     private static final double TIMEOUT = 2.0;
     private static final double dt = 0.02;
 

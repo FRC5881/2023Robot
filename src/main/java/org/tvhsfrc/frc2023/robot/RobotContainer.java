@@ -5,20 +5,21 @@
 
 package org.tvhsfrc.frc2023.robot;
 
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.io.File;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
-import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmDriveCommand;
-import org.tvhsfrc.frc2023.robot.commands.arm.ArmWaypoint;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.drive.RelativeRelativeDrive;
 import org.tvhsfrc.frc2023.robot.commands.intake.IntakeIn;
@@ -34,7 +35,7 @@ import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-    public final SwerveSubsystem swerveSubsystem =
+    public final SwerveSubsystem swerve =
             new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
     public final ArmSubsystem arm = new ArmSubsystem();
     public final IntakeSubsystem intake = new IntakeSubsystem();
@@ -48,6 +49,8 @@ public class RobotContainer {
 
     private final SendableChooser<String> sendableChooser = new SendableChooser<>();
 
+    private final String kMagic = "magic";
+    private final String kScore = "score";
     private final String kAutoline = "autoline";
     private final String kNothing = "nothing";
 
@@ -56,8 +59,12 @@ public class RobotContainer {
         // Configure the trigger bindings
         configureBindings();
 
+        CameraServer.startAutomaticCapture();
+
         sendableChooser.setDefaultOption(kNothing, kNothing);
         sendableChooser.addOption(kAutoline, kAutoline);
+        sendableChooser.addOption(kMagic, kMagic);
+        sendableChooser.addOption(kScore, kScore);
 
         SmartDashboard.putData(sendableChooser);
     }
@@ -73,16 +80,16 @@ public class RobotContainer {
      */
     private void configureBindings() {
         // ------ Driving ------ //
-        controller.touchpad().onTrue(new InstantCommand(swerveSubsystem::zeroGyro));
+        controller.touchpad().onTrue(new InstantCommand(swerve::zeroGyro));
 
         RelativeRelativeDrive drive =
                 new RelativeRelativeDrive(
-                        swerveSubsystem,
-                        () -> deadband(controller.getLeftY(), 0.10),
-                        () -> deadband(controller.getLeftX(), 0.10),
-                        () -> deadband(controller.getRightX(), 0.10));
+                        swerve,
+                        () -> deadband(controller.getLeftY(), 0.07),
+                        () -> deadband(controller.getLeftX(), 0.07),
+                        () -> deadband(controller.getRightX(), 0.07));
 
-        swerveSubsystem.setDefaultCommand(drive);
+        swerve.setDefaultCommand(drive);
 
         // Manual arm control
         arm.setDefaultCommand(
@@ -95,11 +102,7 @@ public class RobotContainer {
                             return right - left;
                         }));
 
-        controller.circle().onTrue(new ArmWaypoint(arm, WAYPOINT.HOME));
-        controller.povDown().onTrue(new ArmWaypoint(arm, WAYPOINT.LOW_CUBE));
-        controller.povLeft().onTrue(new ArmWaypoint(arm, WAYPOINT.MID_CUBE));
-        controller.povUp().onTrue(new ArmWaypoint(arm, WAYPOINT.HIGH_CUBE));
-        controller.triangle().onTrue(new ArmWaypoint(arm, WAYPOINT.DOUBLE_SUBSTATION_CUBE));
+        controller.cross().whileTrue(new RepeatCommand(Commands.run(() -> swerve.lock(), swerve)));
 
         controller.L1().whileTrue(new IntakeIn(intake));
         controller.R1().whileTrue(new IntakeOut(intake));
@@ -115,7 +118,11 @@ public class RobotContainer {
             case kNothing:
                 return Autos.doNothing();
             case kAutoline:
-                return Autos.autoline(swerveSubsystem);
+                return Autos.autoline(swerve);
+            case kMagic:
+                return Autos.scoreAndLine(swerve, arm, intake);
+            case kScore:
+                return Autos.score(swerve, arm, intake);
             default:
                 return Autos.doNothing();
         }

@@ -28,7 +28,7 @@ public class RelativeRelativeDrive extends CommandBase {
                 new Translation2d(vx.getAsDouble(), vy.getAsDouble())
                         .times(swerve.getSwerveDriveConfiguration().maxSpeed);
 
-        swerve.drive(translation, omega.getAsDouble() * 2 * Math.PI, true, false, false);
+        swerve.drive(translation, omega.getAsDouble() * 2 * Math.PI * 0.85, true, false, false);
     }
 
     @Override

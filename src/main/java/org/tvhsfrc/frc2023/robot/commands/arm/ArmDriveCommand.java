@@ -24,7 +24,8 @@ public class ArmDriveCommand extends CommandBase {
     @Override
     public void execute() {
         previous = arm.getStage2Setpoint();
-        Rotation2d stage2 = previous.plus(Rotation2d.fromRotations(supplier.getAsDouble() * STAGE_2_RATE));
+        Rotation2d stage2 =
+                previous.plus(Rotation2d.fromRotations(supplier.getAsDouble() * STAGE_2_RATE));
         arm.setStage2Setpoint(stage2);
     }
 

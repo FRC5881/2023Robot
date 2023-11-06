@@ -9,7 +9,6 @@ public class IntakeIn extends CommandBase {
 
     public IntakeIn(IntakeSubsystem intake) {
         this.intake = intake;
-        addRequirements(intake);
     }
 
     @Override

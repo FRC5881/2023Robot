@@ -22,6 +22,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
         intakeSparkMax.setInverted(false);
         intakeSparkMax.setIdleMode(CANSparkMax.IdleMode.kBrake);
+        intakeSparkMax.setSmartCurrentLimit(80);
 
         intakeSparkMax.burnFlash();
     }
