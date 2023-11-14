@@ -10,7 +10,6 @@
     },
     "types": {
       "/FMSInfo": "FMSInfo",
-      "/Shuffleboard/Vacuum/VacuumCommand": "Command",
       "/SmartDashboard/Field": "Field2d",
       "/SmartDashboard/SendableChooser[0]": "String Chooser",
       "/SmartDashboard/navX-Sensor[1]": "Gyro"

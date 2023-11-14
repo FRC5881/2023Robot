@@ -29,9 +29,9 @@ public class SwerveSubsystem extends SubsystemBase {
      * @param directory Directory of swerve drive config files.
      */
     public SwerveSubsystem(File directory) {
-        // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary objects
-        // being created.
-        SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
+        // Configure the Telemetry before creating the SwerveDrive to avoid unnecessary
+        // objects being created.
+        SwerveDriveTelemetry.verbosity = TelemetryVerbosity.LOW;
         try {
             swerveDrive = new SwerveParser(directory).createSwerveDrive();
         } catch (Exception e) {
@@ -40,10 +40,10 @@ public class SwerveSubsystem extends SubsystemBase {
     }
 
     /**
-     * The primary method for controlling the drivebase. Takes a {@link Translation2d} and a
-     * rotation rate, and calculates and commands module states accordingly. Can use either
-     * open-loop or closed-loop velocity control for the wheel velocities. Also has field- and
-     * robot-relative modes, which affect how the translation vector is used.
+     * The primary method for controlling the drivebase. Takes a Translation2d and a rotation rate,
+     * and calculates and commands module states accordingly. Can use either open-loop or
+     * closed-loop velocity control for the wheel velocities. Also has field- and robot-relative
+     * modes, which affect how the translation vector is used.
      *
      * @param translation {@link Translation2d} that is the commanded linear velocity of the robot,
      *     in meters per second. In robot-relative mode, positive x is torwards the bow (front) and
@@ -55,6 +55,8 @@ public class SwerveSubsystem extends SubsystemBase {
      * @param fieldRelative Drive mode. True for field-relative, false for robot-relative.
      * @param isOpenLoop Whether to use closed-loop velocity control. Set to true to disable
      *     closed-loop.
+     * @param headingCorrection Whether to correct heading when driving translationally. Set to true
+     *     to enable.
      */
     public void drive(
             Translation2d translation,
@@ -62,7 +64,7 @@ public class SwerveSubsystem extends SubsystemBase {
             boolean fieldRelative,
             boolean isOpenLoop,
             boolean headingCorrection) {
-        swerveDrive.drive(translation, rotation, fieldRelative, isOpenLoop);
+        swerveDrive.drive(translation, rotation, fieldRelative, isOpenLoop, headingCorrection);
     }
 
     @Override

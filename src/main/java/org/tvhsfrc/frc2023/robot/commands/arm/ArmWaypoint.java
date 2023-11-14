@@ -1,40 +1,47 @@
 package org.tvhsfrc.frc2023.robot.commands.arm;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
-import org.tvhsfrc.frc2023.robot.utils.Triple;
 
 public class ArmWaypoint extends CommandBase {
-    private final ArmSubsystem armSubsystem;
+    private static final double TIMEOUT = 2.0;
+    private static final double dt = 0.02;
+
+    private final ArmSubsystem arm;
     private final WAYPOINT waypoint;
 
-    public ArmWaypoint(ArmSubsystem armSubsystem, WAYPOINT waypoint) {
-        this.armSubsystem = armSubsystem;
-        this.waypoint = waypoint;
+    private TrapezoidProfile profile;
+    private double time = 0;
 
-        addRequirements(armSubsystem);
+    public ArmWaypoint(ArmSubsystem arm, WAYPOINT waypoint) {
+        this.arm = arm;
+        this.waypoint = waypoint;
+        addRequirements(arm);
     }
 
     @Override
     public void initialize() {
-        Triple<Double, Double, Double> position = waypoint.position;
-
-        armSubsystem.setStage1Rotations(position.getA());
-        armSubsystem.setStage2Rotations(position.getB());
-        armSubsystem.setStage3Rotations(position.getC());
+        TrapezoidProfile.State initial = arm.getStage2Position();
+        TrapezoidProfile.State goal = waypoint.getStage2State();
+        profile = new TrapezoidProfile(Constants.Arm.STAGE_2_CONSTRAINTS, goal, initial);
     }
 
     @Override
-    public void execute() {}
+    public void execute() {
+        time += dt;
+        TrapezoidProfile.State setpoint = profile.calculate(time);
+        arm.setStage2Setpoint(Rotation2d.fromRotations(setpoint.position));
+    }
 
     @Override
     public boolean isFinished() {
-        return armSubsystem.isAtSetPoint();
+        return arm.isAtSetPoint() || time > TIMEOUT;
     }
 
     @Override
-    public void end(boolean interrupted) {
-        armSubsystem.setPreviousArmWaypoint(waypoint);
-    }
+    public void end(boolean interrupted) {}
 }
