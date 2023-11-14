@@ -54,13 +54,6 @@ public class ArmSubsystem extends SubsystemBase {
         SmartDashboard.putBoolean("isHome", stage1Homed);
         SmartDashboard.putBoolean("switch", stage1LimitSwitch.get());
 
-        if (stage1Homed) {
-        } else {
-            // stage1.getPIDController()
-            //         .setReference(STAGE_1_AWAY.getRotations(),
-            // CANSparkMax.ControlType.kPosition);
-        }
-
         stage2.getPIDController().setReference(stage2Setpoint, CANSparkMax.ControlType.kPosition);
     }
 
