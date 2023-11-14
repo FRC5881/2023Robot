@@ -9,8 +9,7 @@ public class ArmDriveCommand extends CommandBase {
     private final ArmSubsystem arm;
     private final DoubleSupplier supplier;
 
-    private static final double STAGE_2_RATE = (120.0 / 360) * 0.02;
-    private Rotation2d previous;
+    private static final double RATE = (120.0 / 360) * 0.02;
 
     public ArmDriveCommand(ArmSubsystem arm, DoubleSupplier supplier) {
         this.arm = arm;
@@ -23,10 +22,10 @@ public class ArmDriveCommand extends CommandBase {
 
     @Override
     public void execute() {
-        previous = arm.getStage2Setpoint();
-        Rotation2d stage2 =
-                previous.plus(Rotation2d.fromRotations(supplier.getAsDouble() * STAGE_2_RATE));
-        arm.setStage2Setpoint(stage2);
+        Rotation2d previous = arm.getGoal();
+        Rotation2d delta = Rotation2d.fromRotations(supplier.getAsDouble() * RATE);
+
+        arm.setGoal(previous.plus(delta));
     }
 
     @Override

@@ -1,174 +1,175 @@
 package org.tvhsfrc.frc2023.robot.subsystems;
 
 import static org.tvhsfrc.frc2023.robot.Constants.Arm.*;
+import static org.tvhsfrc.frc2023.robot.Constants.CANConstants;
 
-import com.revrobotics.*;
-import edu.wpi.first.math.Pair;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
-import org.tvhsfrc.frc2023.robot.Constants;
-import org.tvhsfrc.frc2023.robot.utils.RotationUtil;
+import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 
 public class ArmSubsystem extends SubsystemBase {
-    private final DigitalInput stage1LimitSwitch =
-            new DigitalInput(Constants.DIOConstants.STAGE_1_LIMIT_SWITCH);
+    /** Arm Motor controller, should only be driven using the `setVoltage(v)` method */
+    private final CANSparkMax arm;
 
-    private final CANSparkMax stage2 =
-            new CANSparkMax(
-                    Constants.CANConstants.ARM_STAGE_2, CANSparkMaxLowLevel.MotorType.kBrushless);
+    /**
+     * V = ks * sign(omega) + kg * cos(theta) + kv * omega
+     *
+     * <p>Takes units of radians
+     *
+     * <p>theta: arm angle. 0 degrees must correspond to parallel with the ground. Which means at
+     * HOME the arm is at -180 degress omega: rotational velocity
+     *
+     * <p>Since we use a trapeziodal motion profile, and the arm acceleration is discontinuous, we
+     * leave that term out.
+     *
+     * <p>We rely on the PID controller to give us acceleration.
+     */
+    private final ArmFeedforward feedforward = new ArmFeedforward(0, 0, 0);
 
-    private boolean stage1Homed = true;
-    private double stage2Setpoint = 0;
+    /**
+     * Arm PID Control.
+     *
+     * <p>P should be enough, PD might create better preformance
+     */
+    private final PIDController pidController = new PIDController(0, 0, 0);
+
+    private TrapezoidProfile.State m_state;
+    private TrapezoidProfile.State m_goal;
 
     public ArmSubsystem() {
+
         // Stage 2 motor controller setup
-        setStage2P(STAGE_2_PID.p);
-        setStage2I(STAGE_2_PID.i);
-        setStage2D(STAGE_2_PID.d);
+        arm = new CANSparkMax(CANConstants.ARM_STAGE_2, MotorType.kBrushless);
 
-        stage2.setIdleMode(CANSparkMax.IdleMode.kBrake);
-        stage2.getEncoder().setPositionConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
-        stage2.getEncoder().setVelocityConversionFactor(1 / GEARBOX_RATIO_STAGE_2);
-        stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, false);
-        stage2.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, false);
-        stage2.setSoftLimit(
-                CANSparkMax.SoftLimitDirection.kForward, (float) STAGE_2_LIMIT.getRotations());
-        stage2.setSoftLimit(
-                CANSparkMax.SoftLimitDirection.kReverse, (float) STAGE_2_HOME.getRotations());
-        stage2.getEncoder().setPosition(STAGE_2_HOME.getRotations());
-        stage2.getPIDController().setOutputRange(STAGE_2_MIN_OUTPUT, STAGE_2_MAX_OUTPUT);
+        arm.setIdleMode(CANSparkMax.IdleMode.kBrake);
+        arm.getEncoder().setPositionConversionFactor(1 / CONVERSION_FACTOR);
+        arm.getEncoder().setVelocityConversionFactor(1 / CONVERSION_FACTOR);
+        arm.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
+        arm.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
+        arm.setSoftLimit(
+                CANSparkMax.SoftLimitDirection.kForward,
+                (float) MathUtil.angleModulus(LIMIT.getRadians()));
+        arm.setSoftLimit(
+                CANSparkMax.SoftLimitDirection.kReverse,
+                (float) MathUtil.angleModulus(LIMIT.getRadians()));
+        arm.getEncoder().setPosition(HOME.getRadians());
 
-        stage2.burnFlash();
+        arm.burnFlash();
 
-        SmartDashboard.putData("Arm", this);
-
-        setSetpoint(true, STAGE_2_HOME);
+        m_state = new TrapezoidProfile.State(HOME.getRadians(), 0);
+        setGoal(HOME);
     }
 
     @Override
     public void periodic() {
-        SmartDashboard.putBoolean("isHome", stage1Homed);
-        SmartDashboard.putBoolean("switch", stage1LimitSwitch.get());
+        var profile = new TrapezoidProfile(CONSTRAINTS, m_goal, m_state);
+        m_state = profile.calculate(0.02);
 
-        stage2.getPIDController().setReference(stage2Setpoint, CANSparkMax.ControlType.kPosition);
-    }
+        double ff = feedforward.calculate(m_state.position, m_state.velocity);
+        double pid = pidController.calculate(getPosition(), m_state.position);
 
-    public Rotation2d getStage2Setpoint() {
-        return Rotation2d.fromRotations(stage2Setpoint);
-    }
+        double voltage = ff + pid;
+        double effect = MathUtil.clamp(voltage, MIN_OUTPUT, MAX_OUTPUT);
 
-    /** returns true if the arm is close to the setpoint, within the tolerance */
-    public boolean isAtSetPoint() {
-        Pair<Rotation2d, Rotation2d> current = getRotations();
+        arm.setVoltage(effect);
 
-        boolean s1 =
-                RotationUtil.withinTolerance(current.getFirst(), STAGE_1_HOME, STAGE_1_TOLERANCE);
-        boolean s2 =
-                RotationUtil.withinTolerance(
-                        current.getSecond(), getStage2Setpoint(), STAGE_2_TOLERANCE);
-
-        return s1 && s2;
+        SmartDashboard.putNumber("Arm/Setpoint", m_state.position);
+        SmartDashboard.putNumber("Arm/Feedforward", ff);
+        SmartDashboard.putNumber("Arm/PID", pid);
+        SmartDashboard.putNumber("Arm/Requested Voltage", voltage);
+        SmartDashboard.putNumber("Arm/Effect", effect);
+        SmartDashboard.putNumber("Arm/Real Voltage", arm.getAppliedOutput() * arm.getBusVoltage());
     }
 
     /**
-     * Sets the setpoint of the arm.
+     * Requests that the Arm targets a new goal.
      *
-     * @param stage1 the setpoint of the first stage
-     * @param stage2 the setpoint of the second stage
+     * @param goal Rotation2d of the goal
      */
-    public void setSetpoint(boolean stage1Homed, Rotation2d stage2) {
-        this.stage1Homed = stage1Homed;
-        this.stage2Setpoint =
-                RotationUtil.clamp(stage2, STAGE_2_HOME, STAGE_2_LIMIT).getRotations();
+    public void setGoal(Rotation2d goal) {
+        // Clamp the goal between soft limits
+        double g = MathUtil.clamp(goal.getRadians(), HOME.getRadians(), LIMIT.getRadians());
+        m_goal = new TrapezoidProfile.State(g, 0);
+
+        SmartDashboard.putNumber("Arm/Goal", m_goal.position);
     }
 
     /**
-     * Set only stage 2 setpoint
-     *
-     * @param stage2 the setpoint of the second stage
+     * @return the current goal
      */
-    public void setStage2Setpoint(Rotation2d stage2) {
-        this.stage2Setpoint =
-                RotationUtil.clamp(stage2, STAGE_2_HOME, STAGE_2_LIMIT).getRotations();
+    public Rotation2d getGoal() {
+        return Rotation2d.fromRadians(m_goal.position);
     }
 
     /**
-     * Gets the current rotations of the arm.
-     *
-     * @return a triple of rotations
+     * @return current arm position as reported by the encoder
      */
-    public Pair<Rotation2d, Rotation2d> getRotations() {
-        Rotation2d r2 = Rotation2d.fromRotations(stage2.getEncoder().getPosition());
-        return new Pair<>(new Rotation2d(), r2);
+    private double getPosition() {
+        return arm.getEncoder().getPosition();
     }
 
-    /** Gets the stage 2 position as a TrapezoidProfile.State */
-    public TrapezoidProfile.State getStage2Position() {
-        return new TrapezoidProfile.State(
-                stage2.getEncoder().getPosition(), stage2.getEncoder().getVelocity());
+    /**
+     * @return current arm velocity as reported by the encoder
+     */
+    private double getVelocity() {
+        return arm.getEncoder().getVelocity();
     }
 
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        builder.addBooleanProperty("Stage 1 Limit Switch", () -> !stage1LimitSwitch.get(), null);
-
-        builder.addDoubleProperty(
-                "Stage 1", () -> this.getRotations().getFirst().getRotations(), null);
-        builder.addDoubleProperty(
-                "Stage 2", () -> this.getRotations().getSecond().getRotations(), null);
-
-        builder.addDoubleProperty(
-                "Stage 2 Velocity", () -> stage2.getEncoder().getVelocity(), null);
-
-        builder.addDoubleProperty(
-                "Stage 2 Voltage", () -> stage2.getBusVoltage() * stage2.getAppliedOutput(), null);
-
-        builder.addDoubleProperty(
-                "Stage 1 Setpoint",
-                () -> {
-                    if (stage1Homed) {
-                        return 0.0;
-                    } else {
-                        return STAGE_1_AWAY.getRotations();
-                    }
-                },
-                null);
-        builder.addDoubleProperty("Stage 2 Setpoint", () -> stage2Setpoint, null);
-
-        builder.addDoubleProperty("Stage 2 Temperature", stage2::getMotorTemperature, null);
-
-        builder.addDoubleProperty("Stage 2 Output", stage2::getAppliedOutput, null);
-
-        builder.addDoubleProperty("PID Stage 2 P", null, this::setStage2P);
-        builder.addDoubleProperty("PID Stage 2 I", null, this::setStage2I);
-        builder.addDoubleProperty("PID Stage 2 D", null, this::setStage2D);
+    /**
+     * @return current arm State as reported by the encoder
+     */
+    private TrapezoidProfile.State getState() {
+        return new TrapezoidProfile.State(getPosition(), getVelocity());
     }
 
-    public double getStage2P() {
-        return stage2.getPIDController().getP();
+    /**
+     * @return true if the Arm position is within the tolerance for being considered at the setpoint
+     */
+    public boolean atGoal() {
+        return Math.abs(m_goal.position - getPosition()) < TOLERANCE.getRadians();
     }
 
-    public void setStage2P(double p) {
-        stage2.getPIDController().setP(p);
+    /**
+     * Resets the simulated arm state to match the physical state of the arm. When the robot is
+     * disabled, this method should be called.
+     */
+    public void resetState() {
+        m_state = getState();
     }
 
-    public double getStage2I() {
-        return stage2.getPIDController().getI();
+    /**
+     * Builds a new command that sets the Arm to target a new goal.
+     *
+     * @param goal goal
+     * @param wait if true then this command blocks until the arm reaches the setpoint, otherwise it
+     *     finishes instantly
+     * @return a new command
+     */
+    public Command setArmGoalCommand(Rotation2d goal, boolean wait) {
+        Command cSetGoal = runOnce(() -> setGoal(goal));
+        if (wait) {
+            return cSetGoal.andThen(Commands.waitUntil(this::atGoal));
+        } else {
+            return cSetGoal;
+        }
     }
 
-    public void setStage2I(double i) {
-        stage2.getPIDController().setI(i);
-    }
-
-    public double getStage2D() {
-        return stage2.getPIDController().getD();
-    }
-
-    public void setStage2D(double d) {
-        stage2.getPIDController().setD(d);
+    /**
+     * Builds a new command that sets the Arm to target a new goal.
+     *
+     * @param goal goal
+     * @param wait if true then this command blocks until the arm reaches the setpoint, otherwise it
+     *     finishes instantly
+     * @return a new command
+     */
+    public Command setArmGoalCommand(WAYPOINT goal, boolean wait) {
+        return setArmGoalCommand(goal.getAngle(), wait);
     }
 }

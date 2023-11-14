@@ -5,11 +5,8 @@
 
 package org.tvhsfrc.frc2023.robot;
 
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.*;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.math.util.Units;
 import swervelib.parser.PIDFConfig;
 
 /**
@@ -53,70 +50,32 @@ public final class Constants {
     }
 
     public static final class Arm {
-        // ------ STAGE 1 ------ //
+        /** Converts Motor rotations to Axle rotations */
+        public static final double GEARBOX_RATIO = 3 * 5 * 5;
 
-        /** Length of the first stage of the arm in meters */
-        public static final double STAGE_1_LENGTH = Units.inchesToMeters(38.136);
+        /** Converts Motor rotations to Axle radians */
+        public static final double CONVERSION_FACTOR = GEARBOX_RATIO * 2.0 * Math.PI;
 
-        /** Converts Motor Rotations to Axle Rotations */
-        public static final double GEARBOX_RATIO_STAGE_1 = 3 * 5 * 5 * 5;
+        /** Maximum output (as voltage) */
+        public static final double MIN_OUTPUT = -0.25 * 12;
 
-        /** Stage 1 PID Settings */
-        public static final PIDFConfig STAGE_1_PID = new PIDFConfig(4, 0, 0, 0);
+        /** Minimum output (as voltage) */
+        public static final double MAX_OUTPUT = 0.25 * 12;
 
-        /** Stage 1 Maximum output (as percentage) for PID control */
-        public static final double STAGE_1_MIN_OUTPUT = -0.1;
-
-        /** Stage 1 Minimum output (as negative percentage) for PID control */
-        public static final double STAGE_1_MAX_OUTPUT = 0.1;
-
-        /** Stage 1 Away angle (rotations) */
-        public static final Rotation2d STAGE_1_AWAY = Rotation2d.fromRotations(0.0161);
-
-        /** Stage 1 Soft limit */
-        public static final Rotation2d STAGE_1_LIMIT = Rotation2d.fromDegrees(60);
-
-        /** Stage 1 Starting Position */
-        public static final Rotation2d STAGE_1_HOME = Rotation2d.fromDegrees(-10);
-
-        /**
-         * Stage 1 will continuously attempt to get closer to the setpoint, but when within the
-         * TOLERANCE it will report that it is at the setpoint
-         */
-        public static final Rotation2d STAGE_1_TOLERANCE = Rotation2d.fromDegrees(5);
-
-        // ------ STAGE 2 ------ //
-
-        /** Length of the second stage of the arm in meters */
-        public static final double STAGE_2_LENGTH = Units.inchesToMeters(35);
-
-        /** Converts Motor Rotations to Axle Rotations */
-        public static final double GEARBOX_RATIO_STAGE_2 = 3 * 5 * 5;
-
-        /** Stage 2 PID Settings - Use values from the SPARK Max Hardware Client */
-        public static final PIDFConfig STAGE_2_PID = new PIDFConfig(11.25, 0, 3.75, 0);
-
-        /** Stage 2 Maximum output (as percentage) for PID control */
-        public static final double STAGE_2_MIN_OUTPUT = -0.25;
-
-        /** Stage 2 Minimum output (as negative percentage) for PID control */
-        public static final double STAGE_2_MAX_OUTPUT = 0.25;
-
-        /** Stage 2 motor starting position (rotations) */
-        public static final Rotation2d STAGE_2_HOME = Rotation2d.fromDegrees(0);
+        /** Stage 2 motor starting position, and soft-reverse limit */
+        public static final Rotation2d HOME = Rotation2d.fromDegrees(-180);
 
         /** Stage 2 motor soft-forward limit */
-        public static final Rotation2d STAGE_2_LIMIT = Rotation2d.fromDegrees(135);
+        public static final Rotation2d LIMIT = Rotation2d.fromDegrees(45);
 
         /**
          * Stage 2 will continuously attempt to get closer to the setpoint, but when within the
-         * TOLERANCE it will report that it is at the setpoint
+         * TOLERANCE it will report that we are at the setpoint
          */
-        public static final Rotation2d STAGE_2_TOLERANCE = Rotation2d.fromDegrees(5);
+        public static final Rotation2d TOLERANCE = Rotation2d.fromDegrees(5);
 
         /** Stage 2 is too fast for it's own good, so we limit the speed and acceleration */
-        public static final Constraints STAGE_2_CONSTRAINTS =
-                new Constraints(120 / 360d, 60 / 360d);
+        public static final Constraints CONSTRAINTS = new Constraints(100 / 360d, 60 / 360d);
     }
 
     /**
@@ -127,28 +86,20 @@ public final class Constants {
      * Rotation2d
      */
     public enum WAYPOINT {
-        HOME(true, 0),
-        LOW_CUBE(true, 0.0784),
-        MID_CUBE(true, 0.1742),
-        HIGH_CUBE(false, 0.3314),
-        DOUBLE_SUBSTATION_CUBE(true, 0.1869);
+        HOME(0),
+        LOW_CUBE(0),
+        MID_CUBE(0),
+        HIGH_CUBE(0),
+        DOUBLE_SUBSTATION_CUBE(0);
 
-        private final Pair<Boolean, Rotation2d> angles;
+        private final Rotation2d angle;
 
-        private WAYPOINT(boolean stage1, double stage2) {
-            this.angles = new Pair<>(stage1, Rotation2d.fromRotations(stage2));
+        private WAYPOINT(double radians) {
+            this.angle = Rotation2d.fromRadians(radians);
         }
 
-        public boolean isStage1Home() {
-            return angles.getFirst();
-        }
-
-        public Rotation2d getStage2Angle() {
-            return angles.getSecond();
-        }
-
-        public TrapezoidProfile.State getStage2State() {
-            return new TrapezoidProfile.State(angles.getSecond().getRotations(), 0);
+        public Rotation2d getAngle() {
+            return angle;
         }
     }
 

@@ -4,10 +4,10 @@
 
 package org.tvhsfrc.frc2023.robot.commands.auto;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
+import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 import org.tvhsfrc.frc2023.robot.commands.intake.IntakeIn;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.IntakeSubsystem;
@@ -23,44 +23,37 @@ public final class Autos {
     }
 
     public static CommandBase autoline(SwerveSubsystem swerve) {
-        return Commands.deadline(
-                Commands.waitSeconds(5),
-                Commands.run(
+        return Commands.run(
                         () -> swerve.drive(new Translation2d(-1.0, 0), 0, true, false, true),
-                        swerve));
+                        swerve)
+                .withTimeout(5);
     }
 
     public static CommandBase scoreAndLine(
             SwerveSubsystem swerve, ArmSubsystem arm, IntakeSubsystem intake) {
         return Commands.sequence(
-                Commands.deadline(
-                        Commands.waitSeconds(2),
+                arm.setArmGoalCommand(WAYPOINT.MID_CUBE, true).withTimeout(2),
+                new IntakeIn(intake).withTimeout(3),
+                Commands.parallel(
                         Commands.run(
-                                () -> arm.setStage2Setpoint(Rotation2d.fromRotations(0.19)), arm)),
-                Commands.deadline(Commands.waitSeconds(3), new IntakeIn(intake)),
-                Commands.deadline(
-                        Commands.waitSeconds(5),
-                        Commands.run(
-                                () -> swerve.drive(new Translation2d(1.0, 0), 0, true, false, true),
-                                swerve)),
-                Commands.deadline(
-                        Commands.waitSeconds(2),
-                        Commands.run(
-                                () -> arm.setStage2Setpoint(Rotation2d.fromRotations(0)), arm)));
+                                        () ->
+                                                swerve.drive(
+                                                        new Translation2d(1.0, 0),
+                                                        0,
+                                                        true,
+                                                        false,
+                                                        true),
+                                        swerve)
+                                .withTimeout(5),
+                        arm.setArmGoalCommand(WAYPOINT.HOME, true).withTimeout(2)));
     }
 
     public static CommandBase score(
             SwerveSubsystem swerve, ArmSubsystem arm, IntakeSubsystem intake) {
         return Commands.sequence(
-                Commands.deadline(
-                        Commands.waitSeconds(2),
-                        Commands.run(
-                                () -> arm.setStage2Setpoint(Rotation2d.fromRotations(0.19)), arm)),
-                Commands.deadline(Commands.waitSeconds(3), new IntakeIn(intake)),
-                Commands.deadline(
-                        Commands.waitSeconds(2),
-                        Commands.run(
-                                () -> arm.setStage2Setpoint(Rotation2d.fromRotations(0)), arm)));
+                arm.setArmGoalCommand(WAYPOINT.MID_CUBE, true).withTimeout(2),
+                new IntakeIn(intake).withTimeout(3),
+                arm.setArmGoalCommand(WAYPOINT.HOME, true).withTimeout(2));
     }
 }
 ;
