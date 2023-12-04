@@ -86,11 +86,15 @@ public class RobotContainer {
         // ------ Driving ------ //
         controller.touchpad().onTrue(new InstantCommand(swerve::zeroGyro));
 
-        CommandBase cSetRainbow = Commands.runOnce(() -> leds.setState(Colors.RAINBOW), leds);
-        CommandBase cSetGreen = Commands.runOnce(() -> leds.setState(Colors.GREEN), leds);
-        CommandBase cSetBlue = Commands.runOnce(() -> leds.setState(Colors.BLUE), leds);
-        CommandBase cSetOff = Commands.runOnce(() -> leds.setState(Colors.OFF), leds);
+        CommandBase cSetRainbow = Commands.runOnce(() -> leds.setState(Colors.RAINBOW), leds).ignoringDisable(true);
+        CommandBase cSetGreen = Commands.runOnce(() -> leds.setState(Colors.GREEN), leds).ignoringDisable(true);
+        CommandBase cSetBlue = Commands.runOnce(() -> leds.setState(Colors.BLUE), leds).ignoringDisable(true);
+        CommandBase cSetOff = Commands.runOnce(() -> leds.setState(Colors.OFF), leds).ignoringDisable(true);
 
+        controller.povDown().onTrue(cSetOff);
+        controller.povLeft().onTrue(cSetGreen);
+        controller.povRight().onTrue(cSetBlue);
+        controller.povUp().onTrue(cSetRainbow);
 
         RelativeRelativeDrive drive =
                 new RelativeRelativeDrive(
