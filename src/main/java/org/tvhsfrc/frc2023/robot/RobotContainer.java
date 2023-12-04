@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
@@ -25,8 +26,10 @@ import org.tvhsfrc.frc2023.robot.commands.drive.RelativeRelativeDrive;
 import org.tvhsfrc.frc2023.robot.commands.intake.IntakeIn;
 import org.tvhsfrc.frc2023.robot.commands.intake.IntakeOut;
 import org.tvhsfrc.frc2023.robot.subsystems.ArmSubsystem;
+import org.tvhsfrc.frc2023.robot.subsystems.BlingLightsSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.IntakeSubsystem;
 import org.tvhsfrc.frc2023.robot.subsystems.SwerveSubsystem;
+import org.tvhsfrc.frc2023.robot.subsystems.BlingLightsSubsystem.Colors;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -39,6 +42,7 @@ public class RobotContainer {
             new SwerveSubsystem(new File(Filesystem.getDeployDirectory(), "swerve"));
     public final ArmSubsystem arm = new ArmSubsystem();
     public final IntakeSubsystem intake = new IntakeSubsystem();
+    public final BlingLightsSubsystem leds = new BlingLightsSubsystem();
 
     // Driver controller
     private final CommandPS4Controller controller =
@@ -81,6 +85,12 @@ public class RobotContainer {
     private void configureBindings() {
         // ------ Driving ------ //
         controller.touchpad().onTrue(new InstantCommand(swerve::zeroGyro));
+
+        CommandBase cSetRainbow = Commands.runOnce(() -> leds.setState(Colors.RAINBOW), leds);
+        CommandBase cSetGreen = Commands.runOnce(() -> leds.setState(Colors.GREEN), leds);
+        CommandBase cSetBlue = Commands.runOnce(() -> leds.setState(Colors.BLUE), leds);
+        CommandBase cSetOff = Commands.runOnce(() -> leds.setState(Colors.OFF), leds);
+
 
         RelativeRelativeDrive drive =
                 new RelativeRelativeDrive(

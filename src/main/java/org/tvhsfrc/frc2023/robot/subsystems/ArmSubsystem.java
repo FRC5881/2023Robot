@@ -7,15 +7,12 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import org.tvhsfrc.frc2023.robot.Constants;
 import org.tvhsfrc.frc2023.robot.utils.RotationUtil;
 
 public class ArmSubsystem extends SubsystemBase {
-    private final DigitalInput stage1LimitSwitch =
-            new DigitalInput(Constants.DIOConstants.STAGE_1_LIMIT_SWITCH);
 
     private final CANSparkMax stage2 =
             new CANSparkMax(
@@ -52,7 +49,6 @@ public class ArmSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         SmartDashboard.putBoolean("isHome", stage1Homed);
-        SmartDashboard.putBoolean("switch", stage1LimitSwitch.get());
 
         stage2.getPIDController().setReference(stage2Setpoint, CANSparkMax.ControlType.kPosition);
     }
@@ -114,7 +110,6 @@ public class ArmSubsystem extends SubsystemBase {
 
     @Override
     public void initSendable(SendableBuilder builder) {
-        builder.addBooleanProperty("Stage 1 Limit Switch", () -> !stage1LimitSwitch.get(), null);
 
         builder.addDoubleProperty(
                 "Stage 1", () -> this.getRotations().getFirst().getRotations(), null);

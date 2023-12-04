@@ -25,11 +25,6 @@ public final class Constants {
         public static final int DRIVER_CONTROLLER_PORT = 0;
     }
 
-    /** Identifiers for all Digital IO devices on the robot. */
-    public static class DIOConstants {
-        public static final int STAGE_1_LIMIT_SWITCH = 0;
-    }
-
     /** Identifiers for all the CAN devices on the robot. */
     public static class CANConstants {
         public static final int FRONT_RIGHT_STEER_ENCODER = 1;
