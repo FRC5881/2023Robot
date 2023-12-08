@@ -54,7 +54,7 @@ public final class Constants {
         public static final double GEARBOX_RATIO = 3 * 5 * 5;
 
         /** Converts Motor rotations to Axle radians */
-        public static final double CONVERSION_FACTOR = GEARBOX_RATIO * 2.0 * Math.PI;
+        public static final double CONVERSION_FACTOR = GEARBOX_RATIO / (2.0 * Math.PI);
 
         /** Maximum output (as voltage) */
         public static final double MIN_OUTPUT = -0.25 * 12;
@@ -63,7 +63,7 @@ public final class Constants {
         public static final double MAX_OUTPUT = 0.25 * 12;
 
         /** Stage 2 motor starting position, and soft-reverse limit */
-        public static final Rotation2d HOME = Rotation2d.fromDegrees(-180);
+        public static final Rotation2d HOME = Rotation2d.fromDegrees(-90);
 
         /** Stage 2 motor soft-forward limit */
         public static final Rotation2d LIMIT = Rotation2d.fromDegrees(45);

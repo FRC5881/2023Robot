@@ -16,7 +16,9 @@ import org.tvhsfrc.frc2023.robot.Constants.WAYPOINT;
 
 public class ArmSubsystem extends SubsystemBase {
     /** Arm Motor controller, should only be driven using the `setVoltage(v)` method */
-    private final CANSparkMax arm;
+    private final CANSparkMax armMotor;
+
+    public static final boolean MANUAL = true;
 
     /**
      * V = ks * sign(omega) + kg * cos(theta) + kv * omega
@@ -46,22 +48,22 @@ public class ArmSubsystem extends SubsystemBase {
     public ArmSubsystem() {
 
         // Stage 2 motor controller setup
-        arm = new CANSparkMax(CANConstants.ARM_STAGE_2, MotorType.kBrushless);
+        armMotor = new CANSparkMax(CANConstants.ARM_STAGE_2, MotorType.kBrushless);
 
-        arm.setIdleMode(CANSparkMax.IdleMode.kBrake);
-        arm.getEncoder().setPositionConversionFactor(1 / CONVERSION_FACTOR);
-        arm.getEncoder().setVelocityConversionFactor(1 / CONVERSION_FACTOR);
-        arm.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
-        arm.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
-        arm.setSoftLimit(
+        armMotor.setIdleMode(CANSparkMax.IdleMode.kCoast);
+        armMotor.getEncoder().setPositionConversionFactor(1 / CONVERSION_FACTOR);
+        armMotor.getEncoder().setVelocityConversionFactor(1 / CONVERSION_FACTOR);
+        armMotor.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
+        armMotor.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
+        armMotor.setSoftLimit(
                 CANSparkMax.SoftLimitDirection.kForward,
                 (float) MathUtil.angleModulus(LIMIT.getRadians()));
-        arm.setSoftLimit(
+        armMotor.setSoftLimit(
                 CANSparkMax.SoftLimitDirection.kReverse,
                 (float) MathUtil.angleModulus(LIMIT.getRadians()));
-        arm.getEncoder().setPosition(HOME.getRadians());
+        armMotor.getEncoder().setPosition(HOME.getRadians());
 
-        arm.burnFlash();
+        armMotor.burnFlash();
 
         m_state = new TrapezoidProfile.State(HOME.getRadians(), 0);
         setGoal(HOME);
@@ -69,23 +71,41 @@ public class ArmSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        var profile = new TrapezoidProfile(CONSTRAINTS, m_goal, m_state);
-        m_state = profile.calculate(0.02);
+        if (!MANUAL) {
+            var profile = new TrapezoidProfile(CONSTRAINTS, m_goal, m_state);
+            m_state = profile.calculate(0.02);
 
-        double ff = feedforward.calculate(m_state.position, m_state.velocity);
-        double pid = pidController.calculate(getPosition(), m_state.position);
+            double ff = feedforward.calculate(m_state.position, m_state.velocity);
+            double pid = pidController.calculate(getPosition(), m_state.position);
 
-        double voltage = ff + pid;
-        double effect = MathUtil.clamp(voltage, MIN_OUTPUT, MAX_OUTPUT);
+            double voltage = ff + pid;
+            double effect = MathUtil.clamp(voltage, MIN_OUTPUT, MAX_OUTPUT);
 
-        arm.setVoltage(effect);
+            armMotor.setVoltage(effect);
 
-        SmartDashboard.putNumber("Arm/Setpoint", m_state.position);
-        SmartDashboard.putNumber("Arm/Feedforward", ff);
-        SmartDashboard.putNumber("Arm/PID", pid);
-        SmartDashboard.putNumber("Arm/Requested Voltage", voltage);
-        SmartDashboard.putNumber("Arm/Effect", effect);
-        SmartDashboard.putNumber("Arm/Real Voltage", arm.getAppliedOutput() * arm.getBusVoltage());
+            SmartDashboard.putNumber("Arm/Setpoint", m_state.position);
+            SmartDashboard.putNumber("Arm/Feedforward", ff);
+            SmartDashboard.putNumber("Arm/PID", pid);
+            SmartDashboard.putNumber("Arm/Requested Voltage", voltage);
+            SmartDashboard.putNumber("Arm/Effect", effect);
+            SmartDashboard.putNumber(
+                    "Arm/Real Voltage", armMotor.getAppliedOutput() * armMotor.getBusVoltage());
+        } else {
+            SmartDashboard.putNumber(
+                    "Arm/Real Voltage", armMotor.getAppliedOutput() * armMotor.getBusVoltage());
+            SmartDashboard.putNumber("Arm/Position (degrees)", getRotation().getDegrees());
+            SmartDashboard.putNumber(
+                    "Arm/Kg",
+                    armMotor.getAppliedOutput()
+                            * armMotor.getBusVoltage()
+                            / getRotation().getCos());
+        }
+    }
+
+    public void setVoltage(double v) {
+        if (MANUAL) {
+            armMotor.setVoltage(v);
+        }
     }
 
     /**
@@ -112,14 +132,21 @@ public class ArmSubsystem extends SubsystemBase {
      * @return current arm position as reported by the encoder
      */
     private double getPosition() {
-        return arm.getEncoder().getPosition();
+        return armMotor.getEncoder().getPosition();
+    }
+
+    /**
+     * @return current arm position as reported by the encoder (as a Rotation2d)
+     */
+    public Rotation2d getRotation() {
+        return Rotation2d.fromRadians(getPosition());
     }
 
     /**
      * @return current arm velocity as reported by the encoder
      */
     private double getVelocity() {
-        return arm.getEncoder().getVelocity();
+        return armMotor.getEncoder().getVelocity();
     }
 
     /**

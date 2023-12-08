@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.io.File;
 import org.tvhsfrc.frc2023.robot.Constants.OperatorConstants;
 import org.tvhsfrc.frc2023.robot.commands.arm.ArmDriveCommand;
+import org.tvhsfrc.frc2023.robot.commands.arm.ArmVoltageCommand;
 import org.tvhsfrc.frc2023.robot.commands.auto.Autos;
 import org.tvhsfrc.frc2023.robot.commands.drive.RelativeRelativeDrive;
 import org.tvhsfrc.frc2023.robot.commands.intake.IntakeIn;
@@ -92,15 +93,27 @@ public class RobotContainer {
         swerve.setDefaultCommand(drive);
 
         // Manual arm control
-        arm.setDefaultCommand(
-                new ArmDriveCommand(
-                        arm,
-                        () -> {
-                            double left = (controller.getRawAxis(3) + 1) / 2.0;
-                            double right = (controller.getRawAxis(4) + 1) / 2.0;
+        if (ArmSubsystem.MANUAL) {
+            arm.setDefaultCommand(
+                    new ArmVoltageCommand(
+                            arm,
+                            () -> {
+                                double left = (controller.getRawAxis(3) + 1) / 2.0;
+                                double right = (controller.getRawAxis(4) + 1) / 2.0;
 
-                            return right - left;
-                        }));
+                                return right - left;
+                            }));
+        } else {
+            arm.setDefaultCommand(
+                    new ArmDriveCommand(
+                            arm,
+                            () -> {
+                                double left = (controller.getRawAxis(3) + 1) / 2.0;
+                                double right = (controller.getRawAxis(4) + 1) / 2.0;
+
+                                return right - left;
+                            }));
+        }
 
         controller.cross().whileTrue(new RepeatCommand(Commands.run(() -> swerve.lock(), swerve)));
 
